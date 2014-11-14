@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{D6DBACD6-2C9C-4610-83CA-3527E019FFE5}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>LaunchPad2</RootNamespace>
+    <AssemblyName>LaunchPad2</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>LaunchPad.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="ActionBatch.cs" />
+    <Compile Include="ComponentExtensions.cs" />
+    <Compile Include="Controls\LibraryPanel.xaml.cs">
+      <DependentUpon>LibraryPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MenuSeparator.xaml.cs">
+      <DependentUpon>MenuSeparator.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\NetworkPanel.xaml.cs">
+      <DependentUpon>NetworkPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\PropertiesPanel.xaml.cs">
+      <DependentUpon>PropertiesPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Converters\ZoomPercentageConverter.cs" />
+    <Compile Include="IGroupable.cs" />
+    <Compile Include="IUndoMemento.cs" />
+    <Compile Include="LinqExtensions.cs" />
+    <Compile Include="Models\CueModel.cs" />
+    <Compile Include="Models\DeviceModel.cs" />
+    <Compile Include="Models\Model.cs" />
+    <Compile Include="Models\NodeModel.cs" />
+    <Compile Include="Models\TrackModel.cs" />
+    <Compile Include="Packager.cs" />
+    <Compile Include="RelayCommand.cs" />
+    <Compile Include="Controls\AudioCueControl.cs" />
+    <Compile Include="Controls\CueInfo.cs" />
+    <Compile Include="Controls\CueMovingEventArgs.cs" />
+    <Compile Include="Controls\DragDropHelper.cs" />
+    <Compile Include="Controls\DraggedAdorner.cs" />
+    <Compile Include="Controls\CueMoveMode.cs" />
+    <Compile Include="Controls\EventCueControl.cs" />
+    <Compile Include="Controls\CueMoveEventArgs.cs" />
+    <Compile Include="Controls\InsertionAdorner.cs" />
+    <Compile Include="Controls\SelectionCanvas.cs" />
+    <Compile Include="Controls\DragAndDropUtilities.cs" />
+    <Compile Include="Controls\TrackHeaderControl.cs" />
+    <Compile Include="Converters\BrushConverter.cs" />
+    <Compile Include="Converters\LighteningConverter.cs" />
+    <Compile Include="Converters\FileTitleConverter.cs" />
+    <Compile Include="Controls\CueControl.cs" />
+    <Compile Include="Converters\SampleDecimationConverter.cs" />
+    <Compile Include="Converters\SamplesDecimationConverter.cs" />
+    <Compile Include="Converters\ValueConverterGroup.cs" />
+    <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="TemporaryFile.cs" />
+    <Compile Include="UiHelper.cs" />
+    <Compile Include="UndoBatchMemento.cs" />
+    <Compile Include="UndoManager.cs" />
+    <Compile Include="UndoMemento.cs" />
+    <Compile Include="ViewModels\BrushViewModel.cs" />
+    <Compile Include="ViewModels\CueMoveInfo.cs" />
+    <Compile Include="ViewModels\DeviceViewModel.cs" />
+    <Compile Include="ViewModels\EventCueViewModel.cs" />
+    <Compile Include="ViewModels\NetworkDiscoveryState.cs" />
+    <Compile Include="ViewModels\NodeDiscoveryState.cs" />
+    <Compile Include="ViewModels\EventCueGroupViewModel.cs" />
+    <Compile Include="ViewModels\NodeViewModel.cs" />
+    <Compile Include="ViewModels\PortViewModel.cs" />
+    <Compile Include="ViewModels\RegionInfo.cs" />
+    <Compile Include="ViewModels\SampleInfo.cs" />
+    <Compile Include="ViewModels\TrackViewModel.cs" />
+    <Compile Include="ViewModels\ViewModel.cs" />
+    <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Page Include="Controls\LibraryPanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\MenuSeparator.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\NetworkPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\PropertiesPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FMOD\FMOD.csproj">
+      <Project>{6535FC84-904B-44F2-B211-CC3534A9ABF9}</Project>
+      <Name>FMOD</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NodeControl\NodeControl.csproj">
+      <Project>{73CDDDCB-2DF3-4F07-B822-9A49AAD2A1F1}</Project>
+      <Name>NodeControl</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SC18IM700b\SC18IM700b.csproj">
+      <Project>{E6578F60-08D1-4C27-B0A8-BAF9915ED736}</Project>
+      <Name>SC18IM700b</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Waveform\Waveform.csproj">
+      <Project>{B6236C07-9555-43D9-85C6-A1DC9BA68BB3}</Project>
+      <Name>Waveform</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\XBee2\XBee2.csproj">
+      <Project>{EFEC26F4-5399-4803-979B-DA5DCD1D2709}</Project>
+      <Name>XBee2</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="LaunchPad.ico" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

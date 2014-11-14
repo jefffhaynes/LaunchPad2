@@ -1,0 +1,87 @@
+﻿<UserControl x:Class="LaunchPad2.Controls.NetworkPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:viewModels="clr-namespace:LaunchPad2.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignData ViewModel}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Network" Margin="6" Foreground="{DynamicResource MenuTextBrushKey}"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Command="{Binding DiscoverNetworkCommand}" ToolTip="Discover Network" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Margin="3,0,3,3" Template="{StaticResource ButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding NetworkDiscoveryState}" Value="Discovering">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <Viewbox Stretch="Uniform" Width="24">
+                    <Path Data="{DynamicResource DiscoverNetworkGeometryKey}">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Fill" Value="{DynamicResource MenuBlueBrushKey}"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Fill" Value="{DynamicResource MenuDisabledBrushKey}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                </Viewbox>
+            </Button>
+        </Grid>
+
+        <Border Grid.Row="2" BorderBrush="{DynamicResource PanelHorizontalLineBrushKey}" BorderThickness="0,1,0,0"/>
+
+        <ListView Grid.Row="3" Background="{DynamicResource PanelBackgroundBrushKey}" BorderThickness="0" ItemsSource="{Binding Nodes}"
+                 SelectedItem="{Binding SelectedItem}" SelectionMode="Single">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type viewModels:NodeViewModel}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Rectangle Width="32" Height="32">
+                            <Rectangle.Style>
+                                <Style TargetType="Rectangle">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ConnectionQuality}" Value="Low">
+                                            <Setter Property="Fill" Value="{DynamicResource MenuRedBrushKey}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ConnectionQuality}" Value="Medium">
+                                            <Setter Property="Fill" Value="{DynamicResource MenuYellowBrushKey}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ConnectionQuality}" Value="High">
+                                            <Setter Property="Fill" Value="{DynamicResource MenuBrightGreenBrushKey}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding DiscoveryState}" Value="Discovering">
+                                            <Setter Property="Fill" Value="{DynamicResource MenuGrayBrushKey}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
+                        <TextBlock Grid.Column="1" Margin="6" VerticalAlignment="Center" Foreground="{DynamicResource MenuTextBrushKey}" Text="{Binding Name}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListView>
+    </Grid>
+</UserControl>

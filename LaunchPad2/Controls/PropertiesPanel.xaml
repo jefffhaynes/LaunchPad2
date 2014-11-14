@@ -1,0 +1,236 @@
+﻿<UserControl x:Class="LaunchPad2.Controls.PropertiesPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:viewModels="clr-namespace:LaunchPad2.ViewModels"
+             mc:Ignorable="d" Background="#252526"
+             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignData ViewModel}">
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type viewModels:EventCueViewModel}">
+            <DataTemplate.Resources>
+                <Style TargetType="{x:Type FrameworkElement}" x:Key="DeviceLockedTextBlockStyle">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsLockedToDevice}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataTemplate.Resources>
+            <Grid >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Start" Margin="6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="6" Text="{Binding Start, StringFormat='hh\\:mm\\:ss\\.f'}" 
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Length" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="6,0,6,6" Text="{Binding Length, StringFormat='hh\\:mm\\:ss\\.f'}" Style="{StaticResource DeviceLockedTextBlockStyle}"
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
+                
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Lead-in" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="6,0,6,6" Text="{Binding LeadIn, StringFormat='hh\\:mm\\:ss\\.f'}" Style="{StaticResource DeviceLockedTextBlockStyle}"
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
+                
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Active" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <CheckBox Grid.Row="3" Grid.Column="1" Margin="6,0,6,6" IsChecked="{Binding IsActive}" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Notes" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Margin="6,0,6,6" Text="{Binding Notes}" AcceptsReturn="True"
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}" TextWrapping="Wrap"/>
+
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:TrackViewModel}">
+            <DataTemplate.Resources>
+                <viewModels:TrackViewModel x:Key="TrackViewModel"/>
+            </DataTemplate.Resources>
+            <Grid >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Name" Margin="6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="6" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Color" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"  Margin="6,0,6,6" SelectedValue="{Binding Brush}" Background="{DynamicResource PanelControlBackgroundBrushKey}"
+                          ItemsSource="{Binding Source={StaticResource TrackViewModel}, Path=Brushes}" SelectedValuePath="Key">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type viewModels:BrushViewModel}">
+                            <Rectangle Fill="{Binding Brush}" Width="100" Height="16"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Device" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" Margin="6,0,0,6" SelectedValue="{Binding Device}" Background="{DynamicResource PanelControlBackgroundBrushKey}"
+                          ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DeviceSource}" DisplayMemberPath="Name"/>
+                <Button Grid.Row="2" Grid.Column="2" Margin="6,0,6,6" Background="Transparent" BorderThickness="0" Template="{StaticResource ButtonTemplate}"
+                        Command="{Binding ClearDeviceCommand}">
+                    <Path Data="{DynamicResource DeleteGeometryKey}" Fill="{DynamicResource MenuRedBrushKey}" Stretch="Uniform" Height="16" Width="16"/>
+                </Button>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Node" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <ComboBox Grid.Row="3" Grid.Column="1" Margin="6,0,0,6" SelectedValue="{Binding Node}" Background="{DynamicResource PanelControlBackgroundBrushKey}"
+                          ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=NodeSource}" DisplayMemberPath="Name"/>
+                <Button Grid.Row="3" Grid.Column="2" Margin="6,0,6,6" Background="Transparent" BorderThickness="0" Template="{StaticResource ButtonTemplate}"
+                        Command="{Binding ClearNodeCommand}">
+                    <Path Data="{DynamicResource DeleteGeometryKey}" Fill="{DynamicResource MenuRedBrushKey}" Stretch="Uniform" Height="16" Width="16"/>
+                </Button>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Port" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <ComboBox Grid.Row="4" Grid.Column="1" Margin="6,0,0,6" SelectedValue="{Binding Port}" Background="{DynamicResource PanelControlBackgroundBrushKey}"
+                          ItemsSource="{Binding Node.Ports}" DisplayMemberPath="Name"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Notes" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Margin="6,0,6,6" Text="{Binding Notes}" AcceptsReturn="True"
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}" TextWrapping="Wrap"/>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:NodeViewModel}">
+            <Grid >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Name" Margin="6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="6" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Ports" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <ItemsControl Grid.Row="1" Grid.Column="1" Margin="6,0,6,6" ItemsSource="{Binding Ports}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="viewModels:PortViewModel">
+
+                            <ToggleButton Content="{Binding Name}" IsChecked="{Binding IsActive}"
+                                  Command="{Binding }" >
+                                <ToggleButton.Style>
+                                    <Style TargetType="ToggleButton">
+                                        <Setter Property="Foreground" Value="{DynamicResource MenuTextBrushKey}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource PanelControlBorderBrushKey}"/>
+                                        <Setter Property="Background" Value="{DynamicResource PanelControlBackgroundBrushKey}"/>
+                                        <Setter Property="Margin" Value="0,0,0,4"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                                    <Border Background="{TemplateBinding Background}">
+                                                        <ContentPresenter Margin="3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource CueActiveBrushKey}"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ToggleButton.Style>
+                            </ToggleButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+               
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Notes" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="6,0,6,6" Text="{Binding Notes}" AcceptsReturn="True"
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}" TextWrapping="Wrap"/>
+
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewModels:DeviceViewModel}">
+            <Grid >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Name" Margin="6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="6" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Length" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="6,0,6,6" Text="{Binding Length, StringFormat='hh\\:mm\\:ss\\.f'}" 
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Lead-in" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="6,0,6,6" Text="{Binding LeadIn, StringFormat='hh\\:mm\\:ss\\.f'}" 
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Notes" Margin="6,0,6,6" 
+                           Foreground="{DynamicResource MenuTextBrushKey}"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Margin="6,0,6,6" Text="{Binding Notes}" AcceptsReturn="True"
+                         Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}" TextWrapping="Wrap"/>
+
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Properties" Margin="6" Foreground="{DynamicResource MenuTextBrushKey}"/>
+        <Border Grid.Row="1" BorderBrush="{DynamicResource PanelHorizontalLineBrushKey}" BorderThickness="0,1,0,0"/>
+
+        <ScrollViewer Grid.Row="2">
+            <ContentControl Content="{Binding SelectedItem}"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -1,0 +1,717 @@
+﻿<Window x:Class="LaunchPad2.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:waveform="clr-namespace:Waveform;assembly=Waveform"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:launchpad="clr-namespace:LaunchPad2"
+        xmlns:controls="clr-namespace:LaunchPad2.Controls"
+        xmlns:converters="clr-namespace:LaunchPad2.Converters"
+        xmlns:viewModels="clr-namespace:LaunchPad2.ViewModels"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
+        mc:Ignorable="d"
+        Height="600" Width="1280" d:DataContext="{d:DesignData viewModels:ViewModel}"
+        Background="#2D2D30" Icon="LaunchPad.ico">
+    <Window.Resources>
+        <converters:FileTitleConverter x:Key="FileTitleConverter"/>
+        <converters:SamplesDecimationConverter x:Key="SamplesDecimationConverter"/>
+        <converters:SampleDecimationConverter x:Key="SampleDecimationConverter"/>
+        <converters:LighteningConverter x:Key="LighteningConverter"/>
+        <converters:ZoomPercentageConverter x:Key="PercentageConverter"/>
+        
+        <Style TargetType="Button" x:Key="CueButtonStyle">
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template" Value="{StaticResource ButtonTemplate}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedItems}" Value="{x:Null}">
+                    <Setter Property="IsEnabled" Value="False"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedItems.Count}" Value="0">
+                    <Setter Property="IsEnabled" Value="False"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="CueButtonNumberStyle">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+            <Setter Property="FontSize" Value="8"/>
+            <Setter Property="Margin" Value="0,0,-3,-3"/>
+        </Style>
+
+        <Style TargetType="{x:Type TabItem}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabItem}">
+                        <Border Name="Border"  BorderBrush="{DynamicResource PanelControlBackgroundBrushKey}" >
+                            <ContentPresenter VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              ContentSource="Header" Margin="12,2,12,2">
+                            </ContentPresenter>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource PanelBackgroundBrushKey}" />
+                                <Setter Property="Foreground" Value="{DynamicResource MenuSelectedTextBrushKey}" />
+                                <Setter TargetName="Border" Property="BorderThickness" Value="1,0,1,1"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource PanelControlBackgroundBrushKey}" />
+                                <Setter Property="Foreground" Value="{DynamicResource MenuTextBrushKey}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Window.Title>
+        <Binding Path="File" Converter="{StaticResource FileTitleConverter}"/>
+    </Window.Title>
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Undo" Executed="CommandBinding_OnExecuted"/>
+        <CommandBinding Command="ApplicationCommands.Redo" Executed="CommandBinding_OnExecuted"/>
+        <CommandBinding Command="ApplicationCommands.Cut" Executed="CommandBinding_OnExecuted"/>
+        <CommandBinding Command="ApplicationCommands.Copy" Executed="CommandBinding_OnExecuted"/>
+        <CommandBinding Command="ApplicationCommands.Paste" Executed="CommandBinding_OnExecuted"/>
+        <CommandBinding Command="Open" Executed="LoadButtonOnClick"/>
+        <CommandBinding Command="Save" Executed="SaveButtonOnClick"/>
+    </Window.CommandBindings>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="100" MinHeight="60"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="200"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Click="LoadAudioButtonOnClick" Margin="6,3,3,3" Background="Transparent" BorderThickness="0" Grid.Column="0"
+                    ToolTip="Open Audio File" Template="{StaticResource ButtonTemplate}">
+                <Button.Content>
+                    <Path Data="{DynamicResource LoadAudioGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBrownBrushKey}" Width="16" Height="16"/>
+                </Button.Content>
+            </Button>
+            <Button Click="LoadButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="1"
+                    ToolTip="Open Project" Template="{StaticResource ButtonTemplate}">
+                <Button.Content>
+                    <Path Data="{DynamicResource LoadGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBrownBrushKey}" Width="16" Height="16"/>
+                </Button.Content>
+            </Button>
+            <Button Click="SaveButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="2"
+                     Template="{StaticResource ButtonTemplate}">
+                <Button.ToolTip>
+                    <ToolTip Content="{Binding File, Converter={StaticResource FileTitleConverter}}" ContentStringFormat="Save {0} (Ctrl+S)"/>
+                </Button.ToolTip>
+                <Button.Content>
+                    <Path Data="{DynamicResource SaveGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" Width="16" Height="16"/>
+                </Button.Content>
+            </Button>
+            <Button Click="SaveAsButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="3"
+                    ToolTip="Save As" Template="{StaticResource ButtonTemplate}">
+                <Button.Content>
+                    <Path Data="{DynamicResource SaveAsGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" Width="16" Height="16"/>
+                </Button.Content>
+            </Button>
+
+            <controls:MenuSeparator Grid.Column="4"/>
+
+            <Button Grid.Row="0" Grid.Column="5" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding UndoCommand}" ToolTip="Undo (Ctrl+Z)" 
+                    Template="{StaticResource ButtonTemplate}" IsEnabled="{Binding Path=(launchpad:UndoManager.CanUndo)}" >
+                <Path Data="{DynamicResource UndoGeometryKey}" Stretch="Uniform" Width="16" Height="16">
+                    <Path.Style>
+                        <Style TargetType="Path">
+                            <Setter Property="Fill" Value="{StaticResource MenuBlueBrushKey}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Path.Style>
+                </Path>
+            </Button>
+
+            <Button Grid.Row="0" Grid.Column="6" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding RedoCommand}" ToolTip="Redo (Ctrl+Y)" 
+                    Template="{StaticResource ButtonTemplate}" IsEnabled="{Binding Path=(launchpad:UndoManager.CanRedo)}" >
+                <Path Data="{DynamicResource RedoGeometryKey}" Stretch="Uniform" Width="16" Height="16" >
+                    <Path.Style>
+                        <Style TargetType="Path">
+                            <Setter Property="Fill" Value="{StaticResource MenuBlueBrushKey}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Path.Style>
+                </Path>
+            </Button>
+            
+            <controls:MenuSeparator Grid.Column="7"/>
+
+            <Button Grid.Row="0" Grid.Column="8" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding PlayCommand}"  
+                    Template="{StaticResource ButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="ToolTip" Value="Play"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding AudioTrack.IsPaused}" Value="False">
+                                <Setter Property="ToolTip" Value="Pause"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <Path Width="16" Height="14" Stretch="Uniform">
+                    <Path.Style>
+                        <Style TargetType="Path">
+                            <Setter Property="Data" Value="{DynamicResource PlayGeometryKey}"/>
+                            <Setter Property="Fill" Value="{DynamicResource MenuGreenBrushKey}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Fill" Value="{DynamicResource MenuDisabledBrushKey}"/>
+                                </Trigger>
+                                <DataTrigger Binding="{Binding AudioTrack.IsPaused}" Value="False">
+                                    <Setter Property="Data" Value="{DynamicResource PauseGeometryKey}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Path.Style>
+                </Path>
+
+            </Button>
+
+            <Button Grid.Row="0" Grid.Column="9" Margin="0,3,3,3" Background="Transparent" BorderThickness="0" Command="{Binding StopCommand}"  
+                    Template="{StaticResource ButtonTemplate}" ToolTip="Stop" >
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="IsEnabled" Value="False"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding AudioTrack.IsPaused}" Value="False">
+                                <Setter Property="IsEnabled" Value="True"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <Rectangle Width="10" Height="10" Margin="3,1">
+                    <Rectangle.Style>
+                        <Style TargetType="Rectangle">
+                            <Setter Property="Fill" Value="{StaticResource StopButtonBrushKey}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Rectangle.Style>
+                </Rectangle>
+
+            </Button>
+        </Grid>
+
+        <ScrollViewer Name="AudioScrollViewer" UseLayoutRounding="True" Grid.Row="1" Grid.Column="0" Margin="0,0,0,6" 
+                      VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Hidden" HorizontalContentAlignment="Left"
+                      ScrollChanged="OnScrollChanged" Focusable="False">
+            <Grid Name="AudioPanel">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <waveform:WaveformControl Name="WaveformControl" Samples="{Binding Path=AudioTrack.Samples, Converter={StaticResource SamplesDecimationConverter}}"
+                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" 
+                                          SamplePosition="{Binding Path=AudioTrack.SamplePosition, Converter={StaticResource SampleDecimationConverter}}"
+                                          HorizontalAlignment="Left" Focusable="False" />
+
+                <Border Grid.Row="0" BorderBrush="#3F3F46" BorderThickness="0,1,0,0" VerticalAlignment="Bottom" />
+                <waveform:BeatDetector Grid.Row="1" Width="{Binding ElementName=WaveformControl, Path=ActualWidth}"
+                                      EnergySubbands="{Binding Path=AudioTrack.EnergySubbands}"
+                                       TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" 
+                                       SamplePosition="{Binding Path=AudioTrack.SamplePosition, Converter={StaticResource SampleDecimationConverter}}"
+                                       HorizontalAlignment="Left" Focusable="False"/>
+
+                <Canvas HorizontalAlignment="Left" Grid.Row="0" Focusable="False">
+                    <controls:AudioCueControl Height="{Binding ElementName=AudioPanel, Path=ActualHeight}"
+                                              Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
+                                              TimeScale="{Binding ElementName=ZoomSlider, Path=Value}"
+                                              StrokeThickness="2" Stroke="Red" Cursor="SizeWE" Focusable="False">
+                    </controls:AudioCueControl>
+                    <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="{x:Static system:Int32.MaxValue}"
+                           Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
+                           Width="1" Stroke="#4CFFFFFF" StrokeThickness="1">
+                        <Rectangle.Style>
+                            <Style TargetType="{x:Type Rectangle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Hidden"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue.IsMoving}" Value="false">
+                                        <Setter Property="Visibility" Value="Hidden"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Rectangle.Style>
+                    </Rectangle>
+                </Canvas>
+            </Grid>
+        </ScrollViewer>
+
+        <GridSplitter Grid.Row="1" Grid.Column="0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="6" Background="{DynamicResource GridSplitterBackgroundBrush}"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Margin="12,6,0,0" Text="{Binding Path=AudioTrack.Position,StringFormat='hh\\:mm\\:ss\\.f'}" 
+                   VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="{DynamicResource MenuTextBrushKey}"/>
+
+
+        <Grid Row="2" Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Grid.Column="0">
+                <Grid.Resources>
+                    <Style TargetType="Path" x:Key="TrackButtonPathStyle">
+                        <Setter Property="Stretch" Value="Uniform"/>
+                        <Setter Property="Width" Value="16"/>
+                        <Setter Property="Height" Value="16"/>
+                        <Setter Property="Fill" Value="{DynamicResource MenuGrayBrushKey}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Resources>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Button Margin="6,3,3,3" Background="Transparent" BorderThickness="0" Command="{Binding AddTrackCommand}"
+                        ToolTip="Create new track." Template="{StaticResource ButtonTemplate}">
+                    <Viewbox Stretch="Uniform" Height="14.208" Width="32">
+                        <Grid>
+                            <Path Data="{DynamicResource TrackGeometryKey}" HorizontalAlignment="Left" Height="9.625" Stretch="Fill" VerticalAlignment="Top" Width="38.625" Margin="4.5,4.583,0,0">
+                                <Path.Style>
+                                    <Style TargetType="Path">
+                                        <Setter Property="Fill" Value="{DynamicResource MenuBlueBrushKey}"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
+                            <Path HorizontalAlignment="Left" VerticalAlignment="Top" Data="{DynamicResource NewStarGeometryKey}" Height="9.084" Stretch="Fill" Width="9.08">
+                                <Path.Style>
+                                    <Style TargetType="Path">
+                                        <Setter Property="Fill" Value="{DynamicResource MenuBrownBrushKey}"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
+                        </Grid>
+                    </Viewbox>
+                </Button>
+
+                <Button Margin="3" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Grid.Column="1" Command="{Binding AddCueCommand}"
+                        ToolTip="Create new cue" Template="{StaticResource ButtonTemplate}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedTracks}" Value="{x:Null}">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedTracks.Count}" Value="0">
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <Viewbox Stretch="Uniform">
+                        <Grid>
+                            <Path Data="{DynamicResource CueGeometryKey}" HorizontalAlignment="Left" Height="9.625" Stretch="Fill" VerticalAlignment="Top" Width="28" Margin="4.5,4.583,0,0">
+                                <Path.Style>
+                                    <Style TargetType="Path">
+                                        <Setter Property="Fill" Value="{DynamicResource MenuBlueBrushKey}"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
+                            <Path HorizontalAlignment="Left" VerticalAlignment="Top" Data="{DynamicResource NewStarGeometryKey}" Height="9.084" Stretch="Fill" Width="9.08">
+                                <Path.Style>
+                                    <Style TargetType="Path">
+                                        <Setter Property="Fill" Value="{DynamicResource MenuBrownBrushKey}"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
+                        </Grid>
+                    </Viewbox>
+                </Button>
+
+                <controls:MenuSeparator Grid.Column="2"/>
+
+                <Button Grid.Column="3" ToolTip="Left align"
+                    Command="{Binding CueAlignLeftCommand}" Style="{StaticResource CueButtonStyle}">
+                    <Path Data="{DynamicResource CueAlignLeftGeometryKey}" Style="{StaticResource TrackButtonPathStyle}" />
+                </Button>
+                <Button Grid.Column="4" ToolTip="Right align"
+                    Command="{Binding CueAlignRightCommand}" Style="{StaticResource CueButtonStyle}">
+                    <Path Data="{DynamicResource CueAlignRightGeometryKey}" Style="{StaticResource TrackButtonPathStyle}" />
+                </Button>
+                <Button Grid.Column="5" ToolTip="Align"
+                    Command="{Binding CueAlignAllCommand}" Style="{StaticResource CueButtonStyle}">
+                    <Path Data="{DynamicResource CueAlignAllGeometryKey}" Style="{StaticResource TrackButtonPathStyle}" />
+                </Button>
+                <Button Grid.Column="6" ToolTip="Match durations"
+                    Command="{Binding CueMakeSameWidthCommand}" Style="{StaticResource CueButtonStyle}">
+                    <Path Data="{DynamicResource CueMakeSameWidthGeometryKey}" Style="{StaticResource TrackButtonPathStyle}"/>
+                </Button>
+                <Button Grid.Column="7" ToolTip="Distribute"
+                    Command="{Binding CueDistributeLeftCommand}" Style="{StaticResource CueButtonStyle}">
+                    <Path Data="{DynamicResource CueDistributeLeftGeometryKey}" Style="{StaticResource TrackButtonPathStyle}"/>
+                </Button>
+                <Button Grid.Column="8" ToolTip="Reverse distribute"
+                    Command="{Binding CueDistributeLeftReverseCommand}" Style="{StaticResource CueButtonStyle}">
+                    <Path Data="{DynamicResource CueDistributeLeftReverseGeometryKey}" Style="{StaticResource TrackButtonPathStyle}"/>
+                </Button>
+
+                <controls:MenuSeparator Grid.Column="9"/>
+
+                <Button Grid.Column="10" ToolTip="Distribute to beats 1"
+                    Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="0" Style="{StaticResource CueButtonStyle}">
+                    <Grid>
+                        <Path Data="{DynamicResource CueDistributeOnBeatsGeometry}" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="1" Style="{StaticResource CueButtonNumberStyle}"/>
+                    </Grid>
+                </Button>
+                <Button Grid.Column="11" ToolTip="Distribute to beats 2"
+                    Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="1" Style="{StaticResource CueButtonStyle}">
+                    <Grid>
+                        <Path Data="{DynamicResource CueDistributeOnBeatsGeometry}" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="2" Style="{StaticResource CueButtonNumberStyle}"/>
+                    </Grid>
+                </Button>
+                <Button Grid.Column="12" ToolTip="Distribute to beats 3"
+                    Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="2" Style="{StaticResource CueButtonStyle}">
+                    <Grid>
+                        <Path Data="{DynamicResource CueDistributeOnBeatsGeometry}" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="3" Style="{StaticResource CueButtonNumberStyle}"/>
+                    </Grid>
+                </Button>
+                <Button Grid.Column="13" ToolTip="Distribute to mid range 1"
+                    Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="4" Style="{StaticResource CueButtonStyle}">
+                    <Grid>
+                        <Path Data="M41.395317,3.2215891C41.634022,3.2310773,41.863926,3.3550519,41.9986,3.5732467L42.278,4.0224572 40.990429,4.7700007 40.733234,4.3559499C40.517055,4.0068375 40.625694,3.5483477 40.974823,3.3325328 41.105709,3.251418 41.252098,3.215896 41.395317,3.2215891z M49.712559,2.0485495C50.119411,2.0582795 50.425983,2.1975472 50.595909,2.5015633 52.524212,5.9546859 47.741005,6.1553662 47.741005,6.1553662 47.741005,6.1553662 45.675903,11.467919 45.122604,11.78042 44.5704,12.091419 42.058002,12.40542 42.058002,12.40542L27.099781,35.538235 27.103582,35.539635 25.78208,37.560135 25.80098,37.571934 25.750179,37.610935C25.750179,37.610935 25.623779,42.371739 33.106991,38.314034 36.488392,41.426438 28.363983,45.638336 26.435581,48.645142 24.506678,51.651444 26.992981,58.415646 23.080177,61.750649 22.447376,62.400051 16.88677,66.872654 8.0938682,61.042149 -0.69975155,55.211544 -0.34629613,50.113941 0.28267157,47.945942 1.5769212,43.92244 10.228661,40.164639 12.200664,37.383435 14.173866,34.603134 16.491568,21.582625 21.424576,25.299929 16.918671,34.885834 24.246178,32.292132 24.246178,32.292132L39.319797,10.949819C39.319797,10.949819 38.674595,9.4390681 38.903797,8.8091767 39.103119,8.2597387 46.864609,1.9804475 49.712559,2.0485495z M43.797722,1.6275949C44.036346,1.6371548,44.265678,1.7617,44.401157,1.9798953L44.761002,2.5619146 43.474705,3.308 43.134857,2.7626004C42.919392,2.4134876 43.027573,1.9549963 43.376419,1.7391803 43.508022,1.6575183 43.654545,1.6218593 43.797722,1.6275949z M46.311596,0.00059533119C46.549953,0.010151148,46.779316,0.13440979,46.914333,0.35178566L47.312,0.99658644 46.026024,1.7429998 45.649849,1.135805C45.434517,0.78556275 45.542381,0.32833946 45.89127,0.1119386 46.022327,0.030423164 46.168579,-0.0051369667 46.311596,0.00059533119z" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="1" Style="{StaticResource CueButtonNumberStyle}"/>
+                    </Grid>
+                </Button>
+                <Button Grid.Column="14" ToolTip="Distribute to mid range 2"
+                    Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="5" Style="{StaticResource CueButtonStyle}">
+                    <Grid>
+                        <Path Data="M41.395317,3.2215891C41.634022,3.2310773,41.863926,3.3550519,41.9986,3.5732467L42.278,4.0224572 40.990429,4.7700007 40.733234,4.3559499C40.517055,4.0068375 40.625694,3.5483477 40.974823,3.3325328 41.105709,3.251418 41.252098,3.215896 41.395317,3.2215891z M49.712559,2.0485495C50.119411,2.0582795 50.425983,2.1975472 50.595909,2.5015633 52.524212,5.9546859 47.741005,6.1553662 47.741005,6.1553662 47.741005,6.1553662 45.675903,11.467919 45.122604,11.78042 44.5704,12.091419 42.058002,12.40542 42.058002,12.40542L27.099781,35.538235 27.103582,35.539635 25.78208,37.560135 25.80098,37.571934 25.750179,37.610935C25.750179,37.610935 25.623779,42.371739 33.106991,38.314034 36.488392,41.426438 28.363983,45.638336 26.435581,48.645142 24.506678,51.651444 26.992981,58.415646 23.080177,61.750649 22.447376,62.400051 16.88677,66.872654 8.0938682,61.042149 -0.69975155,55.211544 -0.34629613,50.113941 0.28267157,47.945942 1.5769212,43.92244 10.228661,40.164639 12.200664,37.383435 14.173866,34.603134 16.491568,21.582625 21.424576,25.299929 16.918671,34.885834 24.246178,32.292132 24.246178,32.292132L39.319797,10.949819C39.319797,10.949819 38.674595,9.4390681 38.903797,8.8091767 39.103119,8.2597387 46.864609,1.9804475 49.712559,2.0485495z M43.797722,1.6275949C44.036346,1.6371548,44.265678,1.7617,44.401157,1.9798953L44.761002,2.5619146 43.474705,3.308 43.134857,2.7626004C42.919392,2.4134876 43.027573,1.9549963 43.376419,1.7391803 43.508022,1.6575183 43.654545,1.6218593 43.797722,1.6275949z M46.311596,0.00059533119C46.549953,0.010151148,46.779316,0.13440979,46.914333,0.35178566L47.312,0.99658644 46.026024,1.7429998 45.649849,1.135805C45.434517,0.78556275 45.542381,0.32833946 45.89127,0.1119386 46.022327,0.030423164 46.168579,-0.0051369667 46.311596,0.00059533119z" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="2" Style="{StaticResource CueButtonNumberStyle}"/>
+                    </Grid>
+                </Button>
+                <Button Grid.Column="15" ToolTip="Distribute to mid range 3"
+                    Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="6" Style="{StaticResource CueButtonStyle}">
+                    <Grid>
+                        <Path Data="M41.395317,3.2215891C41.634022,3.2310773,41.863926,3.3550519,41.9986,3.5732467L42.278,4.0224572 40.990429,4.7700007 40.733234,4.3559499C40.517055,4.0068375 40.625694,3.5483477 40.974823,3.3325328 41.105709,3.251418 41.252098,3.215896 41.395317,3.2215891z M49.712559,2.0485495C50.119411,2.0582795 50.425983,2.1975472 50.595909,2.5015633 52.524212,5.9546859 47.741005,6.1553662 47.741005,6.1553662 47.741005,6.1553662 45.675903,11.467919 45.122604,11.78042 44.5704,12.091419 42.058002,12.40542 42.058002,12.40542L27.099781,35.538235 27.103582,35.539635 25.78208,37.560135 25.80098,37.571934 25.750179,37.610935C25.750179,37.610935 25.623779,42.371739 33.106991,38.314034 36.488392,41.426438 28.363983,45.638336 26.435581,48.645142 24.506678,51.651444 26.992981,58.415646 23.080177,61.750649 22.447376,62.400051 16.88677,66.872654 8.0938682,61.042149 -0.69975155,55.211544 -0.34629613,50.113941 0.28267157,47.945942 1.5769212,43.92244 10.228661,40.164639 12.200664,37.383435 14.173866,34.603134 16.491568,21.582625 21.424576,25.299929 16.918671,34.885834 24.246178,32.292132 24.246178,32.292132L39.319797,10.949819C39.319797,10.949819 38.674595,9.4390681 38.903797,8.8091767 39.103119,8.2597387 46.864609,1.9804475 49.712559,2.0485495z M43.797722,1.6275949C44.036346,1.6371548,44.265678,1.7617,44.401157,1.9798953L44.761002,2.5619146 43.474705,3.308 43.134857,2.7626004C42.919392,2.4134876 43.027573,1.9549963 43.376419,1.7391803 43.508022,1.6575183 43.654545,1.6218593 43.797722,1.6275949z M46.311596,0.00059533119C46.549953,0.010151148,46.779316,0.13440979,46.914333,0.35178566L47.312,0.99658644 46.026024,1.7429998 45.649849,1.135805C45.434517,0.78556275 45.542381,0.32833946 45.89127,0.1119386 46.022327,0.030423164 46.168579,-0.0051369667 46.311596,0.00059533119z" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="3" Style="{StaticResource CueButtonNumberStyle}"/>
+                    </Grid>
+                </Button>
+                <Button Grid.Column="16" ToolTip="Distribute to high range 1"
+                    Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="7" Style="{StaticResource CueButtonStyle}">
+                    <Grid>
+                        <Path Data="M35.920002,22.417C26.884855,22.417 19.561998,25.560821 19.561998,29.43915 19.561998,33.318077 26.884855,36.461998 35.920002,36.461998 44.955044,36.461998 52.278,33.318077 52.278,29.43915 52.278,25.560821 44.955044,22.417 35.920002,22.417z M1.4894273,5.6843419E-14C2.1339567,-1.6405005E-07,2.670486,0.34185447,2.8762159,0.81322421L2.9946256,0.89787896C2.7681358,4.4225066 4.2825432,8.1913899 6.2407904,10.1497 13.13398,17.042932 30.725153,17.643726 45.243332,17.643726 50.76152,17.643726 56.749813,18.018122 59.995907,16.895035 61.240704,16.468637 63.025902,14.16196 63.992001,15.145751 63.992001,18.644317 63.992001,22.143682 63.992001,25.651447 62.442505,26.33894 61.877403,24.691858 60.248508,23.893165 58.615707,23.092274 58.615707,23.092274 54.243317,23.144274 54.555817,25.251053 56.818813,26.208143 56.993313,28.897615 57.097511,30.586399 56.480312,32.344784 55.495911,33.650066 48.881325,42.379783 23.031164,42.449486 16.494576,33.650066 14.787677,31.34349 14.579277,28.689218 15.998575,25.894945 10.532484,27.261431 4.7525129,29.611708 3.2382751,35.895546 3.1262152,36.369541 3.0519953,36.921539 2.9778554,37.47633L2.9778554,39.60841C2.9778554,40.284801 2.3111963,40.833 1.4894273,40.833 0.68742293,40.833 0.044265632,40.308903 0.011550413,39.65591 3.5527137E-15,26.816837 3.5527137E-15,14.016862 0,1.2246575 0.10546884,0.48772703 0.71728384,-1.6405005E-07 1.4894273,5.6843419E-14z" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="1" Style="{StaticResource CueButtonNumberStyle}"/>
+                    </Grid>
+                </Button>
+                <Button Grid.Column="17" ToolTip="Distribute to high range 2"
+                    Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="8" Style="{StaticResource CueButtonStyle}">
+                    <Grid>
+                        <Path Data="M35.920002,22.417C26.884855,22.417 19.561998,25.560821 19.561998,29.43915 19.561998,33.318077 26.884855,36.461998 35.920002,36.461998 44.955044,36.461998 52.278,33.318077 52.278,29.43915 52.278,25.560821 44.955044,22.417 35.920002,22.417z M1.4894273,5.6843419E-14C2.1339567,-1.6405005E-07,2.670486,0.34185447,2.8762159,0.81322421L2.9946256,0.89787896C2.7681358,4.4225066 4.2825432,8.1913899 6.2407904,10.1497 13.13398,17.042932 30.725153,17.643726 45.243332,17.643726 50.76152,17.643726 56.749813,18.018122 59.995907,16.895035 61.240704,16.468637 63.025902,14.16196 63.992001,15.145751 63.992001,18.644317 63.992001,22.143682 63.992001,25.651447 62.442505,26.33894 61.877403,24.691858 60.248508,23.893165 58.615707,23.092274 58.615707,23.092274 54.243317,23.144274 54.555817,25.251053 56.818813,26.208143 56.993313,28.897615 57.097511,30.586399 56.480312,32.344784 55.495911,33.650066 48.881325,42.379783 23.031164,42.449486 16.494576,33.650066 14.787677,31.34349 14.579277,28.689218 15.998575,25.894945 10.532484,27.261431 4.7525129,29.611708 3.2382751,35.895546 3.1262152,36.369541 3.0519953,36.921539 2.9778554,37.47633L2.9778554,39.60841C2.9778554,40.284801 2.3111963,40.833 1.4894273,40.833 0.68742293,40.833 0.044265632,40.308903 0.011550413,39.65591 3.5527137E-15,26.816837 3.5527137E-15,14.016862 0,1.2246575 0.10546884,0.48772703 0.71728384,-1.6405005E-07 1.4894273,5.6843419E-14z" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="2" Style="{StaticResource CueButtonNumberStyle}"/>
+                    </Grid>
+                </Button>
+                <Button Grid.Column="18" ToolTip="Distribute to high range 3"
+                    Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="9" Style="{StaticResource CueButtonStyle}">
+                    <Grid>
+                        <Path Data="M35.920002,22.417C26.884855,22.417 19.561998,25.560821 19.561998,29.43915 19.561998,33.318077 26.884855,36.461998 35.920002,36.461998 44.955044,36.461998 52.278,33.318077 52.278,29.43915 52.278,25.560821 44.955044,22.417 35.920002,22.417z M1.4894273,5.6843419E-14C2.1339567,-1.6405005E-07,2.670486,0.34185447,2.8762159,0.81322421L2.9946256,0.89787896C2.7681358,4.4225066 4.2825432,8.1913899 6.2407904,10.1497 13.13398,17.042932 30.725153,17.643726 45.243332,17.643726 50.76152,17.643726 56.749813,18.018122 59.995907,16.895035 61.240704,16.468637 63.025902,14.16196 63.992001,15.145751 63.992001,18.644317 63.992001,22.143682 63.992001,25.651447 62.442505,26.33894 61.877403,24.691858 60.248508,23.893165 58.615707,23.092274 58.615707,23.092274 54.243317,23.144274 54.555817,25.251053 56.818813,26.208143 56.993313,28.897615 57.097511,30.586399 56.480312,32.344784 55.495911,33.650066 48.881325,42.379783 23.031164,42.449486 16.494576,33.650066 14.787677,31.34349 14.579277,28.689218 15.998575,25.894945 10.532484,27.261431 4.7525129,29.611708 3.2382751,35.895546 3.1262152,36.369541 3.0519953,36.921539 2.9778554,37.47633L2.9778554,39.60841C2.9778554,40.284801 2.3111963,40.833 1.4894273,40.833 0.68742293,40.833 0.044265632,40.308903 0.011550413,39.65591 3.5527137E-15,26.816837 3.5527137E-15,14.016862 0,1.2246575 0.10546884,0.48772703 0.71728384,-1.6405005E-07 1.4894273,5.6843419E-14z" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="3" Style="{StaticResource CueButtonNumberStyle}"/>
+                    </Grid>
+                </Button>
+                <StackPanel Grid.Column="19" HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal">
+                    <TextBlock Text="{Binding ElementName=ZoomSlider, Path=Value, Converter={StaticResource PercentageConverter}}" Foreground="{DynamicResource MenuTextBrushKey}" VerticalAlignment="Center"/>
+                    <Slider Name="ZoomSlider" Orientation="Horizontal" Width="200" Maximum="1" Minimum="0.002" Value="0.1" Margin="6" TickFrequency="0.1" SmallChange="0.01"
+                    Background="#7EFFFFFF"/>
+                </StackPanel>
+            </Grid>
+
+            <ScrollViewer Name="TrackScrollViewer" Grid.Column="0" 
+                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" 
+                          ScrollChanged="OnScrollChanged" Focusable="False" Grid.Row="1">
+                <controls:SelectionCanvas x:Name="SelectionCanvas" Focusable="True"
+                                          Width="{Binding ElementName=WaveformControl, Path=ActualWidth}"
+                                          Height="{Binding ElementName=TracksControl, Path=ActualHeight}" 
+                                          Background="#1E1E1E" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                          AddCueCommand="{Binding AddCueCommand}"
+                                          CueMoving="SelectionCanvas_OnCueMoving"
+                                          CueMoved="SelectionCanvas_OnCueMoved"
+                                          DeleteCommand="{Binding DeleteCommand}"
+                                          SelectedItems="{Binding SelectedItems}"
+                                          SelectedItem="{Binding SelectedItem}">
+                    <controls:SelectionCanvas.ContextMenu>
+                        <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                            <MenuItem Command="{Binding GroupCommand}" Header="Group">
+                                <MenuItem.Icon>
+                                    <Rectangle StrokeThickness="1" StrokeDashArray="2 2" Stroke="Black" 
+                                               VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                                </MenuItem.Icon>
+                                <MenuItem.Style>
+                                    <Style TargetType="MenuItem">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItems}" Value="{x:Null}">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SelectedItems.Count}" Value="0">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SelectedItems.Count}" Value="1">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </MenuItem.Style>
+                            </MenuItem>
+                            <MenuItem Command="{Binding UngroupCommand}" Header="Ungroup">
+                                <MenuItem.Style>
+                                    <Style TargetType="MenuItem">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItems}" Value="{x:Null}">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SelectedItems.Count}" Value="0">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SelectedItems.Count}" Value="1">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </MenuItem.Style>
+                            </MenuItem>
+                        </ContextMenu>
+                    </controls:SelectionCanvas.ContextMenu>
+                    <controls:AudioCueControl Height="{Binding ElementName=TracksControl, Path=ActualHeight}"
+                                              Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
+                                              TimeScale="{Binding ElementName=ZoomSlider, Path=Value}"
+                                              StrokeThickness="1" Stroke="{DynamicResource AudioCueBrushKey}" Cursor="SizeWE" Canvas.ZIndex="{x:Static system:Int32.MaxValue}">
+                    </controls:AudioCueControl>
+
+                    <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="{x:Static system:Int32.MaxValue}"
+                           Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
+                           Width="1" Stroke="#4CFFFFFF" StrokeThickness="1">
+                        <Rectangle.Style>
+                            <Style TargetType="{x:Type Rectangle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Hidden"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue.IsMoving}" Value="false">
+                                        <Setter Property="Visibility" Value="Hidden"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Rectangle.Style>
+                    </Rectangle>
+
+                    <ItemsControl Name="TracksControl" HorizontalAlignment="Left" ItemsSource="{Binding Tracks}" 
+                              controls:DragDropHelper.IsDragSource="True" 
+                              controls:DragDropHelper.IsDropTarget="True"
+                              controls:DragDropHelper.DragDropGripName="HeaderGrip">
+                        <controls:DragDropHelper.DragDropTemplate>
+                            <DataTemplate DataType="viewModels:TrackViewModel">
+                                <Border Height="32" BorderBrush="{x:Null}">
+                                    <TextBlock Padding="6" VerticalAlignment="Center" Width="64" TextTrimming="CharacterEllipsis" 
+                                               Background="{DynamicResource MenuTextBrushKey}" Text="{Binding Name}" />
+                                </Border>
+                            </DataTemplate>
+                        </controls:DragDropHelper.DragDropTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="viewModels:TrackViewModel">
+                                <Border BorderThickness="0,1,0,0" BorderBrush="#282828">
+                                    <Canvas Name="HeaderCanvas" Height="32">
+                                        <controls:TrackHeaderControl x:Name="TrackHeaderControl">
+                                            <StackPanel Orientation="Horizontal" >
+                                                <Rectangle Name="HeaderGrip" Height="{Binding ElementName=HeaderCanvas, Path=ActualHeight}" Width="32">
+                                                    <Rectangle.Style>
+                                                        <Style TargetType="Rectangle">
+                                                            <Setter Property="Fill" Value="{Binding Brush, Converter={StaticResource LighteningConverter}}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Port.ShouldBeActive}" Value="True">
+                                                                    <Setter Property="Fill" Value="{DynamicResource CueActiveBrushKey}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Rectangle.Style>
+                                                </Rectangle>
+                                                <Grid VerticalAlignment="Center">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+                                                    <TextBlock Text="{Binding Name}" Foreground="{DynamicResource MenuTextBrushKey}"  Margin="6,0,6,0"/>
+                                                    <TextBlock Grid.Row="1" Text="{Binding Device.Name}" Foreground="{DynamicResource MenuTextBrushKey}" Margin="6,0,6,2" FontSize="9">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Device}" Value="{x:Null}">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Grid>
+                                            </StackPanel>
+                                        </controls:TrackHeaderControl>
+                                        <ItemsControl ItemsSource="{Binding Cues}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <Canvas Height="{Binding ElementName=HeaderCanvas, Path=ActualHeight}" HorizontalAlignment="Stretch" 
+                                                    Width="{Binding ElementName=WaveformControl, Path=ActualWidth}">
+                                                        <Canvas.Style>
+                                                            <Style TargetType="{x:Type Canvas}">
+                                                                <Setter Property="Background" Value="{StaticResource TrackBackgroundBrushKey}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding ElementName=TrackHeaderControl, Path=IsSelected}" Value="True">
+                                                                        <Setter Property="Background" Value="{Binding Source={StaticResource TrackBackgroundBrushKey}, Converter={StaticResource LighteningConverter}}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Canvas.Style>
+                                                    </Canvas>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="viewModels:EventCueViewModel">
+                                                    <controls:EventCueControl Sample="{Binding StartSample, Converter={StaticResource SampleDecimationConverter}}" 
+                                                                              SampleLength="{Binding SampleLength, Converter={StaticResource SampleDecimationConverter}}"
+                                                                              LeadInSampleLength="{Binding LeadInSampleLength, Converter={StaticResource SampleDecimationConverter}}"
+                                                                              TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" IsSelected="{Binding IsSelected}"
+                                                                              AutoscrollDistance="40" Height="32" BorderThickness="1" GripWidth="16" SnapToInterval="0:0:0.1">
+                                                        <controls:EventCueControl.Style>
+                                                            <Style TargetType="{x:Type controls:EventCueControl}">
+                                                                <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=DataContext.Brush}" />
+                                                                <Setter Property="GripBrush" Value="{Binding RelativeSource={RelativeSource Self}, Path=Background, Converter={StaticResource LighteningConverter}}"/>
+                                                                <Style.Triggers>
+                                                                    <Trigger Property="IsSelected" Value="True">
+                                                                        <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=DataContext.Brush, Converter={StaticResource LighteningConverter}}" />
+                                                                    </Trigger>
+                                                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                        <Setter Property="Background" Value="{StaticResource CueActiveBrushKey}" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding LeadInSampleLength}" Value="0">
+                                                                        <Setter Property="LeadInShown" Value="False"/>
+                                                                    </DataTrigger>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="LeadInShown" Value="True"/>
+                                                                    </Trigger>
+                                                                    <DataTrigger Binding="{Binding IsLockedToDevice}" Value="True">
+                                                                        <Setter Property="CanResize" Value="False"/>
+                                                                        <Setter Property="LeadInBrush" Value="#3A3A3A"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </controls:EventCueControl.Style>
+                                                    </controls:EventCueControl>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Canvas>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </controls:SelectionCanvas>
+            </ScrollViewer>
+        </Grid>
+
+        <GridSplitter Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Left" Width="6" Background="{DynamicResource GridSplitterBackgroundBrush}"/>
+
+        <Grid Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" Margin="6,0,6,6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TabControl Margin="0,0,0,6" TabStripPlacement="Bottom" Background="{DynamicResource PanelBackgroundBrushKey}" BorderThickness="0">
+                <TabItem Header="Library">
+                    <controls:LibraryPanel/>
+                </TabItem>
+                <TabItem Header="Network">
+                    <controls:NetworkPanel/>
+                </TabItem>
+            </TabControl>
+
+            <GridSplitter Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="6" Background="{DynamicResource GridSplitterBackgroundBrush}"/>
+
+            <controls:PropertiesPanel Grid.Row="1" DeviceSource="{Binding Devices}" NodeSource="{Binding Nodes}"/>
+        </Grid>
+
+    </Grid>
+</Window>
