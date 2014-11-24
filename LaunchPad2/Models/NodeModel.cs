@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 using LaunchPad2.ViewModels;
-using XBee2;
+using XBee;
 
 namespace LaunchPad2.Models
 {

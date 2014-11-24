@@ -40,7 +40,7 @@
   <ItemGroup>
     <Reference Include="BinarySerializer, Version=2.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Lib\BinarySerializer.dll</HintPath>
+      <HintPath>..\..\BinarySerializer\BinarySerializer\bin\Debug\BinarySerializer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

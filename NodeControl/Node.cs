@@ -1,4 +1,4 @@
-﻿using XBee2;
+﻿using XBee;
 
 namespace NodeControl
 {

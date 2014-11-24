@@ -4,14 +4,14 @@ using System.IO.Ports;
 using System.Threading.Tasks;
 using SC18IM700;
 using SC18IM700.Commands;
-using XBee2;
-using XBee2.Frames.AtCommands;
+using XBee;
+using XBee.Frames.AtCommands;
 
 namespace NodeControl
 {
     public static class NetworkController
     {
-        private static readonly XBee XBee = new XBee();
+        private static readonly XBeeController XBee = new XBeeController();
         private static readonly object InitializingLock = new object();
         private static bool _isInitialized;
 

@@ -2,7 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using NodeControl;
-using XBee2;
+using XBee;
 
 namespace LaunchPad2.ViewModels
 {
