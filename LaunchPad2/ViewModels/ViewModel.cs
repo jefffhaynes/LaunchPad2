@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using FMOD;
 using LaunchPad2.Models;
 using NodeControl;
+using XBee;
 
 namespace LaunchPad2.ViewModels
 {
@@ -67,8 +70,8 @@ namespace LaunchPad2.ViewModels
             Groups = new ObservableCollection<EventCueGroupViewModel>();
 
             NetworkController.NodeDiscovered += NetworkControllerOnNodeDiscovered;
+            Nodes.CollectionChanged += NodesOnCollectionChanged;
         }
-
 
         public string File
         {
@@ -772,19 +775,53 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        private void NetworkControllerOnNodeDiscovered(object sender, NodeDiscoveryEventArgs e)
+        private async void NetworkControllerOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)
         {
             var node = e.Node;
 
-            var existingNode = Nodes.FirstOrDefault(n => n.Address.Equals(node.Address));
+            var existingNode = Nodes.FirstOrDefault(n => n.Address.Equals(node.Address.LongAddress));
+
+            var name = await node.GetNodeIdentifier();
+
+            var signalStrength = e.SignalStrength.HasValue ? e.SignalStrength : SignalStrength.High;
 
             if (existingNode == null)
-                Nodes.Add(new NodeViewModel(node.Name, node.Address, node.ConnectionQuality, NodeDiscoveryState.Discovered));
+            {
+                var nodeViewModel = new NodeViewModel(name, node.Address.LongAddress, signalStrength,
+                    NodeDiscoveryState.Discovered);
+
+                Nodes.Add(nodeViewModel);
+            }
             else
             {
-                existingNode.Name = node.Name;
-                existingNode.ConnectionQuality = node.ConnectionQuality;
+                existingNode.Name = name;
+                existingNode.SignalStrength = signalStrength;
                 existingNode.DiscoveryState = NodeDiscoveryState.Discovered;
+            }
+        }
+
+        private void NodesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (var item in e.NewItems.Cast<NodeViewModel>())
+                    item.PropertyChanged += OnNodeViewModelOnPropertyChanged;
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (var item in e.OldItems.Cast<NodeViewModel>())
+                    item.PropertyChanged -= OnNodeViewModelOnPropertyChanged;
+            }
+        }
+
+
+        private async void OnNodeViewModelOnPropertyChanged(object o, PropertyChangedEventArgs args)
+        {
+            var n = (NodeViewModel) o;
+            if (args.PropertyName == "Name")
+            {
+                await NetworkController.SetNodeName(new NodeAddress(n.Address), n.Name);
             }
         }
     }

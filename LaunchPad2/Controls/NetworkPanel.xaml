@@ -62,13 +62,13 @@
                             <Rectangle.Style>
                                 <Style TargetType="Rectangle">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ConnectionQuality}" Value="Low">
+                                        <DataTrigger Binding="{Binding SignalStrength}" Value="Low">
                                             <Setter Property="Fill" Value="{DynamicResource MenuRedBrushKey}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding ConnectionQuality}" Value="Medium">
+                                        <DataTrigger Binding="{Binding SignalStrength}" Value="Medium">
                                             <Setter Property="Fill" Value="{DynamicResource MenuYellowBrushKey}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding ConnectionQuality}" Value="High">
+                                        <DataTrigger Binding="{Binding SignalStrength}" Value="High">
                                             <Setter Property="Fill" Value="{DynamicResource MenuBrightGreenBrushKey}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding DiscoveryState}" Value="Discovering">

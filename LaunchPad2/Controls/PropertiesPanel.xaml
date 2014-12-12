@@ -137,7 +137,7 @@
 
                 <TextBlock Grid.Row="0" Text="Name" Margin="6" 
                            Foreground="{DynamicResource MenuTextBrushKey}"/>
-                <TextBox Grid.Row="0" Grid.Column="1" Margin="6" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="6" Text="{Binding Name}" 
                          Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Ports" Margin="6,0,6,6" 

@@ -26,8 +26,10 @@ namespace NodeControl
             await XBee.DiscoverNetwork();
         }
 
-        public static async void SetActivePorts(LongAddress address, Ports ports)
+        public static async void SetActivePorts(NodeAddress address, Ports ports)
         {
+            var node = await XBee.GetRemote(address);
+
             var gpioPorts = GpioPorts.None;
 
             if (ports != Ports.None)
@@ -51,20 +53,28 @@ namespace NodeControl
             }
 
             var gpioWrite = new GpioWrite(gpioPorts);
-            await XBee.TransmitDataAsync(address, gpioWrite.GetPacket());
+            
+            await node.TransmitDataAsync(gpioWrite.GetPacket());
         }
 
-        private static async void Initialize(LongAddress address)
+        public static async Task SetNodeName(NodeAddress address, string name)
+        {
+            var node = await XBee.GetRemote(address);
+            await node.SetNodeIdentifier(name);
+            await node.WriteChanges();
+        }
+
+        private static async void Initialize(XBeeNode node)
         {
             try
             {
                 var port1Conf = new PortConf1RegisterWrite();
-                await XBee.TransmitDataAsync(address, port1Conf.GetPacket());
+                await node.TransmitDataAsync(port1Conf.GetPacket());
 
                 var port2Conf = new PortConf2RegisterWrite();
-                await XBee.TransmitDataAsync(address, port2Conf.GetPacket());
+                await node.TransmitDataAsync(port2Conf.GetPacket());
 
-                SetActivePorts(address, Ports.None);
+                SetActivePorts(node.Address, Ports.None);
             }
             catch (TimeoutException)
             {
@@ -75,41 +85,41 @@ namespace NodeControl
         {
             if (!_isInitialized)
             {
-                //await XBee.OpenAsync("COM5", 9600);
-                await XBee.OpenAsync("COM4", 115200);
+                await XBee.OpenAsync("COM5", 9600);
+                //await XBee.OpenAsync("COM4", 115200);
                 XBee.NodeDiscovered += XBeeOnNodeDiscovered;
                 _isInitialized = true;
             }
         }
 
-        public static event EventHandler<NodeDiscoveryEventArgs> NodeDiscovered; 
+        public static event EventHandler<NodeDiscoveredEventArgs> NodeDiscovered; 
 
         private static void XBeeOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)
         {
-            ConnectionQuality connectionQuality;
-            switch (e.SignalStrength)
-            {
-                case SignalStrength.Low:
-                    connectionQuality = ConnectionQuality.Low;
-                    break;
-                case SignalStrength.Medium:
-                    connectionQuality = ConnectionQuality.Medium;
-                    break;
-                case SignalStrength.High:
-                    connectionQuality = ConnectionQuality.High;
-                    break;
-                default:
-                    throw new InvalidOperationException("Unknown signal strength.");
-            }
+            //ConnectionQuality connectionQuality;
+            //switch (e.SignalStrength)
+            //{
+            //    case SignalStrength.Low:
+            //        connectionQuality = ConnectionQuality.Low;
+            //        break;
+            //    case SignalStrength.Medium:
+            //        connectionQuality = ConnectionQuality.Medium;
+            //        break;
+            //    case SignalStrength.High:
+            //        connectionQuality = ConnectionQuality.High;
+            //        break;
+            //    default:
+            //        throw new InvalidOperationException("Unknown signal strength.");
+            //}
 
-            var node = new Node(e.Name, e.Address, connectionQuality);
+            var node = e.Node;
 
             if(NodeDiscovered != null)
-                NodeDiscovered(null, new NodeDiscoveryEventArgs(node));
+                NodeDiscovered(null, e);
 
-            if (XBee.CoordinatorHardwareVersion == HardwareVersion.XBeeSeries1 ||
-                XBee.CoordinatorHardwareVersion == HardwareVersion.XBeeProSeries1)
-                Initialize(e.Address);
+            if (XBee.HardwareVersion == HardwareVersion.XBeeSeries1 ||
+                XBee.HardwareVersion == HardwareVersion.XBeeProSeries1)
+                Initialize(node);
         }
     }
 }

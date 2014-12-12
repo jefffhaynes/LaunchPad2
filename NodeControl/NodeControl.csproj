@@ -38,9 +38,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BinarySerializer, Version=2.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="BinarySerializer, Version=2.6.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\BinarySerializer.2.4.1.0\lib\net40\BinarySerializer.dll</HintPath>
+      <HintPath>..\packages\BinarySerializer.2.6.0.0\lib\portable-net40+sl50+win+MonoAndroid10+MonoTouch10\BinarySerializer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -49,9 +49,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="XBee, Version=0.5.2.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="XBee, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\XBee.0.5.2.0\lib\net45\XBee.dll</HintPath>
+      <HintPath>..\packages\XBee.1.0.0.0\lib\net45\XBee.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -64,7 +64,6 @@
     <Compile Include="FireControlCommand.cs" />
     <Compile Include="NetworkController.cs" />
     <Compile Include="Node.cs" />
-    <Compile Include="NodeDiscoveryEventArgs.cs" />
     <Compile Include="ObjectType.cs" />
     <Compile Include="PortState.cs" />
     <Compile Include="Ports.cs" />

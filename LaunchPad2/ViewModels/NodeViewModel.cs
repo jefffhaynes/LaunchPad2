@@ -9,18 +9,18 @@ namespace LaunchPad2.ViewModels
     public class NodeViewModel : ViewModelBase
     {
         private LongAddress _address;
-        private ConnectionQuality _connectionQuality;
+        private SignalStrength? _signalStrength;
         private string _name;
         private NodeDiscoveryState _nodeDiscoveryState;
         private string _notes;
 
         public NodeViewModel(string name, LongAddress address,
-            ConnectionQuality connectionQuality = ConnectionQuality.Low, 
+            SignalStrength? signalStrength = XBee.SignalStrength.Low, 
             NodeDiscoveryState discoveryState = NodeDiscoveryState.None)
         {
             Name = name;
             Address = address;
-            ConnectionQuality = connectionQuality;
+            SignalStrength = signalStrength;
             DiscoveryState = discoveryState;
 
             Ports = new ReadOnlyCollection<PortViewModel>(new[]
@@ -78,14 +78,14 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        public ConnectionQuality ConnectionQuality
+        public SignalStrength? SignalStrength
         {
-            get { return _connectionQuality; }
+            get { return _signalStrength; }
             set
             {
-                if (_connectionQuality != value)
+                if (_signalStrength != value)
                 {
-                    _connectionQuality = value;
+                    _signalStrength = value;
                     OnPropertyChanged();
                 }
             }
@@ -131,7 +131,7 @@ namespace LaunchPad2.ViewModels
 
             try
             {
-                NetworkController.SetActivePorts(Address, portState);
+                NetworkController.SetActivePorts(new NodeAddress(Address), portState);
             }
             catch (TimeoutException)
             {
