@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading.Tasks;
 using SC18IM700;
@@ -11,24 +10,18 @@ namespace NodeControl
 {
     public static class NetworkController
     {
-        private static readonly XBeeController XBee = new XBeeController();
-        private static readonly object InitializingLock = new object();
+        private static XBeeController _xBee = new XBeeController();
         private static bool _isInitialized;
-
-        private static IEnumerable<string> SerialPortNames
-        {
-            get { return SerialPort.GetPortNames(); }
-        }
 
         public static async Task DiscoverNetworkAsync()
         {
             await Initialize();
-            await XBee.DiscoverNetwork();
+            await _xBee.DiscoverNetwork();
         }
 
         public static async void SetActivePorts(NodeAddress address, Ports ports)
         {
-            var node = await XBee.GetRemote(address);
+            var node = await _xBee.GetRemoteAsync(address);
 
             var gpioPorts = GpioPorts.None;
 
@@ -59,7 +52,7 @@ namespace NodeControl
 
         public static async Task SetNodeName(NodeAddress address, string name)
         {
-            var node = await XBee.GetRemote(address);
+            var node = await _xBee.GetRemoteAsync(address);
             await node.SetNodeIdentifier(name);
             await node.WriteChanges();
         }
@@ -68,6 +61,8 @@ namespace NodeControl
         {
             try
             {
+                await Task.Delay(1000);
+
                 var port1Conf = new PortConf1RegisterWrite();
                 await node.TransmitDataAsync(port1Conf.GetPacket());
 
@@ -85,9 +80,8 @@ namespace NodeControl
         {
             if (!_isInitialized)
             {
-                await XBee.OpenAsync("COM5", 9600);
-                //await XBee.OpenAsync("COM4", 115200);
-                XBee.NodeDiscovered += XBeeOnNodeDiscovered;
+                _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
+                _xBee.NodeDiscovered += XBeeOnNodeDiscovered;
                 _isInitialized = true;
             }
         }
@@ -96,29 +90,13 @@ namespace NodeControl
 
         private static void XBeeOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)
         {
-            //ConnectionQuality connectionQuality;
-            //switch (e.SignalStrength)
-            //{
-            //    case SignalStrength.Low:
-            //        connectionQuality = ConnectionQuality.Low;
-            //        break;
-            //    case SignalStrength.Medium:
-            //        connectionQuality = ConnectionQuality.Medium;
-            //        break;
-            //    case SignalStrength.High:
-            //        connectionQuality = ConnectionQuality.High;
-            //        break;
-            //    default:
-            //        throw new InvalidOperationException("Unknown signal strength.");
-            //}
-
             var node = e.Node;
 
             if(NodeDiscovered != null)
                 NodeDiscovered(null, e);
 
-            if (XBee.HardwareVersion == HardwareVersion.XBeeSeries1 ||
-                XBee.HardwareVersion == HardwareVersion.XBeeProSeries1)
+            if (_xBee.HardwareVersion == HardwareVersion.XBeeSeries1 ||
+                _xBee.HardwareVersion == HardwareVersion.XBeeProSeries1)
                 Initialize(node);
         }
     }

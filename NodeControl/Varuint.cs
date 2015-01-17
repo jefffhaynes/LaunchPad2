@@ -9,7 +9,7 @@ namespace NodeControl
         [Ignore]
         public uint Value { get; set; }
 
-        public void Deserialize(Stream stream, Endianness endianness, BinarySerializationContext serializationContext)
+        public void Deserialize(Stream stream, Endianness endianness, BinarySerializationContext context)
         {
             var reader = new StreamReader(stream);
 
@@ -32,7 +32,7 @@ namespace NodeControl
             }
         }
 
-        public void Serialize(Stream stream, Endianness endianness, BinarySerializationContext serializationContext)
+        public void Serialize(Stream stream, Endianness endianness, BinarySerializationContext context)
         {
             var writer = new StreamWriter(stream);
             
