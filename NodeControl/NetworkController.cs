@@ -19,6 +19,10 @@ namespace NodeControl
             await _xBee.DiscoverNetwork();
         }
 
+        static public event EventHandler InitializingController;
+
+        public static event EventHandler DiscoveringNetwork;
+
         public static async void SetActivePorts(NodeAddress address, Ports ports)
         {
             var node = await _xBee.GetRemoteAsync(address);
@@ -61,7 +65,7 @@ namespace NodeControl
         {
             try
             {
-                await Task.Delay(1000);
+                await Task.Delay(2000);
 
                 var port1Conf = new PortConf1RegisterWrite();
                 await node.TransmitDataAsync(port1Conf.GetPacket());
@@ -70,6 +74,9 @@ namespace NodeControl
                 await node.TransmitDataAsync(port2Conf.GetPacket());
 
                 SetActivePorts(node.Address, Ports.None);
+            }
+            catch (XBeeException)
+            {
             }
             catch (TimeoutException)
             {
@@ -81,6 +88,12 @@ namespace NodeControl
             if (!_isInitialized)
             {
                 _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
+
+                if (_xBee == null)
+                    throw new InvalidOperationException("No XBee found.");
+                
+                await _xBee.Local.Reset();
+                await Task.Delay(5000);
                 _xBee.NodeDiscovered += XBeeOnNodeDiscovered;
                 _isInitialized = true;
             }

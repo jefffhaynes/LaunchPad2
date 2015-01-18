@@ -70,8 +70,11 @@ namespace LaunchPad2.ViewModels
             Groups = new ObservableCollection<EventCueGroupViewModel>();
 
             NetworkController.NodeDiscovered += NetworkControllerOnNodeDiscovered;
+            NetworkController.InitializingController += NetworkControllerOnInitializingController;
+            NetworkController.DiscoveringNetwork += NetworkControllerOnDiscoveringNetwork;
             Nodes.CollectionChanged += NodesOnCollectionChanged;
         }
+
 
         public string File
         {
@@ -773,15 +776,32 @@ namespace LaunchPad2.ViewModels
             {
                 NetworkDiscoveryState = NetworkDiscoveryState.Failed;
             }
+            catch (InvalidOperationException)
+            {
+                NetworkDiscoveryState = NetworkDiscoveryState.Failed;
+                MessageBox.Show("No XBee controller found.");
+            }
         }
 
-        private async void NetworkControllerOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)
+
+        private void NetworkControllerOnDiscoveringNetwork(object sender, EventArgs eventArgs)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void NetworkControllerOnInitializingController(object sender, EventArgs eventArgs)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void NetworkControllerOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)
         {
             var node = e.Node;
 
             var existingNode = Nodes.FirstOrDefault(n => n.Address.Equals(node.Address.LongAddress));
 
-            var name = await node.GetNodeIdentifier();
+            //var name = await node.GetNodeIdentifier();
+            var name = e.Name;
 
             var signalStrength = e.SignalStrength.HasValue ? e.SignalStrength : SignalStrength.High;
 
@@ -821,7 +841,13 @@ namespace LaunchPad2.ViewModels
             var n = (NodeViewModel) o;
             if (args.PropertyName == "Name")
             {
-                await NetworkController.SetNodeName(new NodeAddress(n.Address), n.Name);
+                try
+                {
+                    await NetworkController.SetNodeName(new NodeAddress(n.Address), n.Name);
+                }
+                catch (TimeoutException)
+                {
+                }
             }
         }
     }

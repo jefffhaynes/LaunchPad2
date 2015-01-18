@@ -3,6 +3,7 @@
     public enum NetworkDiscoveryState
     {
         Unknown,
+        Initializing,
         Discovered,
         Discovering,
         Failed
