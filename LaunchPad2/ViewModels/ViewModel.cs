@@ -762,8 +762,6 @@ namespace LaunchPad2.ViewModels
 
         private async void DiscoverNetwork()
         {
-            NetworkDiscoveryState = NetworkDiscoveryState.Discovering;
-
             foreach(var node in Nodes)
                 node.DiscoveryState = NodeDiscoveryState.Discovering;
 
@@ -786,12 +784,12 @@ namespace LaunchPad2.ViewModels
 
         private void NetworkControllerOnDiscoveringNetwork(object sender, EventArgs eventArgs)
         {
-            throw new NotImplementedException();
+            NetworkDiscoveryState = NetworkDiscoveryState.Discovering;
         }
 
         private void NetworkControllerOnInitializingController(object sender, EventArgs eventArgs)
         {
-            throw new NotImplementedException();
+            NetworkDiscoveryState = NetworkDiscoveryState.Initializing;
         }
 
         private void NetworkControllerOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)

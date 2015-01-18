@@ -15,7 +15,14 @@ namespace NodeControl
 
         public static async Task DiscoverNetworkAsync()
         {
+            if (InitializingController != null)
+                InitializingController(null, EventArgs.Empty);
+
             await Initialize();
+
+            if (DiscoveringNetwork != null)
+                DiscoveringNetwork(null, EventArgs.Empty);
+
             await _xBee.DiscoverNetwork();
         }
 
@@ -91,9 +98,7 @@ namespace NodeControl
 
                 if (_xBee == null)
                     throw new InvalidOperationException("No XBee found.");
-                
-                await _xBee.Local.Reset();
-                await Task.Delay(5000);
+
                 _xBee.NodeDiscovered += XBeeOnNodeDiscovered;
                 _isInitialized = true;
             }
