@@ -21,7 +21,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Button Command="{Binding DiscoverNetworkCommand}" ToolTip="Discover Network" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Margin="3,0,3,3" Template="{StaticResource ButtonTemplate}">
-                <!--<Button.Style>
+                <Button.Style>
                     <Style TargetType="Button">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding NetworkDiscoveryState}" Value="Discovering">
@@ -29,7 +29,7 @@
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </Button.Style>-->
+                </Button.Style>
                 <ContentPresenter>
                     <ContentPresenter.Resources>
                         <Style TargetType="{x:Type Line}">
