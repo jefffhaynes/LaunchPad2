@@ -108,8 +108,6 @@ namespace NodeControl
         {
             try
             {
-                await Task.Delay(2000);
-
                 var port1Conf = new PortConf1RegisterWrite();
                 await node.TransmitDataAsync(port1Conf.GetPacket());
 
