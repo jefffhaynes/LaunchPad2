@@ -40,12 +40,13 @@ namespace LaunchPad2.Models
         {
             var groupViewModel = new EventCueGroupViewModel { Group = parent };
             var groups = Groups.Select(group => group.GetViewModel(groupViewModel, cueSources));
-            var cues = CueIds.Select(cueId => cueSources[cueId]).ToList();
+            var cues = CueIds.Select(cueId => cueSources[cueId]);
+            var groupables = groups.Cast<IGroupable>().Union(cues).ToList();
 
-            foreach (var cue in cues)
-                cue.Group = groupViewModel;
+            foreach (var group in groupables)
+                group.Group = groupViewModel;
 
-            groupViewModel.Children = new ObservableCollection<IGroupable>(groups.Cast<IGroupable>().Union(cues));
+            groupViewModel.Children = new ObservableCollection<IGroupable>(groupables);
 
             return groupViewModel;
         }
