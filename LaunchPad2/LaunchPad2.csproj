@@ -34,7 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -100,6 +100,7 @@
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="Models\CueModel.cs" />
     <Compile Include="Models\DeviceModel.cs" />
+    <Compile Include="Models\GroupModel.cs" />
     <Compile Include="Models\Model.cs" />
     <Compile Include="Models\NodeModel.cs" />
     <Compile Include="Models\TrackModel.cs" />

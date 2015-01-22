@@ -13,6 +13,7 @@ namespace LaunchPad2.Models
     [XmlType("Cue")]
     public class CueModel : ISerializable
     {
+        private const string IdSerializationInfoKey = "id";
         private const string StartSerializationInfoKey = "start";
         private const string LengthSerializationInfoKey = "length";
         private const string LeadInSerializationInfoKey = "leadin";
@@ -22,21 +23,30 @@ namespace LaunchPad2.Models
         {
         }
 
+        [XmlIgnore]
+        public EventCueViewModel Reference { get; private set; }
+
         public CueModel(EventCueViewModel viewModel)
         {
+            Id = Guid.NewGuid().ToString();
             LeadIn = viewModel.LeadIn;
             Start = viewModel.Start;
             Length = viewModel.Length;
             Notes = viewModel.Notes;
+            Reference = viewModel;
         }
 
         public CueModel(SerializationInfo info, StreamingContext context)
         {
+            Id = info.GetString(IdSerializationInfoKey);
             StartXml = info.GetString(StartSerializationInfoKey);
             LengthXml = info.GetString(LengthSerializationInfoKey);
             LeadInXml = info.GetString(LeadInSerializationInfoKey);
             Notes = info.GetString(NotesSerializationInfoKey);
         }
+
+        [XmlAttribute]
+        public string Id { get; set; }
 
         [XmlIgnore]
         public TimeSpan LeadIn { get; set; }
@@ -73,14 +83,17 @@ namespace LaunchPad2.Models
 
         public EventCueViewModel GetViewModel()
         {
-            return new EventCueViewModel(0, Start, Length, LeadIn)
+            Reference = new EventCueViewModel(0, Start, Length, LeadIn)
             {
                 Notes = Notes
             };
+
+            return Reference;
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
+            info.AddValue(IdSerializationInfoKey, Id);
             info.AddValue(StartSerializationInfoKey, StartXml);
             info.AddValue(LengthSerializationInfoKey, LengthXml);
             info.AddValue(LeadInSerializationInfoKey, LeadInXml);
