@@ -133,9 +133,17 @@ namespace NodeControl
             if (NodeDiscovered != null)
                 NodeDiscovered(null, e);
 
-            if (_xBee.HardwareVersion == HardwareVersion.XBeeSeries1 ||
-                _xBee.HardwareVersion == HardwareVersion.XBeeProSeries1)
+            if (IsSeriesOne)
                 Initialize(node);
+        }
+
+        private static bool IsSeriesOne
+        {
+            get
+            {
+                return _xBee.HardwareVersion == HardwareVersion.XBeeSeries1 ||
+                       _xBee.HardwareVersion == HardwareVersion.XBeeProSeries1;
+            }
         }
     }
 }
