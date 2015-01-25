@@ -40,9 +40,9 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BinarySerializer, Version=3.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="BinarySerializer, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\BinarySerializer.3.3\lib\portable-net40+sl50+win\BinarySerializer.dll</HintPath>
+      <HintPath>..\packages\BinarySerializer.3.5\lib\portable-net40+sl50+win\BinarySerializer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -51,9 +51,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="XBee, Version=1.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="XBee, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\XBee.1.3.0.0\lib\net45\XBee.dll</HintPath>
+      <HintPath>..\packages\XBee.1.4.0.0\lib\net45\XBee.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
