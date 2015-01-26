@@ -5,15 +5,20 @@ namespace NodeControl
 {
     public class StatusCommand : ControlObjectPayload
     {
+        [FieldOrder(0)]
         public byte PortCount { get; set; }
 
-        [FieldLength("PortCount")]
+        [FieldOrder(1)]
+        [FieldCount("PortCount")]
         public List<PortStatus> PortStatus { get; set; }
 
+        [FieldOrder(2)]
         public bool IsArmedLocally { get; set; }
 
+        [FieldOrder(3)]
         public bool IsArmedRemotely { get; set; }
 
+        [FieldOrder(4)]
         public BatteryState BatteryState { get; set; }
     }
 }

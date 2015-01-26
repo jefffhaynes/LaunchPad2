@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO.Ports;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using BinarySerialization;
 using SC18IM700;
@@ -17,6 +18,10 @@ namespace NodeControl
         public static event EventHandler InitializingController;
 
         public static event EventHandler DiscoveringNetwork;
+
+        public static event EventHandler<StatusEventArgs> StatusReceived; 
+
+        private static readonly BinarySerializer Serializer = new BinarySerializer();
 
         public static async Task DiscoverNetworkAsync()
         {
@@ -36,8 +41,10 @@ namespace NodeControl
         {
             if (!_isInitialized)
             {
-                _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
+                _xBee = await XBeeController.FindAndOpen(new[] {"COM4"}, 115200);
+                //_xBee = new XBeeController();
 
+                //await _xBee.OpenAsync("COM4", 115200);
                 if (_xBee == null)
                     throw new InvalidOperationException("No XBee found.");
 
@@ -135,6 +142,13 @@ namespace NodeControl
 
             if (IsSeriesOne)
                 Initialize(node);
+            else
+            {
+                var statusCommands = node.GetReceivedData().Select(
+                    data => 
+                        Serializer.Deserialize<StatusCommand>(data));
+                statusCommands.Subscribe(OnStatusReceived);
+            }
         }
 
         private static bool IsSeriesOne
@@ -144,6 +158,13 @@ namespace NodeControl
                 return _xBee.HardwareVersion == HardwareVersion.XBeeSeries1 ||
                        _xBee.HardwareVersion == HardwareVersion.XBeeProSeries1;
             }
+        }
+
+        private static void OnStatusReceived(StatusCommand statusCommand)
+        {
+            var handler = StatusReceived;
+            if(handler != null)
+                handler(null, new StatusEventArgs(statusCommand));
         }
     }
 }
