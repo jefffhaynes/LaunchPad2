@@ -103,6 +103,9 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Button Click="LoadAudioButtonOnClick" Margin="6,3,3,3" Background="Transparent" BorderThickness="0" Grid.Column="0"
                     ToolTip="Open Audio File" Template="{StaticResource ButtonTemplate}">
@@ -221,6 +224,44 @@
                 </Rectangle>
 
             </Button>
+
+            <controls:MenuSeparator Grid.Column="10"/>
+
+            <Button Grid.Row="0" Grid.Column="11" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding StartShowCommand}"  
+                    Template="{StaticResource ButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="ToolTip" Value="Start Show"/>
+                    </Style>
+                </Button.Style>
+                <Path Width="16" Height="14" Stretch="Uniform">
+                    <Path.Style>
+                        <Style TargetType="Path">
+                            <Setter Property="Data" Value="{DynamicResource StartShowGeometryKey}"/>
+                            <Setter Property="Fill" Value="{DynamicResource MenuGreenBrushKey}"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Fill" Value="{DynamicResource MenuDisabledBrushKey}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Path.Style>
+                </Path>
+
+            </Button>
+
+            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s\\.f'}" Grid.Column="12" Foreground="{StaticResource MenuTextBrushKey}" FontSize="14" >
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsShowRunning}" Value="true">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
         </Grid>
 
         <ScrollViewer Name="AudioScrollViewer" UseLayoutRounding="True" Grid.Row="1" Grid.Column="0" Margin="0,0,0,6" 
@@ -246,7 +287,7 @@
                 <Canvas HorizontalAlignment="Left" Grid.Row="0" Focusable="False">
                     <controls:AudioCueControl Height="{Binding ElementName=AudioPanel, Path=ActualHeight}"
                                               Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
-                                              TimeScale="{Binding Zoom}" AutoscrollDistance="300"
+                                              TimeScale="{Binding Zoom}" AutoscrollDistance="300" UseLayoutRounding="False"
                                               StrokeThickness="2" Stroke="Red" Cursor="SizeWE" Focusable="False">
                     </controls:AudioCueControl>
                     <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="{x:Static system:Int32.MaxValue}"

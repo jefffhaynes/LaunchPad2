@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using FMOD;
@@ -24,6 +25,8 @@ namespace LaunchPad2.ViewModels
         private string _file;
         private object _selectedItem;
 
+        private double _zoom;
+
         private const string ClipboardTracksKey = "Tracks";
 
         public ViewModel()
@@ -34,9 +37,27 @@ namespace LaunchPad2.ViewModels
             PlayCommand = new RelayCommand(() => AudioTrack.IsPaused = !AudioTrack.IsPaused, IsAudioFileLoaded);
             StopCommand = new RelayCommand(() =>
             {
+                IsShowRunning = false;
                 AudioTrack.IsPaused = true;
                 AudioTrack.Position = TimeSpan.Zero;
             });
+
+            StartShowCommand = new RelayCommand(() =>
+            {
+                AudioTrack.Position = TimeSpan.Zero;
+                var countdownTime = TimeSpan.FromSeconds(-10);
+                CountdownTime = countdownTime;
+                Task.Run(async () =>
+                {
+                    var start = DateTime.Now;
+                    while (CountdownTime < TimeSpan.Zero)
+                    {
+                        CountdownTime = countdownTime + (DateTime.Now - start);
+                        await Task.Delay(10);
+                    }
+                }).ContinueWith(new Action<Task>(t => AudioTrack.IsPaused = false));
+                IsShowRunning = true;
+            }, IsAudioFileLoaded);
 
             PositionCommand = new RelayCommand(position =>
             {
@@ -58,12 +79,12 @@ namespace LaunchPad2.ViewModels
 
             AddDeviceCommand = new RelayCommand(AddDevice);
             DeleteDeviceCommand = new RelayCommand(DeleteDevice);
-            AddTrackFromDeviceCommand = new RelayCommand(device => AddTrack((DeviceViewModel)device));
+            AddTrackFromDeviceCommand = new RelayCommand(device => AddTrack((DeviceViewModel) device));
 
             GroupCommand = new RelayCommand(GroupSelected);
             UngroupCommand = new RelayCommand(UngroupSelected);
 
-            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double)width));
+            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width));
 
             DiscoverNetworkCommand = new RelayCommand(DiscoverNetwork);
 
@@ -89,6 +110,40 @@ namespace LaunchPad2.ViewModels
                 if (_file != value)
                 {
                     _file = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private TimeSpan _countdownTime;
+
+        public TimeSpan CountdownTime
+        {
+            get { return _countdownTime; }
+            set
+            {
+                if (_countdownTime != value)
+                {
+                    _countdownTime = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private bool _isShowRunning;
+
+        public bool IsShowRunning
+        {
+            get { return _isShowRunning; }
+            set
+            {
+                if (_isShowRunning != value)
+                {
+                    if (value)
+                        Arm();
+                    else Disarm();
+
+                    _isShowRunning = value;
                     OnPropertyChanged();
                 }
             }
@@ -123,6 +178,7 @@ namespace LaunchPad2.ViewModels
 
                     _audioTrack = value;
                     PlayCommand.UpdateCanExecute();
+                    StartShowCommand.UpdateCanExecute();
                     AddTrackCommand.UpdateCanExecute();
                     UpdateSampleRate();
 
@@ -142,7 +198,7 @@ namespace LaunchPad2.ViewModels
 
         public ObservableCollection<NodeViewModel> Nodes { get; set; }
 
-        public ObservableCollection<EventCueGroupViewModel> Groups { get; set; } 
+        public ObservableCollection<EventCueGroupViewModel> Groups { get; set; }
 
         public IEnumerable<EventCueViewModel> AllCues
         {
@@ -156,6 +212,8 @@ namespace LaunchPad2.ViewModels
         public RelayCommand PlayCommand { get; private set; }
 
         public RelayCommand StopCommand { get; private set; }
+
+        public RelayCommand StartShowCommand { get; private set; }
 
         public RelayCommand PositionCommand { get; private set; }
 
@@ -195,7 +253,17 @@ namespace LaunchPad2.ViewModels
 
         public IList<object> SelectedItems { get; set; }
 
-        private double _zoom;
+        private void Arm()
+        {
+            foreach(var node in Nodes)
+                NetworkController.Arm(new NodeAddress(node.Address));
+        }
+
+        private void Disarm()
+        {
+            foreach(var node in Nodes)
+                NetworkController.Disarm(new NodeAddress(node.Address));
+        }
 
         public double Zoom
         {
@@ -263,7 +331,7 @@ namespace LaunchPad2.ViewModels
                     else cue.IsActive = false;
                 }
 
-                if(track.Port != null)
+                if (track.Port != null)
                     track.Port.ShouldBeActive = trackActive;
             }
 
@@ -558,14 +626,14 @@ namespace LaunchPad2.ViewModels
 
             IEnumerable<double[]> subbands = AudioTrack.EnergySubbands.Skip(bandOffset).Take(bandCount);
             List<double> subbandAverages = subbands.ZipMany(band => band.Average()).ToList();
-            
+
             double average;
             double stdDev = subbandAverages.StdDev(out average);
 
-            double millisecondsPerValue = AudioTrack.Length.TotalMilliseconds / subbandAverages.Count;
+            double millisecondsPerValue = AudioTrack.Length.TotalMilliseconds/subbandAverages.Count;
             var energyAndTime =
                 subbandAverages.Select((value, i) =>
-                new SampleInfo<double>(TimeSpan.FromMilliseconds(i*millisecondsPerValue), value));
+                    new SampleInfo<double>(TimeSpan.FromMilliseconds(i*millisecondsPerValue), value));
 
             var energyAndTimeOrderedByEnergy =
                 energyAndTime.Where(sample => sample.Value > average + stdDev)
@@ -679,7 +747,7 @@ namespace LaunchPad2.ViewModels
                 return;
             }
 
-            Zoom = width/_audioTrack.TotalSamples * 100;
+            Zoom = width/_audioTrack.TotalSamples*100;
         }
 
         public void Cut()
@@ -795,7 +863,7 @@ namespace LaunchPad2.ViewModels
 
         private async void DiscoverNetwork()
         {
-            foreach(var node in Nodes)
+            foreach (var node in Nodes)
                 node.DiscoveryState = NodeDiscoveryState.Discovering;
 
             try

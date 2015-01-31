@@ -11,6 +11,8 @@ namespace NodeControl
 {
     public static class NetworkController
     {
+        private const InputOutputChannel ArmingPort = InputOutputChannel.Channel7;
+
         private static XBeeController _xBee;
         private static bool _isInitialized;
 
@@ -95,6 +97,18 @@ namespace NodeControl
             var gpioWrite = new GpioWrite(gpioPorts);
 
             await node.TransmitDataAsync(gpioWrite.GetPacket());
+        }
+
+        public static async void Arm(NodeAddress address)
+        {
+            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalHigh);
+        }
+
+        public static async void Disarm(NodeAddress address)
+        {
+            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalLow);
         }
 
         public static async Task SetNodeName(NodeAddress address, string name)
