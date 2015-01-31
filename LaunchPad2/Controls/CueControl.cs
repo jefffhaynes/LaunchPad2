@@ -209,7 +209,7 @@ namespace LaunchPad2.Controls
             if (mouseRight < AutoscrollDistance)
             {
                 double delta = AutoscrollDistance - mouseRight;
-                _scrollViewer.ScrollToHorizontalOffset(_scrollViewer.HorizontalOffset + delta * autoscrollEase);
+                _scrollViewer.ScrollToHorizontalOffset(_scrollViewer.HorizontalOffset + delta*autoscrollEase);
             }
             else
             {
@@ -218,7 +218,7 @@ namespace LaunchPad2.Controls
                 if (mouseLeft < AutoscrollDistance && mouseLeft > -AutoScrollOuterLimit)
                 {
                     double delta = mouseLeft - AutoscrollDistance;
-                    _scrollViewer.ScrollToHorizontalOffset(_scrollViewer.HorizontalOffset + delta * autoscrollEase);
+                    _scrollViewer.ScrollToHorizontalOffset(_scrollViewer.HorizontalOffset + delta*autoscrollEase);
                 }
             }
         }
@@ -243,7 +243,7 @@ namespace LaunchPad2.Controls
 
             _clickWidth = GetWidth();
             _clickLeft = GetLeft();
-            
+
             /* If we're cloning, force into move mode */
             if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                 _cueMoveMode = CueMoveMode.Normal;

@@ -246,7 +246,7 @@
                 <Canvas HorizontalAlignment="Left" Grid.Row="0" Focusable="False">
                     <controls:AudioCueControl Height="{Binding ElementName=AudioPanel, Path=ActualHeight}"
                                               Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
-                                              TimeScale="{Binding Zoom}"
+                                              TimeScale="{Binding Zoom}" AutoscrollDistance="300"
                                               StrokeThickness="2" Stroke="Red" Cursor="SizeWE" Focusable="False">
                     </controls:AudioCueControl>
                     <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="{x:Static system:Int32.MaxValue}"
@@ -655,7 +655,7 @@
                                                                               SampleLength="{Binding SampleLength, Converter={StaticResource SampleDecimationConverter}}"
                                                                               LeadInSampleLength="{Binding LeadInSampleLength, Converter={StaticResource SampleDecimationConverter}}"
                                                                               TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" IsSelected="{Binding IsSelected}"
-                                                                              AutoscrollDistance="200" Height="32" BorderThickness="1" GripWidth="16" SnapToInterval="0:0:0.1">
+                                                                              AutoscrollDistance="40" Height="32" BorderThickness="1" GripWidth="16" SnapToInterval="0:0:0.1">
                                                         <controls:EventCueControl.Style>
                                                             <Style TargetType="{x:Type controls:EventCueControl}">
                                                                 <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=DataContext.Brush}" />
