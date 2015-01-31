@@ -491,8 +491,13 @@
                 </Button>
                 <StackPanel Grid.Column="19" HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal">
                     <TextBlock Text="{Binding ElementName=ZoomSlider, Path=Value, Converter={StaticResource PercentageConverter}}" Foreground="{DynamicResource MenuTextBrushKey}" VerticalAlignment="Center"/>
-                    <Slider Name="ZoomSlider" Orientation="Horizontal" Width="200" Maximum="1" Minimum="0.002" Value="0.1" Margin="6" TickFrequency="0.1" SmallChange="0.01"
+                    <Slider Name="ZoomSlider" Orientation="Horizontal" Width="200" Maximum="1" Minimum="0.002" Value="0.1" Margin="6,6,0,6" TickFrequency="0.1" SmallChange="0.01"
                     Background="#7EFFFFFF"/>
+                    <Button Template="{StaticResource ButtonTemplate}" Margin="3">
+                        <Border BorderBrush="{StaticResource MenuTextBrushKey}" BorderThickness="1" Padding="2" >
+                            <Path Data="F1M-54.2975,806.375L-66.1491,794.524 -66.1491,802.853 -94.3314,802.853 -94.3314,794.524 -106.183,806.375 -94.3314,818.227 -94.3314,809.897 -66.1491,809.897 -66.1491,818.227 -54.2975,806.375z" Stretch="Uniform" Fill="{DynamicResource MenuTextBrushKey}" Width="18" Height="14" />
+                        </Border>
+                    </Button>
                 </StackPanel>
             </Grid>
 
