@@ -62,6 +62,8 @@ namespace LaunchPad2.ViewModels
             GroupCommand = new RelayCommand(GroupSelected);
             UngroupCommand = new RelayCommand(UngroupSelected);
 
+            ZoomExtentsCommand = new RelayCommand(ZoomExtents);
+
             DiscoverNetworkCommand = new RelayCommand(DiscoverNetwork);
 
             Tracks = new ObservableCollection<TrackViewModel>();
@@ -185,6 +187,8 @@ namespace LaunchPad2.ViewModels
         public ICommand GroupCommand { get; private set; }
 
         public ICommand UngroupCommand { get; private set; }
+
+        public ICommand ZoomExtentsCommand { get; private set; }
 
         public IList<object> SelectedItems { get; set; }
 
@@ -612,7 +616,7 @@ namespace LaunchPad2.ViewModels
             UndoManager.DoAndAdd(undoBatchMemento);
         }
 
-        public void AddDevice()
+        private void AddDevice()
         {
             string deviceName = string.Format("Device {0}", Devices.Count);
             var device = new DeviceViewModel {Name = deviceName};
@@ -647,6 +651,11 @@ namespace LaunchPad2.ViewModels
             }
 
             UndoManager.DoAndAdd(undoBatchMemento);
+        }
+
+        private void ZoomExtents()
+        {
+            
         }
 
         public void Cut()

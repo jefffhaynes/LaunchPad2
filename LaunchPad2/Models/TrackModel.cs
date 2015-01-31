@@ -106,10 +106,10 @@ namespace LaunchPad2.Models
 
             return new TrackViewModel(Name, brush)
             {
+                Cues = new ObservableCollection<EventCueViewModel>(Cues.Select(cue => cue.GetViewModel())),
                 Device = deviceSource.SingleOrDefault(device => device.Id == DeviceId),
                 Node = node,
                 Port = node == null ? null : node.Ports.SingleOrDefault(port => port.Port == Port),
-                Cues = new ObservableCollection<EventCueViewModel>(Cues.Select(cue => cue.GetViewModel())),
                 Notes = Notes
             };
         }
