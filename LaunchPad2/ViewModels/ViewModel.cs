@@ -17,6 +17,7 @@ namespace LaunchPad2.ViewModels
     {
         private static readonly TimeSpan DefaultCuePosition = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan DefaultCueLength = TimeSpan.FromSeconds(1);
+        private const double DefaultZoom = 0.1;
         private string _audioFile;
         private AudioTrack _audioTrack;
         private List<CueMoveInfo> _cueUndoStates;
@@ -62,7 +63,7 @@ namespace LaunchPad2.ViewModels
             GroupCommand = new RelayCommand(GroupSelected);
             UngroupCommand = new RelayCommand(UngroupSelected);
 
-            ZoomExtentsCommand = new RelayCommand(ZoomExtents);
+            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double)width));
 
             DiscoverNetworkCommand = new RelayCommand(DiscoverNetwork);
 
@@ -75,6 +76,8 @@ namespace LaunchPad2.ViewModels
             NetworkController.InitializingController += NetworkControllerOnInitializingController;
             NetworkController.DiscoveringNetwork += NetworkControllerOnDiscoveringNetwork;
             Nodes.CollectionChanged += NodesOnCollectionChanged;
+
+            Zoom = DefaultZoom;
         }
 
 
@@ -191,6 +194,21 @@ namespace LaunchPad2.ViewModels
         public ICommand ZoomExtentsCommand { get; private set; }
 
         public IList<object> SelectedItems { get; set; }
+
+        private double _zoom;
+
+        public double Zoom
+        {
+            get { return _zoom; }
+            set
+            {
+                if (Math.Abs(_zoom - value) > double.Epsilon)
+                {
+                    _zoom = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public object SelectedItem
         {
@@ -653,9 +671,15 @@ namespace LaunchPad2.ViewModels
             UndoManager.DoAndAdd(undoBatchMemento);
         }
 
-        private void ZoomExtents()
+        private void ZoomExtents(double width)
         {
-            
+            if (_audioTrack == null)
+            {
+                Zoom = DefaultZoom;
+                return;
+            }
+
+            Zoom = width/_audioTrack.TotalSamples * 100;
         }
 
         public void Cut()

@@ -106,15 +106,11 @@
             </Grid.ColumnDefinitions>
             <Button Click="LoadAudioButtonOnClick" Margin="6,3,3,3" Background="Transparent" BorderThickness="0" Grid.Column="0"
                     ToolTip="Open Audio File" Template="{StaticResource ButtonTemplate}">
-                <Button.Content>
-                    <Path Data="{DynamicResource LoadAudioGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBrownBrushKey}" Width="16" Height="16"/>
-                </Button.Content>
+                <Path Data="{DynamicResource LoadAudioGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" Width="14" Height="16"/>
             </Button>
             <Button Click="LoadButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="1"
                     ToolTip="Open Project" Template="{StaticResource ButtonTemplate}">
-                <Button.Content>
-                    <Path Data="{DynamicResource LoadGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBrownBrushKey}" Width="16" Height="16"/>
-                </Button.Content>
+                <Path Data="{DynamicResource LoadGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBrownBrushKey}" Width="16" Height="16"/>
             </Button>
             <Button Click="SaveButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="2"
                      Template="{StaticResource ButtonTemplate}">
@@ -236,21 +232,21 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <waveform:WaveformControl Name="WaveformControl" Samples="{Binding Path=AudioTrack.Samples, Converter={StaticResource SamplesDecimationConverter}}"
-                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" 
+                                          TimeScale="{Binding Zoom}" 
                                           SamplePosition="{Binding Path=AudioTrack.SamplePosition, Converter={StaticResource SampleDecimationConverter}}"
                                           HorizontalAlignment="Left" Focusable="False" />
 
                 <Border Grid.Row="0" BorderBrush="#3F3F46" BorderThickness="0,1,0,0" VerticalAlignment="Bottom" />
                 <waveform:BeatDetector Grid.Row="1" Width="{Binding ElementName=WaveformControl, Path=ActualWidth}"
                                       EnergySubbands="{Binding Path=AudioTrack.EnergySubbands}"
-                                       TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" 
+                                       TimeScale="{Binding Zoom}" 
                                        SamplePosition="{Binding Path=AudioTrack.SamplePosition, Converter={StaticResource SampleDecimationConverter}}"
                                        HorizontalAlignment="Left" Focusable="False"/>
 
                 <Canvas HorizontalAlignment="Left" Grid.Row="0" Focusable="False">
                     <controls:AudioCueControl Height="{Binding ElementName=AudioPanel, Path=ActualHeight}"
                                               Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
-                                              TimeScale="{Binding ElementName=ZoomSlider, Path=Value}"
+                                              TimeScale="{Binding Zoom}"
                                               StrokeThickness="2" Stroke="Red" Cursor="SizeWE" Focusable="False">
                     </controls:AudioCueControl>
                     <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="{x:Static system:Int32.MaxValue}"
@@ -490,9 +486,14 @@
                     </Grid>
                 </Button>
                 <StackPanel Grid.Column="19" HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal">
-                    <TextBlock Text="{Binding ElementName=ZoomSlider, Path=Value, Converter={StaticResource PercentageConverter}}" Foreground="{DynamicResource MenuTextBrushKey}" VerticalAlignment="Center"/>
-                    <Slider Name="ZoomSlider" Orientation="Horizontal" Width="200" Maximum="1" Minimum="0.002" Value="0.1" Margin="6" TickFrequency="0.1" SmallChange="0.01"
+                    <TextBlock Text="{Binding Zoom, Converter={StaticResource PercentageConverter}}" Foreground="{DynamicResource MenuTextBrushKey}" VerticalAlignment="Center"/>
+                    <Slider Name="ZoomSlider" Orientation="Horizontal" Width="200" Maximum="1" Minimum="0.002" Value="{Binding Zoom}" Margin="6,6,0,6" TickFrequency="0.1" SmallChange="0.01"
                     Background="#7EFFFFFF"/>
+                    <Button Template="{StaticResource ButtonTemplate}" Margin="4" Command="{Binding ZoomExtentsCommand}" CommandParameter="{Binding ElementName=TrackScrollViewer, Path=ActualWidth}">
+                        <Border BorderBrush="{StaticResource MenuGrayBrushKey}" BorderThickness="1,0,1,0" Padding="1" >
+                            <Path Data="F1M-54.2975,806.375L-66.1491,794.524 -66.1491,802.853 -94.3314,802.853 -94.3314,794.524 -106.183,806.375 -94.3314,818.227 -94.3314,809.897 -66.1491,809.897 -66.1491,818.227 -54.2975,806.375z" Stretch="Uniform" Fill="{DynamicResource MenuTextBrushKey}" Width="18" Height="14" />
+                        </Border>
+                    </Button>
                 </StackPanel>
             </Grid>
 
@@ -553,7 +554,7 @@
                     </controls:SelectionCanvas.ContextMenu>
                     <controls:AudioCueControl Height="{Binding ElementName=TracksControl, Path=ActualHeight}"
                                               Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
-                                              TimeScale="{Binding ElementName=ZoomSlider, Path=Value}"
+                                              TimeScale="{Binding Zoom}"
                                               StrokeThickness="1" Stroke="{DynamicResource AudioCueBrushKey}" Cursor="SizeWE" Canvas.ZIndex="{x:Static system:Int32.MaxValue}">
                     </controls:AudioCueControl>
 
@@ -654,7 +655,7 @@
                                                                               SampleLength="{Binding SampleLength, Converter={StaticResource SampleDecimationConverter}}"
                                                                               LeadInSampleLength="{Binding LeadInSampleLength, Converter={StaticResource SampleDecimationConverter}}"
                                                                               TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" IsSelected="{Binding IsSelected}"
-                                                                              AutoscrollDistance="40" Height="32" BorderThickness="1" GripWidth="16" SnapToInterval="0:0:0.1">
+                                                                              AutoscrollDistance="200" Height="32" BorderThickness="1" GripWidth="16" SnapToInterval="0:0:0.1">
                                                         <controls:EventCueControl.Style>
                                                             <Style TargetType="{x:Type controls:EventCueControl}">
                                                                 <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=DataContext.Brush}" />

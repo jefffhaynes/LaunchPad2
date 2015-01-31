@@ -241,7 +241,7 @@ namespace LaunchPad2.ViewModels
 
         public TimeSpan FromSample(uint samples)
         {
-            return TimeSpan.FromMilliseconds(samples*1000/(SampleRate));
+            return TimeSpan.FromMilliseconds((double)samples*1000/(SampleRate));
         }
 
         public EventCueViewModel Clone()
