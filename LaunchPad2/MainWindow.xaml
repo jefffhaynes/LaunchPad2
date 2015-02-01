@@ -201,16 +201,6 @@
 
             <Button Grid.Row="0" Grid.Column="9" Margin="0,3,3,3" Background="Transparent" BorderThickness="0" Command="{Binding StopCommand}"  
                     Template="{StaticResource ButtonTemplate}" ToolTip="Stop" >
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="IsEnabled" Value="False"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding AudioTrack.IsPaused}" Value="False">
-                                <Setter Property="IsEnabled" Value="True"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
                 <Rectangle Width="10" Height="10" Margin="3,1">
                     <Rectangle.Style>
                         <Style TargetType="Rectangle">

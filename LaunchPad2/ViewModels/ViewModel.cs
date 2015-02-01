@@ -316,8 +316,11 @@ namespace LaunchPad2.ViewModels
                 IsShowRunning = false;
             }
 
-            AudioTrack.IsPaused = true;
-            AudioTrack.Position = TimeSpan.Zero;
+            if (AudioTrack != null)
+            {
+                AudioTrack.IsPaused = true;
+                AudioTrack.Position = TimeSpan.Zero;
+            }
 
             var handler = Stopped;
             if (handler != null)
