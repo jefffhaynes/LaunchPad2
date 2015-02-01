@@ -42,8 +42,7 @@ namespace LaunchPad2.Controls
         protected override void OnRender(DrawingContext drawingContext)
         {
             var pen = new Pen(Stroke, StrokeThickness);
-            double x = -StrokeThickness/2.0;
-            drawingContext.DrawLine(pen, new Point(x, 0), new Point(x, _height));
+            drawingContext.DrawLine(pen, new Point(0, 0), new Point(0, _height));
         }
 
         protected override double Snap(double value)
