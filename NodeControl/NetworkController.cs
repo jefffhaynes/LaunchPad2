@@ -99,13 +99,13 @@ namespace NodeControl
             await node.TransmitDataAsync(gpioWrite.GetPacket());
         }
 
-        public static async void Arm(NodeAddress address)
+        public static async Task Arm(NodeAddress address)
         {
             XBeeNode node = await _xBee.GetRemoteAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalHigh);
         }
 
-        public static async void Disarm(NodeAddress address)
+        public static async Task Disarm(NodeAddress address)
         {
             XBeeNode node = await _xBee.GetRemoteAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalLow);

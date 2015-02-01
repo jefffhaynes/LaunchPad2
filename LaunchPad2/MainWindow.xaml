@@ -227,10 +227,11 @@
 
             <controls:MenuSeparator Grid.Column="10"/>
 
-            <Button Grid.Row="0" Grid.Column="11" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding StartShowCommand}"  
+            <Button Grid.Row="0" Grid.Column="11" Margin="3" Background="Transparent" BorderThickness="0"
                     Template="{StaticResource ButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
+                        <Setter Property="Command" Value="{Binding StartShowCommand}"/>
                         <Setter Property="ToolTip" Value="Start Show"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsShowRunning}" Value="True">
@@ -260,7 +261,7 @@
 
             </Button>
 
-            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s\\.f'}" Grid.Column="12" Foreground="{StaticResource MenuGreenBrushKey}" FontSize="14" >
+            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s\\.f'}" Grid.Column="12" Foreground="{StaticResource MenuRedBrushKey}" FontSize="12" Margin="0,0,0,1" >
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>

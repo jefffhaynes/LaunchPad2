@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -17,18 +18,22 @@ namespace LaunchPad2.ViewModels
 {
     public class ViewModel : ViewModelBase
     {
+        private const double DefaultZoom = 0.1;
+        private const string ClipboardTracksKey = "Tracks";
         private static readonly TimeSpan DefaultCuePosition = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan DefaultCueLength = TimeSpan.FromSeconds(1);
-        private const double DefaultZoom = 0.1;
+        private static readonly TimeSpan CountdownLength = TimeSpan.FromSeconds(10);
         private string _audioFile;
         private AudioTrack _audioTrack;
+        private Dictionary<EventCueViewModel, TrackViewModel> _clonedCuesAndTracks;
+        private CancellationTokenSource _countdownCancellationTokenSource;
+        private TimeSpan _countdownTime;
         private List<CueMoveInfo> _cueUndoStates;
         private string _file;
+        private bool _isShowRunning;
+        private NetworkDiscoveryState _networkDiscoveryState;
         private object _selectedItem;
-
         private double _zoom;
-
-        private const string ClipboardTracksKey = "Tracks";
 
         public ViewModel()
         {
@@ -36,29 +41,35 @@ namespace LaunchPad2.ViewModels
             RedoCommand = new RelayCommand(UndoManager.Redo);
 
             PlayCommand = new RelayCommand(() => AudioTrack.IsPaused = !AudioTrack.IsPaused, IsAudioFileLoaded);
-            StopCommand = new RelayCommand(() =>
-            {
-                IsShowRunning = false;
-                AudioTrack.IsPaused = true;
-                AudioTrack.Position = TimeSpan.Zero;
-            });
+            StopCommand = new RelayCommand(async () => { await Stop(); });
 
-            StartShowCommand = new RelayCommand(() =>
+            StartShowCommand = new RelayCommand(async () =>
             {
+                _countdownCancellationTokenSource = new CancellationTokenSource();
+
                 AudioTrack.Position = TimeSpan.Zero;
-                var countdownTime = TimeSpan.FromSeconds(-10);
-                CountdownTime = countdownTime;
-                Task.Run(async () =>
-                {
-                    var start = DateTime.Now;
-                    while (CountdownTime < TimeSpan.Zero)
-                    {
-                        CountdownTime = countdownTime + (DateTime.Now - start);
-                        await Task.Delay(10);
-                    }
-                }).ContinueWith(new Action<Task>(t => AudioTrack.IsPaused = false));
+                CountdownTime = CountdownLength;
+
+                await Arm();
                 IsShowRunning = true;
+
+                DateTime start = DateTime.Now;
+                while (CountdownTime > TimeSpan.Zero && !_countdownCancellationTokenSource.IsCancellationRequested)
+                {
+                    CountdownTime = CountdownLength - (DateTime.Now - start);
+                    await Task.Delay(25);
+                }
+
+                if (!_countdownCancellationTokenSource.IsCancellationRequested)
+                    AudioTrack.IsPaused = false;
+
             }, IsAudioFileLoaded);
+
+            AbortShowCommand = new RelayCommand(async () =>
+            {
+                _countdownCancellationTokenSource.Cancel();
+                await Stop();
+            });
 
             PositionCommand = new RelayCommand(position =>
             {
@@ -101,14 +112,7 @@ namespace LaunchPad2.ViewModels
 
             Zoom = DefaultZoom;
 
-
             CompositionTarget.Rendering += CompositionTargetOnRendering;
-        }
-
-        private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
-        {
-            if(AudioTrack != null && !AudioTrack.IsPaused)
-                AudioTrack.Update();
         }
 
 
@@ -125,8 +129,6 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        private TimeSpan _countdownTime;
-
         public TimeSpan CountdownTime
         {
             get { return _countdownTime; }
@@ -140,8 +142,6 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        private bool _isShowRunning;
-
         public bool IsShowRunning
         {
             get { return _isShowRunning; }
@@ -149,10 +149,6 @@ namespace LaunchPad2.ViewModels
             {
                 if (_isShowRunning != value)
                 {
-                    if (value)
-                        Arm();
-                    else Disarm();
-
                     _isShowRunning = value;
                     OnPropertyChanged();
                 }
@@ -225,6 +221,8 @@ namespace LaunchPad2.ViewModels
 
         public RelayCommand StartShowCommand { get; private set; }
 
+        public RelayCommand AbortShowCommand { get; private set; }
+
         public RelayCommand PositionCommand { get; private set; }
 
         public RelayCommand AddTrackCommand { get; private set; }
@@ -263,18 +261,6 @@ namespace LaunchPad2.ViewModels
 
         public IList<object> SelectedItems { get; set; }
 
-        private void Arm()
-        {
-            foreach(var node in Nodes)
-                NetworkController.Arm(new NodeAddress(node.Address));
-        }
-
-        private void Disarm()
-        {
-            foreach(var node in Nodes)
-                NetworkController.Disarm(new NodeAddress(node.Address));
-        }
-
         public double Zoom
         {
             get { return _zoom; }
@@ -301,6 +287,49 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        public NetworkDiscoveryState NetworkDiscoveryState
+        {
+            get { return _networkDiscoveryState; }
+            set
+            {
+                if (_networkDiscoveryState != value)
+                {
+                    _networkDiscoveryState = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
+        {
+            if (AudioTrack != null && !AudioTrack.IsPaused)
+                AudioTrack.Update();
+        }
+
+        private async Task Stop()
+        {
+            if (IsShowRunning)
+            {
+                await Disarm();
+                IsShowRunning = false;
+            }
+
+            AudioTrack.IsPaused = true;
+            AudioTrack.Position = TimeSpan.Zero;
+        }
+
+        private async Task Arm()
+        {
+            foreach (NodeViewModel node in Nodes)
+                await NetworkController.Arm(new NodeAddress(node.Address));
+        }
+
+        private async Task Disarm()
+        {
+            foreach (NodeViewModel node in Nodes)
+                await NetworkController.Disarm(new NodeAddress(node.Address));
+        }
+
         private IEnumerable<TrackViewModel> GetSelectedTracks()
         {
             return SelectedItems == null
@@ -322,16 +351,16 @@ namespace LaunchPad2.ViewModels
             TimeSpan position = _audioTrack.Position;
 
             // Make a copy so we don't step on anything else going on
-            var tracks = Tracks.ToList();
+            List<TrackViewModel> tracks = Tracks.ToList();
 
-            foreach (var track in tracks)
+            foreach (TrackViewModel track in tracks)
             {
-                var trackActive = false;
+                bool trackActive = false;
 
                 // Make a copy so we don't step on anything else going on
-                var cues = track.Cues.ToList();
+                List<EventCueViewModel> cues = track.Cues.ToList();
 
-                foreach (var cue in cues)
+                foreach (EventCueViewModel cue in cues)
                 {
                     if (cue.Intersects(position))
                     {
@@ -345,7 +374,7 @@ namespace LaunchPad2.ViewModels
                     track.Port.ShouldBeActive = trackActive;
             }
 
-            foreach (var node in Nodes)
+            foreach (NodeViewModel node in Nodes)
             {
                 node.SyncPortStates();
             }
@@ -457,8 +486,6 @@ namespace LaunchPad2.ViewModels
                 cue.SampleRate = AudioTrack.SampleRate;
         }
 
-        private Dictionary<EventCueViewModel, TrackViewModel> _clonedCuesAndTracks;
-
         public void StartMove()
         {
             SetCueMoveUndo();
@@ -479,7 +506,9 @@ namespace LaunchPad2.ViewModels
         public void EndMove()
         {
             if (_clonedCuesAndTracks == null)
+            {
                 CommitCueMoveUndo();
+            }
             else
             {
                 var clonedCuesAndTracks = new Dictionary<EventCueViewModel, TrackViewModel>(_clonedCuesAndTracks);
@@ -626,7 +655,7 @@ namespace LaunchPad2.ViewModels
 
         private void CueDistributeOnBeats(object parameter)
         {
-            var offset = Convert.ToInt32(parameter);
+            int offset = Convert.ToInt32(parameter);
             CueDistributeOnBands(offset, 1);
         }
 
@@ -641,16 +670,16 @@ namespace LaunchPad2.ViewModels
             double stdDev = subbandAverages.StdDev(out average);
 
             double millisecondsPerValue = AudioTrack.Length.TotalMilliseconds/subbandAverages.Count;
-            var energyAndTime =
+            IEnumerable<SampleInfo<double>> energyAndTime =
                 subbandAverages.Select((value, i) =>
                     new SampleInfo<double>(TimeSpan.FromMilliseconds(i*millisecondsPerValue), value));
 
-            var energyAndTimeOrderedByEnergy =
+            List<SampleInfo<double>> energyAndTimeOrderedByEnergy =
                 energyAndTime.Where(sample => sample.Value > average + stdDev)
                     .OrderByDescending(value => value.Value)
                     .ToList();
 
-            var selectedTracks = GetSelectedTracks().ToList();
+            List<TrackViewModel> selectedTracks = GetSelectedTracks().ToList();
 
             if (selectedTracks.Count == 0)
             {
@@ -661,13 +690,13 @@ namespace LaunchPad2.ViewModels
                 int valueIndex = 0;
                 foreach (EventCueViewModel cue in selectedCues)
                 {
-                    var nearestNeighborOrdered =
+                    List<SampleInfo<double>> nearestNeighborOrdered =
                         energyAndTimeOrderedByEnergy.OrderBy(
                             sample => Math.Abs((cue.Start - sample.Time).TotalMilliseconds)).ToList();
 
                     do
                     {
-                        var sample = nearestNeighborOrdered[valueIndex++];
+                        SampleInfo<double> sample = nearestNeighborOrdered[valueIndex++];
                         cue.Start = sample.Time;
                         //cue.LeadIn = TimeSpan.FromMilliseconds(sample.Value);
                     } while (
@@ -680,12 +709,12 @@ namespace LaunchPad2.ViewModels
             else
             {
                 /* Wipe out and populate selected tracks */
-                foreach (var track in selectedTracks)
+                foreach (TrackViewModel track in selectedTracks)
                 {
                     Delete(track.Cues, undoBatchMemento);
 
                     /* Higher energy values have shorter duration */
-                    var cues =
+                    List<EventCueViewModel> cues =
                         energyAndTimeOrderedByEnergy.Select(
                             value =>
                             {
@@ -695,10 +724,10 @@ namespace LaunchPad2.ViewModels
                             })
                             .ToList();
 
-                    var trackCues = track.Cues;
+                    ObservableCollection<EventCueViewModel> trackCues = track.Cues;
                     var doAction = new Action(() =>
                     {
-                        foreach (var cue in cues)
+                        foreach (EventCueViewModel cue in cues)
                         {
                             if (!trackCues.Any(c => c.Intersects(cue)))
                                 trackCues.Add(cue);
@@ -780,22 +809,23 @@ namespace LaunchPad2.ViewModels
             if (Clipboard.ContainsData(ClipboardTracksKey))
             {
                 var tracks = (List<TrackModel>) Clipboard.GetData(ClipboardTracksKey);
-                var trackViewModels = tracks.Select(track => track.GetViewModel(Devices, Nodes)).ToList();
+                List<TrackViewModel> trackViewModels =
+                    tracks.Select(track => track.GetViewModel(Devices, Nodes)).ToList();
 
                 var doAction = new Action(() =>
                 {
-                    foreach (var track in trackViewModels)
+                    foreach (TrackViewModel track in trackViewModels)
                     {
-                        var trackName = GetUniqueName(track.Name);
+                        string trackName = GetUniqueName(track.Name);
                         track.Name = trackName;
 
-                        var insertTrack = GetSelectedTracks().LastOrDefault();
+                        TrackViewModel insertTrack = GetSelectedTracks().LastOrDefault();
 
                         if (insertTrack == null)
                             Tracks.Add(track);
                         else
                         {
-                            var insertIndex = Tracks.IndexOf(insertTrack);
+                            int insertIndex = Tracks.IndexOf(insertTrack);
                             Tracks.Insert(insertIndex + 1, track);
                         }
                     }
@@ -805,7 +835,7 @@ namespace LaunchPad2.ViewModels
 
                 var undoAction = new Action(() =>
                 {
-                    foreach (var track in trackViewModels)
+                    foreach (TrackViewModel track in trackViewModels)
                         Tracks.Remove(track);
                 });
 
@@ -815,7 +845,7 @@ namespace LaunchPad2.ViewModels
 
         private string GetUniqueName(string baseName)
         {
-            var name = baseName;
+            string name = baseName;
             for (int i = 0; Tracks.Select(track => track.Name).Contains(name); i++)
             {
                 name = string.Format("{0} - Copy", baseName);
@@ -829,13 +859,13 @@ namespace LaunchPad2.ViewModels
 
         private void GroupSelected()
         {
-            var selected = SelectedItems.OfType<IGroupable>();
-            var rootGroupables = selected.Select(item => item.GetRootGroupable()).Distinct().ToList();
+            IEnumerable<IGroupable> selected = SelectedItems.OfType<IGroupable>();
+            List<IGroupable> rootGroupables = selected.Select(item => item.GetRootGroupable()).Distinct().ToList();
 
             var group = new EventCueGroupViewModel();
             group.Children = new ObservableCollection<IGroupable>(rootGroupables);
 
-            foreach (var rootGroupable in rootGroupables)
+            foreach (IGroupable rootGroupable in rootGroupables)
                 rootGroupable.Group = group;
 
             Groups.Add(group);
@@ -843,37 +873,22 @@ namespace LaunchPad2.ViewModels
 
         private void UngroupSelected()
         {
-            var selected = SelectedItems.OfType<IGroupable>();
-            var rootGroupables = selected.Select(item => item.GetRootGroupable()).Distinct().ToList();
+            IEnumerable<IGroupable> selected = SelectedItems.OfType<IGroupable>();
+            List<IGroupable> rootGroupables = selected.Select(item => item.GetRootGroupable()).Distinct().ToList();
 
-            var groups = rootGroupables.OfType<EventCueGroupViewModel>();
+            IEnumerable<EventCueGroupViewModel> groups = rootGroupables.OfType<EventCueGroupViewModel>();
 
-            foreach (var group in groups)
+            foreach (EventCueGroupViewModel group in groups)
             {
-                foreach (var child in group.Children)
+                foreach (IGroupable child in group.Children)
                     child.Group = null;
                 Groups.Remove(group);
             }
         }
 
-        private NetworkDiscoveryState _networkDiscoveryState;
-
-        public NetworkDiscoveryState NetworkDiscoveryState
-        {
-            get { return _networkDiscoveryState; }
-            set
-            {
-                if (_networkDiscoveryState != value)
-                {
-                    _networkDiscoveryState = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
         private async void DiscoverNetwork()
         {
-            foreach (var node in Nodes)
+            foreach (NodeViewModel node in Nodes)
                 node.DiscoveryState = NodeDiscoveryState.Discovering;
 
             try
@@ -905,14 +920,14 @@ namespace LaunchPad2.ViewModels
 
         private void NetworkControllerOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)
         {
-            var node = e.Node;
+            XBeeNode node = e.Node;
 
-            var existingNode = Nodes.FirstOrDefault(n => n.Address.Equals(node.Address.LongAddress));
+            NodeViewModel existingNode = Nodes.FirstOrDefault(n => n.Address.Equals(node.Address.LongAddress));
 
             //var name = await node.GetNodeIdentifier();
-            var name = e.Name;
+            string name = e.Name;
 
-            var signalStrength = e.SignalStrength.HasValue ? e.SignalStrength : SignalStrength.High;
+            SignalStrength? signalStrength = e.SignalStrength.HasValue ? e.SignalStrength : SignalStrength.High;
 
             if (existingNode == null)
             {
@@ -933,13 +948,13 @@ namespace LaunchPad2.ViewModels
         {
             if (e.NewItems != null)
             {
-                foreach (var item in e.NewItems.Cast<NodeViewModel>())
+                foreach (NodeViewModel item in e.NewItems.Cast<NodeViewModel>())
                     item.PropertyChanged += OnNodeViewModelOnPropertyChanged;
             }
 
             if (e.OldItems != null)
             {
-                foreach (var item in e.OldItems.Cast<NodeViewModel>())
+                foreach (NodeViewModel item in e.OldItems.Cast<NodeViewModel>())
                     item.PropertyChanged -= OnNodeViewModelOnPropertyChanged;
             }
         }
