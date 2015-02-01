@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Waveform.Util.Annotations;
+using LaunchPad2.Annotations;
 
 namespace LaunchPad2.ViewModels
 {

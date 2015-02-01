@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
-using LaunchPad2.Properties;
+using LaunchPad2.Annotations;
 
 namespace LaunchPad2.Converters
 {

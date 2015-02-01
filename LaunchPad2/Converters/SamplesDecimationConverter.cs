@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Data;
 using FMOD;
-using LaunchPad2.Properties;
+using LaunchPad2.Annotations;
 using Waveform;
 
 namespace LaunchPad2.Converters

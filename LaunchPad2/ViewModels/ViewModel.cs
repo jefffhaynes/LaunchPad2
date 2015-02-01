@@ -35,6 +35,8 @@ namespace LaunchPad2.ViewModels
         private object _selectedItem;
         private double _zoom;
 
+        public event EventHandler Stopped;
+
         public ViewModel()
         {
             UndoCommand = new RelayCommand(UndoManager.Undo);
@@ -316,6 +318,10 @@ namespace LaunchPad2.ViewModels
 
             AudioTrack.IsPaused = true;
             AudioTrack.Position = TimeSpan.Zero;
+
+            var handler = Stopped;
+            if (handler != null)
+                handler(this, EventArgs.Empty);
         }
 
         private async Task Arm()

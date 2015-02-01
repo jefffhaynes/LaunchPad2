@@ -78,7 +78,6 @@ namespace FMOD
                     RESULT result = _playbackChannel.setPaused(value);
                     ThrowOnBadResult(result);
                     OnPropertyChanged("IsPaused");
-                    //_positionReportingTimer.Enabled = !value;
                 }
             }
         }

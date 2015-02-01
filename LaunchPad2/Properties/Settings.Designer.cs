@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace LaunchPad2.Properties {
+namespace LaunchPad2.Annotations {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
