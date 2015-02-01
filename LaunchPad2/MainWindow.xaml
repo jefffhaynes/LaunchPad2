@@ -18,7 +18,7 @@
         <converters:SampleDecimationConverter x:Key="SampleDecimationConverter"/>
         <converters:LighteningConverter x:Key="LighteningConverter"/>
         <converters:ZoomPercentageConverter x:Key="PercentageConverter"/>
-        
+
         <Style TargetType="Button" x:Key="CueButtonStyle">
             <Setter Property="Margin" Value="3"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -91,7 +91,7 @@
             <ColumnDefinition Width="200"/>
         </Grid.ColumnDefinitions>
 
-        <Grid>
+        <Grid Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -106,6 +106,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Button Click="LoadAudioButtonOnClick" Margin="6,3,3,3" Background="Transparent" BorderThickness="0" Grid.Column="0"
                     ToolTip="Open Audio File" Template="{StaticResource ButtonTemplate}">
@@ -164,7 +165,7 @@
                     </Path.Style>
                 </Path>
             </Button>
-            
+
             <controls:MenuSeparator Grid.Column="7"/>
 
             <Button Grid.Row="0" Grid.Column="8" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding PlayCommand}"  
@@ -226,17 +227,17 @@
             </Button>
 
             <controls:MenuSeparator Grid.Column="10"/>
-
-            <Button Grid.Row="0" Grid.Column="11" Margin="3" Background="Transparent" BorderThickness="0"
+            
+            <Button Grid.Row="0" Grid.Column="11" Margin="3" BorderThickness="0"
                     Template="{StaticResource ButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="Command" Value="{Binding StartShowCommand}"/>
-                        <Setter Property="ToolTip" Value="Start Show"/>
+                        <Setter Property="ToolTip" Value="Arm and Start Show"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsShowRunning}" Value="True">
                                 <Setter Property="Command" Value="{Binding AbortShowCommand}"/>
-                                <Setter Property="ToolTip" Value="Abort"></Setter>
+                                <Setter Property="ToolTip" Value="Abort"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -245,7 +246,7 @@
                     <Path.Style>
                         <Style TargetType="Path">
                             <Setter Property="Data" Value="{DynamicResource StartShowGeometryKey}"/>
-                            <Setter Property="Fill" Value="{DynamicResource MenuGreenBrushKey}"/>
+                            <Setter Property="Fill" Value="{DynamicResource MenuYellowBrushKey}"/>
                             <Style.Triggers>
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter Property="Fill" Value="{DynamicResource MenuDisabledBrushKey}"/>
@@ -258,10 +259,9 @@
                         </Style>
                     </Path.Style>
                 </Path>
-
             </Button>
 
-            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s\\.f'}" Grid.Column="12" Foreground="{StaticResource MenuRedBrushKey}" FontSize="12" Margin="0,0,0,1" >
+            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s\\.f'}" Grid.Column="12" Foreground="{StaticResource MenuRedBrushKey}" FontSize="12" Margin="0,0,6,1" >
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -273,6 +273,19 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
+
+            <Rectangle Grid.Column="13" Fill="{StaticResource WarningBrushKey}">
+                <Rectangle.Style>
+                    <Style TargetType="Rectangle">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsShowRunning}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Rectangle.Style>
+            </Rectangle>
         </Grid>
 
         <ScrollViewer Name="AudioScrollViewer" UseLayoutRounding="True" Grid.Row="1" Grid.Column="0" Margin="0,0,0,6" 
