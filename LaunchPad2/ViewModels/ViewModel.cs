@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using FMOD;
 using LaunchPad2.Models;
 using NodeControl;
@@ -99,6 +100,15 @@ namespace LaunchPad2.ViewModels
             Nodes.CollectionChanged += NodesOnCollectionChanged;
 
             Zoom = DefaultZoom;
+
+
+            CompositionTarget.Rendering += CompositionTargetOnRendering;
+        }
+
+        private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
+        {
+            if(AudioTrack != null && !AudioTrack.IsPaused)
+                AudioTrack.Update();
         }
 
 

@@ -5,20 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Timers;
-using Timer = System.Timers.Timer;
 
 namespace FMOD
 {
     public class AudioTrack : IDisposable, INotifyPropertyChanged
     {
-        private const int UpdateIntervalMs = 20;
         private const int FftWindowSize = 1024;
         private const int SubbandCount = 128;
         private const int DefaultEnergySubbandWindowSize = 42;
         private static readonly LomontFft Fft = new LomontFft();
         private readonly string _file;
-        private readonly Timer _positionReportingTimer;
         private readonly ReaderWriterLockSlim _samplesCacheLock = new ReaderWriterLockSlim();
         private readonly ReaderWriterLockSlim _spectralSamplesCacheLock = new ReaderWriterLockSlim();
         private readonly ReaderWriterLockSlim _energySubbandCacheLock = new ReaderWriterLockSlim();
@@ -42,13 +38,23 @@ namespace FMOD
         public AudioTrack(string file)
         {
             _file = file;
-
-            _positionReportingTimer = new Timer(UpdateIntervalMs) {Enabled = false, AutoReset = true};
-            _positionReportingTimer.Elapsed += ReportingTimerElapsed;
-
             EnergySubbandWindowSize = DefaultEnergySubbandWindowSize;
 
             Load();
+        }
+
+        /// <summary>
+        /// This must be called to refresh position information, typically from a frame loop or rendering event.
+        /// </summary>
+        public void Update()
+        {
+            _system.update();
+
+            OnPropertyChanged("Position");
+            OnPropertyChanged("SamplePosition");
+
+            if (PositionChanged != null)
+                PositionChanged(this, EventArgs.Empty);
         }
 
 
@@ -72,7 +78,7 @@ namespace FMOD
                     RESULT result = _playbackChannel.setPaused(value);
                     ThrowOnBadResult(result);
                     OnPropertyChanged("IsPaused");
-                    _positionReportingTimer.Enabled = !value;
+                    //_positionReportingTimer.Enabled = !value;
                 }
             }
         }
@@ -534,7 +540,6 @@ namespace FMOD
             switch (type)
             {
                 case CHANNEL_CALLBACKTYPE.END:
-                    _positionReportingTimer.Enabled = false;
                     Load();
                     break;
             }
@@ -553,16 +558,6 @@ namespace FMOD
             _viewSound.getDefaults(ref _sampleRate, ref volume, ref pan, ref priority);
 
             OnPropertyChanged("SampleRate");
-        }
-
-        private void ReportingTimerElapsed(object sender, ElapsedEventArgs e)
-        {
-            _system.update();
-            OnPropertyChanged("Position");
-            OnPropertyChanged("SamplePosition");
-
-            if (PositionChanged != null)
-                PositionChanged(this, EventArgs.Empty);
         }
 
         public double ToSamples(TimeSpan time)

@@ -232,6 +232,12 @@
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="ToolTip" Value="Start Show"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsShowRunning}" Value="True">
+                                <Setter Property="Command" Value="{Binding AbortShowCommand}"/>
+                                <Setter Property="ToolTip" Value="Abort"></Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
                     </Style>
                 </Button.Style>
                 <Path Width="16" Height="14" Stretch="Uniform">
@@ -243,6 +249,10 @@
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter Property="Fill" Value="{DynamicResource MenuDisabledBrushKey}"/>
                                 </Trigger>
+                                <DataTrigger Binding="{Binding IsShowRunning}" Value="True">
+                                    <Setter Property="Data" Value="{DynamicResource AbortGeometryKey}"/>
+                                    <Setter Property="Fill" Value="{DynamicResource MenuRedBrushKey}"/>
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Path.Style>
@@ -250,7 +260,7 @@
 
             </Button>
 
-            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s\\.f'}" Grid.Column="12" Foreground="{StaticResource MenuTextBrushKey}" FontSize="14" >
+            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s\\.f'}" Grid.Column="12" Foreground="{StaticResource MenuGreenBrushKey}" FontSize="14" >
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>
