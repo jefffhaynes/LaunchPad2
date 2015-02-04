@@ -90,6 +90,8 @@ namespace LaunchPad2
 
                 _temporaryAudioFile = temporaryAudioFile;
                 _viewModel.File = dialog.FileName;
+
+                _viewModel.Stopped += (s, args) => AudioScrollViewer.ScrollToHorizontalOffset(0);
             }
         }
 

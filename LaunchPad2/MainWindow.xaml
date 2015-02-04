@@ -11,7 +11,7 @@
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Height="600" Width="1280" d:DataContext="{d:DesignData viewModels:ViewModel}"
-        Background="#2D2D30" Icon="LaunchPad.ico">
+        Background="{StaticResource PanelHorizontalLineBrushKey}" Icon="LaunchPad.ico">
     <Window.Resources>
         <converters:FileTitleConverter x:Key="FileTitleConverter"/>
         <converters:SamplesDecimationConverter x:Key="SamplesDecimationConverter"/>
@@ -108,35 +108,32 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Button Click="LoadAudioButtonOnClick" Margin="6,3,3,3" Background="Transparent" BorderThickness="0" Grid.Column="0"
-                    ToolTip="Open Audio File" Template="{StaticResource ButtonTemplate}">
-                <Path Data="{DynamicResource LoadAudioGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" Width="14" Height="16"/>
+
+            <Button Grid.Column="0" Click="LoadButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" 
+                    ToolTip="Open Project" Template="{StaticResource TouchButtonTemplate}">
+                <Path Data="{DynamicResource LoadGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBrownBrushKey}"/>
             </Button>
-            <Button Click="LoadButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="1"
-                    ToolTip="Open Project" Template="{StaticResource ButtonTemplate}">
-                <Path Data="{DynamicResource LoadGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBrownBrushKey}" Width="16" Height="16"/>
-            </Button>
-            <Button Click="SaveButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="2"
-                     Template="{StaticResource ButtonTemplate}">
+            <Button Click="SaveButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="1"
+                     Template="{StaticResource TouchButtonTemplate}">
                 <Button.ToolTip>
                     <ToolTip Content="{Binding File, Converter={StaticResource FileTitleConverter}}" ContentStringFormat="Save {0} (Ctrl+S)"/>
                 </Button.ToolTip>
-                <Button.Content>
-                    <Path Data="{DynamicResource SaveGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" Width="16" Height="16"/>
-                </Button.Content>
+                <Path Data="{DynamicResource SaveGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" />
             </Button>
-            <Button Click="SaveAsButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="3"
-                    ToolTip="Save As" Template="{StaticResource ButtonTemplate}">
-                <Button.Content>
-                    <Path Data="{DynamicResource SaveAsGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" Width="16" Height="16"/>
-                </Button.Content>
+            <Button Click="SaveAsButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="2"
+                    ToolTip="Save As" Template="{StaticResource TouchButtonTemplate}">
+                <Path Data="{DynamicResource SaveAsGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" />
+            </Button>
+            <Button Click="LoadAudioButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="3"
+                    ToolTip="Open Audio File" Template="{StaticResource TouchButtonTemplate}">
+                <Path Data="{DynamicResource LoadAudioGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" />
             </Button>
 
             <controls:MenuSeparator Grid.Column="4"/>
 
             <Button Grid.Row="0" Grid.Column="5" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding UndoCommand}" ToolTip="Undo (Ctrl+Z)" 
-                    Template="{StaticResource ButtonTemplate}" IsEnabled="{Binding Path=(launchpad:UndoManager.CanUndo)}" >
-                <Path Data="{DynamicResource UndoGeometryKey}" Stretch="Uniform" Width="16" Height="16">
+                    Template="{StaticResource TouchButtonTemplate}" IsEnabled="{Binding Path=(launchpad:UndoManager.CanUndo)}" >
+                <Path Data="{DynamicResource UndoGeometryKey}" Stretch="Uniform" >
                     <Path.Style>
                         <Style TargetType="Path">
                             <Setter Property="Fill" Value="{StaticResource MenuBlueBrushKey}"/>
@@ -151,8 +148,8 @@
             </Button>
 
             <Button Grid.Row="0" Grid.Column="6" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding RedoCommand}" ToolTip="Redo (Ctrl+Y)" 
-                    Template="{StaticResource ButtonTemplate}" IsEnabled="{Binding Path=(launchpad:UndoManager.CanRedo)}" >
-                <Path Data="{DynamicResource RedoGeometryKey}" Stretch="Uniform" Width="16" Height="16" >
+                    Template="{StaticResource TouchButtonTemplate}" IsEnabled="{Binding Path=(launchpad:UndoManager.CanRedo)}" >
+                <Path Data="{DynamicResource RedoGeometryKey}" Stretch="Uniform" >
                     <Path.Style>
                         <Style TargetType="Path">
                             <Setter Property="Fill" Value="{StaticResource MenuBlueBrushKey}"/>
@@ -169,7 +166,7 @@
             <controls:MenuSeparator Grid.Column="7"/>
 
             <Button Grid.Row="0" Grid.Column="8" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding PlayCommand}"  
-                    Template="{StaticResource ButtonTemplate}">
+                    Template="{StaticResource TouchButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="ToolTip" Value="Play"/>
@@ -180,7 +177,7 @@
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
-                <Path Width="16" Height="14" Stretch="Uniform">
+                <Path Stretch="Uniform">
                     <Path.Style>
                         <Style TargetType="Path">
                             <Setter Property="Data" Value="{DynamicResource PlayGeometryKey}"/>
@@ -200,8 +197,8 @@
             </Button>
 
             <Button Grid.Row="0" Grid.Column="9" Margin="0,3,3,3" Background="Transparent" BorderThickness="0" Command="{Binding StopCommand}"  
-                    Template="{StaticResource ButtonTemplate}" ToolTip="Stop" >
-                <Rectangle Width="10" Height="10" Margin="3,1">
+                    Template="{StaticResource TouchButtonTemplate}" ToolTip="Stop" >
+                <Rectangle Margin="3">
                     <Rectangle.Style>
                         <Style TargetType="Rectangle">
                             <Setter Property="Fill" Value="{StaticResource StopButtonBrushKey}"/>
@@ -217,9 +214,9 @@
             </Button>
 
             <controls:MenuSeparator Grid.Column="10"/>
-            
+
             <Button Grid.Row="0" Grid.Column="11" Margin="3" BorderThickness="0"
-                    Template="{StaticResource ButtonTemplate}">
+                    Template="{StaticResource TouchButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="Command" Value="{Binding StartShowCommand}"/>
@@ -232,7 +229,7 @@
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
-                <Path Width="16" Height="14" Stretch="Uniform">
+                <Path Stretch="Uniform">
                     <Path.Style>
                         <Style TargetType="Path">
                             <Setter Property="Data" Value="{DynamicResource StartShowGeometryKey}"/>
@@ -251,7 +248,7 @@
                 </Path>
             </Button>
 
-            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s\\.f'}" Grid.Column="12" Foreground="{StaticResource MenuRedBrushKey}" FontSize="12" Margin="0,0,12,0">
+            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s'}" Grid.Column="12" Foreground="{StaticResource MenuRedBrushKey}" FontSize="12" Margin="0,0,12,0">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>

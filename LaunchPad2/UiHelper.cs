@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace LaunchPad2
@@ -38,6 +40,16 @@ namespace LaunchPad2
                         yield return childOfChild;
                     }
                 }
+            }
+        }
+
+        public static bool HasTouchInput
+        {
+            get
+            {
+                return
+                    Tablet.TabletDevices.Cast<TabletDevice>()
+                        .Any(tabletDevice => tabletDevice.Type == TabletDeviceType.Touch);
             }
         }
     }
