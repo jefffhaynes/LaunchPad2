@@ -21,6 +21,7 @@
         <SolidColorBrush x:Key="StopButtonBrushKey" Color="#FFF28A75"/>
         <SolidColorBrush x:Key="TrackBackgroundBrushKey" Color="Black"/>
         <SolidColorBrush x:Key="GridSplitterBackgroundBrush" Color="#FF3F3F46"/>
+        <SolidColorBrush x:Key="StatusBarBrushKey" Color="#68217A"/>
 
         <SolidColorBrush x:Key="PanelBackgroundBrushKey" Color="#FF252526"/>
         <SolidColorBrush x:Key="PanelControlBorderBrushKey" Color="#FF434346"/>

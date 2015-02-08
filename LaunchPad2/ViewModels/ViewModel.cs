@@ -117,6 +117,28 @@ namespace LaunchPad2.ViewModels
             CompositionTarget.Rendering += CompositionTargetOnRendering;
         }
 
+        private string _status;
+
+        public string Status
+        {
+            get { return _status; }
+
+            set
+            {
+                if (_status != value)
+                {
+                    _status = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public async void SetStatus(string status)
+        {
+            Status = status;
+            await Task.Delay(TimeSpan.FromSeconds(10));
+            Status = null;
+        }
 
         public string File
         {

@@ -84,6 +84,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="100" MinHeight="60"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -766,5 +767,8 @@
             <controls:PropertiesPanel Grid.Row="1" DeviceSource="{Binding Devices}" NodeSource="{Binding Nodes}"/>
         </Grid>
 
+        <Border Grid.Row="3" Grid.ColumnSpan="2" Grid.Column="0" Background="{StaticResource StatusBarBrushKey}">
+            <TextBlock Text="{Binding Status}" Foreground="{StaticResource MenuTextBrushKey}" Margin="4"/>
+        </Border>
     </Grid>
 </Window>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -38,18 +39,20 @@ namespace LaunchPad2
             }
         }
 
-        private void SaveButtonOnClick(object sender, RoutedEventArgs e)
+        private async void SaveButtonOnClick(object sender, RoutedEventArgs e)
         {
             if(_viewModel.File == null || !File.Exists(_viewModel.File))
                 SaveAsButtonOnClick(sender, e);
             else
             {
+                _viewModel.SetStatus("Saving...");
                 var model = new Model(_viewModel);
-                Packager.Pack(_viewModel.File, model, _viewModel.AudioFile);
+                await Task.Run(() => Packager.Pack(_viewModel.File, model, _viewModel.AudioFile));
+                _viewModel.SetStatus("Saved");
             }
         }
 
-        private void SaveAsButtonOnClick(object sender, RoutedEventArgs e)
+        private async void SaveAsButtonOnClick(object sender, RoutedEventArgs e)
         {
             var dialog = new SaveFileDialog
             {
@@ -60,14 +63,16 @@ namespace LaunchPad2
             bool? result = dialog.ShowDialog();
             if (result != null && result.Value)
             {
+                _viewModel.SetStatus("Saving...");
                 var model = new Model(_viewModel);
-                Packager.Pack(dialog.FileName, model, _viewModel.AudioFile);
+                await Task.Run(() => Packager.Pack(dialog.FileName, model, _viewModel.AudioFile));
 
                 _viewModel.File = dialog.FileName;
+                _viewModel.SetStatus("Saved");
             }
         }
 
-        private void LoadButtonOnClick(object sender, RoutedEventArgs e)
+        private async void LoadButtonOnClick(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFileDialog
             {
@@ -78,10 +83,15 @@ namespace LaunchPad2
             bool? result = dialog.ShowDialog();
             if (result != null && result.Value)
             {
-                string filename = dialog.FileName;
-                TemporaryFile temporaryAudioFile;
+                _viewModel.SetStatus("Loading...");
 
-                Model model = Packager.Unpack(filename, out temporaryAudioFile);
+                string filename = dialog.FileName;
+
+                Model model = null;
+                TemporaryFile temporaryAudioFile = null;
+                
+                await Task.Run(() => model = Packager.Unpack(filename, out temporaryAudioFile));
+
                 _viewModel = model.GetViewModel();
                 DataContext = _viewModel;
 
@@ -92,6 +102,8 @@ namespace LaunchPad2
                 _viewModel.File = dialog.FileName;
 
                 _viewModel.Stopped += (s, args) => AudioScrollViewer.ScrollToHorizontalOffset(0);
+
+                _viewModel.SetStatus("Loaded");
             }
         }
 
