@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -34,6 +35,8 @@ namespace FMOD
         private uint _totalSamples;
         private Channel _viewChannel;
         private Sound _viewSound;
+
+        public event EventHandler<AudioTrackStatusEventArgs> StatusChanged;
 
         public AudioTrack(string file)
         {
@@ -196,6 +199,7 @@ namespace FMOD
 
                 try
                 {
+                    Debug.Assert(_sampleCacheTempFile != null, "_sampleCacheTempFile != null");
                     using (var stream = new FileStream(_sampleCacheTempFile.Path, FileMode.Open, FileAccess.Read))
                     using (var reader = new BinaryReader(stream))
                     {
@@ -226,6 +230,7 @@ namespace FMOD
 
                 try
                 {
+                    Debug.Assert(_spectralCacheTempFile != null, "_spectralCacheTempFile != null");
                     using (var stream = new FileStream(_spectralCacheTempFile.Path, FileMode.Open, FileAccess.Read))
                     using (var reader = new BinaryReader(stream))
                     {
@@ -257,6 +262,7 @@ namespace FMOD
 
                 try
                 {
+                    Debug.Assert(_energySubbandCacheTempFile != null, "_energySubbandCacheTempFile != null");
                     using (var stream = new FileStream(_energySubbandCacheTempFile.Path, FileMode.Open, FileAccess.Read)
                         )
                     using (var reader = new BinaryReader(stream))
@@ -284,6 +290,8 @@ namespace FMOD
 
         private void CacheSamples()
         {
+            OnStatusChanged("Loading audio");
+
             _samplesCacheLock.EnterWriteLock();
 
             if (_sampleCacheTempFile != null)
@@ -306,6 +314,8 @@ namespace FMOD
             {
                 _samplesCacheLock.ExitWriteLock();
             }
+
+            OnStatusChanged("Audio loaded");
         }
 
         private IEnumerable<StereoSample> ReadSamples()
@@ -406,6 +416,8 @@ namespace FMOD
 
         private void CacheEnergySubbands()
         {
+            OnStatusChanged("Detecting beats");
+
             _energySubbandCacheLock.EnterWriteLock();
 
             try
@@ -429,6 +441,8 @@ namespace FMOD
             {
                 _energySubbandCacheLock.ExitWriteLock();
             }
+
+            OnStatusChanged("Beats detected");
         }
 
         private IEnumerable<IEnumerable<double>> ReadEnergySubbands()
@@ -582,6 +596,13 @@ namespace FMOD
         {
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(property));
+        }
+
+        private void OnStatusChanged(string message)
+        {
+            var handler = StatusChanged;
+            if(handler != null)
+                handler(this, new AudioTrackStatusEventArgs(message));
         }
 
         #region IDisposable Members

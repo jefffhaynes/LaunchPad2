@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AudioTrackStatusEventArgs.cs" />
     <Compile Include="Fft.cs" />
     <Compile Include="Fmod.cs" />
     <Compile Include="FmodException.cs" />

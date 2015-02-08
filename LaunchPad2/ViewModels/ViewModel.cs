@@ -34,6 +34,7 @@ namespace LaunchPad2.ViewModels
         private NetworkDiscoveryState _networkDiscoveryState;
         private object _selectedItem;
         private double _zoom;
+        private string _status;
 
         public event EventHandler Stopped;
 
@@ -117,8 +118,6 @@ namespace LaunchPad2.ViewModels
             CompositionTarget.Rendering += CompositionTargetOnRendering;
         }
 
-        private string _status;
-
         public string Status
         {
             get { return _status; }
@@ -136,8 +135,8 @@ namespace LaunchPad2.ViewModels
         public async void SetStatus(string status)
         {
             Status = status;
-            await Task.Delay(TimeSpan.FromSeconds(10));
-            Status = null;
+            await Task.Delay(TimeSpan.FromSeconds(60));
+            Status = "Ready";
         }
 
         public string File
@@ -204,6 +203,7 @@ namespace LaunchPad2.ViewModels
                     if (_audioTrack != null)
                     {
                         _audioTrack.PositionChanged -= AudioTrackOnPositionChanged;
+                        _audioTrack.StatusChanged -= AudioTrackOnStatusChanged;
                     }
 
                     _audioTrack = value;
@@ -215,7 +215,9 @@ namespace LaunchPad2.ViewModels
                     if (_audioTrack != null)
                     {
                         _audioTrack.PositionChanged += AudioTrackOnPositionChanged;
+                        _audioTrack.StatusChanged += AudioTrackOnStatusChanged;
                     }
+
                     OnPropertyChanged();
                 }
             }
@@ -1050,6 +1052,11 @@ namespace LaunchPad2.ViewModels
                 {
                 }
             }
+        }
+
+        private void AudioTrackOnStatusChanged(object sender, AudioTrackStatusEventArgs e)
+        {
+            SetStatus(e.Message);
         }
     }
 }
