@@ -33,10 +33,8 @@ namespace LaunchPad2.ViewModels
         private bool _isShowRunning;
         private NetworkDiscoveryState _networkDiscoveryState;
         private object _selectedItem;
-        private double _zoom;
         private string _status;
-
-        public event EventHandler Stopped;
+        private double _zoom;
 
         public ViewModel()
         {
@@ -65,7 +63,6 @@ namespace LaunchPad2.ViewModels
 
                 if (!_countdownCancellationTokenSource.IsCancellationRequested)
                     AudioTrack.IsPaused = false;
-
             }, IsAudioFileLoaded);
 
             AbortShowCommand = new RelayCommand(async () =>
@@ -130,13 +127,6 @@ namespace LaunchPad2.ViewModels
                     OnPropertyChanged();
                 }
             }
-        }
-
-        public async void SetStatus(string status)
-        {
-            Status = status;
-            await Task.Delay(TimeSpan.FromSeconds(60));
-            Status = "Ready";
         }
 
         public string File
@@ -237,6 +227,49 @@ namespace LaunchPad2.ViewModels
             get { return Tracks.SelectMany(track => track.Cues); }
         }
 
+        public IList<object> SelectedItems { get; set; }
+
+        public double Zoom
+        {
+            get { return _zoom; }
+            set
+            {
+                if (Math.Abs(_zoom - value) > double.Epsilon)
+                {
+                    _zoom = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public object SelectedItem
+        {
+            get { return _selectedItem; }
+            set
+            {
+                if (_selectedItem != value)
+                {
+                    _selectedItem = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public NetworkDiscoveryState NetworkDiscoveryState
+        {
+            get { return _networkDiscoveryState; }
+            set
+            {
+                if (_networkDiscoveryState != value)
+                {
+                    _networkDiscoveryState = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        #region Commands
+
         public RelayCommand UndoCommand { get; private set; }
 
         public RelayCommand RedoCommand { get; private set; }
@@ -285,51 +318,15 @@ namespace LaunchPad2.ViewModels
 
         public ICommand ZoomExtentsCommand { get; private set; }
 
-        public IList<object> SelectedItems { get; set; }
+        #endregion
 
-        public double Zoom
-        {
-            get { return _zoom; }
-            set
-            {
-                if (Math.Abs(_zoom - value) > double.Epsilon)
-                {
-                    _zoom = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        public event EventHandler Stopped;
 
-        public object SelectedItem
+        public async void SetStatus(string status)
         {
-            get { return _selectedItem; }
-            set
-            {
-                if (_selectedItem != value)
-                {
-                    _selectedItem = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public NetworkDiscoveryState NetworkDiscoveryState
-        {
-            get { return _networkDiscoveryState; }
-            set
-            {
-                if (_networkDiscoveryState != value)
-                {
-                    _networkDiscoveryState = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
-        {
-            if (AudioTrack != null && !AudioTrack.IsPaused)
-                AudioTrack.Update();
+            Status = status;
+            await Task.Delay(TimeSpan.FromSeconds(60));
+            Status = "Ready";
         }
 
         private async Task Stop()
@@ -346,7 +343,7 @@ namespace LaunchPad2.ViewModels
                 AudioTrack.Position = TimeSpan.Zero;
             }
 
-            var handler = Stopped;
+            EventHandler handler = Stopped;
             if (handler != null)
                 handler(this, EventArgs.Empty);
         }
@@ -566,7 +563,7 @@ namespace LaunchPad2.ViewModels
 
         private void SetCueMoveUndo()
         {
-            var selectedCues = AllCues.Where(cue => cue.IsSelected).ToList();
+            List<EventCueViewModel> selectedCues = AllCues.Where(cue => cue.IsSelected).ToList();
 
             if (!selectedCues.Any())
             {
@@ -588,10 +585,11 @@ namespace LaunchPad2.ViewModels
             List<CueMoveInfo> undoCueStates = _cueUndoStates.ToList();
 
             /* Check for no movement */
-            var firstUndoState = undoCueStates.First();
+            CueMoveInfo firstUndoState = undoCueStates.First();
             if (!firstUndoState.HasChanged)
                 return;
 
+            /* Needed only for redo */
             var doAction = new Action(() =>
             {
                 foreach (CueMoveInfo cueInfo in cueStates)
@@ -957,12 +955,6 @@ namespace LaunchPad2.ViewModels
 
         private async void DiscoverNetwork()
         {
-            if (Nodes == null)
-            {
-                MessageBox.Show("Nodes is null!!");
-                return;
-            }
-
             foreach (NodeViewModel node in Nodes)
                 node.DiscoveryState = NodeDiscoveryState.Discovering;
 
@@ -986,7 +978,6 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-
         private void NetworkControllerOnDiscoveringNetwork(object sender, EventArgs eventArgs)
         {
             NetworkDiscoveryState = NetworkDiscoveryState.Discovering;
@@ -1003,9 +994,7 @@ namespace LaunchPad2.ViewModels
 
             NodeViewModel existingNode = Nodes.FirstOrDefault(n => n.Address.Equals(node.Address.LongAddress));
 
-            //var name = await node.GetNodeIdentifier();
             string name = e.Name;
-
             SignalStrength? signalStrength = e.SignalStrength.HasValue ? e.SignalStrength : SignalStrength.High;
 
             if (existingNode == null)
@@ -1057,6 +1046,12 @@ namespace LaunchPad2.ViewModels
         private void AudioTrackOnStatusChanged(object sender, AudioTrackStatusEventArgs e)
         {
             SetStatus(e.Message);
+        }
+
+        private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
+        {
+            if (AudioTrack != null && !AudioTrack.IsPaused)
+                AudioTrack.Update();
         }
     }
 }
