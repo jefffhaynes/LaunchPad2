@@ -32,5 +32,21 @@ namespace LaunchPad2.ViewModels
             foreach (var item in Children.SelectMany(child => child.GetDescendants()))
                 yield return item;
         }
+
+        public void Select()
+        {
+            foreach (var groupable in Children)
+            {
+                groupable.Select();
+            }
+        }
+
+        public void Unselect()
+        {
+            foreach (var groupable in Children)
+            {
+                groupable.Unselect();
+            }
+        }
     }
 }

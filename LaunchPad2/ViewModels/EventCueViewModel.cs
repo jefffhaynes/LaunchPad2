@@ -95,6 +95,16 @@ namespace LaunchPad2.ViewModels
             yield return this;
         }
 
+        public void Select()
+        {
+            IsSelected = true;
+        }
+
+        public void Unselect()
+        {
+            IsSelected = false;
+        }
+
         private bool _isLockedToDevice;
 
         public bool IsLockedToDevice

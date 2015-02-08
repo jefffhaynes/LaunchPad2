@@ -10,5 +10,9 @@ namespace LaunchPad2
         IGroupable GetRootGroupable();
 
         IEnumerable<IGroupable> GetDescendants();
+
+        void Select();
+
+        void Unselect();
     }
 }

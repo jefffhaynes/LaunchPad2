@@ -915,8 +915,10 @@ namespace LaunchPad2.ViewModels
                 foreach (IGroupable rootGroupable in rootGroupables)
                     rootGroupable.Group = group;
                 Groups.Add(group);
+                group.Select();
             }, () =>
             {
+                group.Unselect();
                 foreach (IGroupable rootGroupable in rootGroupables)
                     rootGroupable.Group = null;
                 Groups.Remove(group);
@@ -934,6 +936,7 @@ namespace LaunchPad2.ViewModels
             {
                 foreach (EventCueGroupViewModel group in groups)
                 {
+                    group.Unselect();
                     foreach (IGroupable child in group.Children)
                         child.Group = null;
                     Groups.Remove(group);
@@ -945,6 +948,7 @@ namespace LaunchPad2.ViewModels
                     foreach (IGroupable child in group.Children)
                         child.Group = group;
                     Groups.Add(group);
+                    group.Select();
                 }
             });
         }
