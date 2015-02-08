@@ -69,7 +69,8 @@
                 </Viewbox>
             </Button>
             <Button Command="{Binding AddTrackFromDeviceCommand}" CommandParameter="{Binding ElementName=DeviceListView, Path=SelectedItem}" 
-                    Grid.Column="2" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{StaticResource ButtonTemplate}">
+                    Grid.Column="2" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Margin="0,0,3,3"
+                    Template="{StaticResource ButtonTemplate}" ToolTip="Track From Device">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Style.Triggers>

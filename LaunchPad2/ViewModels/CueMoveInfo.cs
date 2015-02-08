@@ -11,5 +11,10 @@
         public EventCueViewModel Cue { get; private set; }
 
         public EventCueViewModel Before { get; private set; }
+
+        public bool HasChanged
+        {
+            get { return Cue.Start != Before.Start || Cue.Length != Before.Length || Cue.LeadIn != Before.LeadIn; }
+        }
     }
 }

@@ -564,7 +564,15 @@ namespace LaunchPad2.ViewModels
 
         private void SetCueMoveUndo()
         {
-            _cueUndoStates = AllCues.Select(cue => new CueMoveInfo(cue, cue.Clone())).ToList();
+            var selectedCues = AllCues.Where(cue => cue.IsSelected).ToList();
+
+            if (!selectedCues.Any())
+            {
+                _cueUndoStates = null;
+                return;
+            }
+
+            _cueUndoStates = selectedCues.Select(cue => new CueMoveInfo(cue, cue.Clone())).ToList();
         }
 
         private void CommitCueMoveUndo(UndoBatchMemento undoBatchMemento = null)
@@ -572,7 +580,15 @@ namespace LaunchPad2.ViewModels
             if (_cueUndoStates == null)
                 return;
 
-            List<CueMoveInfo> cueStates = AllCues.Select(cue => new CueMoveInfo(cue, cue.Clone())).ToList();
+            List<CueMoveInfo> cueStates = AllCues.Where(cue => cue.IsSelected)
+                .Select(cue => new CueMoveInfo(cue, cue.Clone())).ToList();
+
+            List<CueMoveInfo> undoCueStates = _cueUndoStates.ToList();
+
+            /* Check for no movement */
+            var firstUndoState = undoCueStates.First();
+            if (!firstUndoState.HasChanged)
+                return;
 
             var doAction = new Action(() =>
             {
@@ -583,8 +599,6 @@ namespace LaunchPad2.ViewModels
                     cueInfo.Cue.LeadIn = cueInfo.Before.LeadIn;
                 }
             });
-
-            List<CueMoveInfo> undoCueStates = _cueUndoStates.ToList();
 
             var undoAction = new Action(() =>
             {
@@ -896,10 +910,17 @@ namespace LaunchPad2.ViewModels
             var group = new EventCueGroupViewModel();
             group.Children = new ObservableCollection<IGroupable>(rootGroupables);
 
-            foreach (IGroupable rootGroupable in rootGroupables)
-                rootGroupable.Group = group;
-
-            Groups.Add(group);
+            UndoManager.DoAndAdd(() =>
+            {
+                foreach (IGroupable rootGroupable in rootGroupables)
+                    rootGroupable.Group = group;
+                Groups.Add(group);
+            }, () =>
+            {
+                foreach (IGroupable rootGroupable in rootGroupables)
+                    rootGroupable.Group = null;
+                Groups.Remove(group);
+            });
         }
 
         private void UngroupSelected()
@@ -907,18 +928,35 @@ namespace LaunchPad2.ViewModels
             IEnumerable<IGroupable> selected = SelectedItems.OfType<IGroupable>();
             List<IGroupable> rootGroupables = selected.Select(item => item.GetRootGroupable()).Distinct().ToList();
 
-            IEnumerable<EventCueGroupViewModel> groups = rootGroupables.OfType<EventCueGroupViewModel>();
+            IEnumerable<EventCueGroupViewModel> groups = rootGroupables.OfType<EventCueGroupViewModel>().ToList();
 
-            foreach (EventCueGroupViewModel group in groups)
+            UndoManager.DoAndAdd(() =>
             {
-                foreach (IGroupable child in group.Children)
-                    child.Group = null;
-                Groups.Remove(group);
-            }
+                foreach (EventCueGroupViewModel group in groups)
+                {
+                    foreach (IGroupable child in group.Children)
+                        child.Group = null;
+                    Groups.Remove(group);
+                }
+            }, () =>
+            {
+                foreach (EventCueGroupViewModel group in groups)
+                {
+                    foreach (IGroupable child in group.Children)
+                        child.Group = group;
+                    Groups.Add(group);
+                }
+            });
         }
 
         private async void DiscoverNetwork()
         {
+            if (Nodes == null)
+            {
+                MessageBox.Show("Nodes is null!!");
+                return;
+            }
+
             foreach (NodeViewModel node in Nodes)
                 node.DiscoveryState = NodeDiscoveryState.Discovering;
 
@@ -935,6 +973,10 @@ namespace LaunchPad2.ViewModels
             {
                 NetworkDiscoveryState = NetworkDiscoveryState.Failed;
                 MessageBox.Show("No XBee controller found.");
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
             }
         }
 

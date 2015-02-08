@@ -33,7 +33,6 @@ namespace NodeControl
             await _xBee.DiscoverNetwork();
         }
 
-
         private static async Task Initialize()
         {
             if (!_isInitialized)
