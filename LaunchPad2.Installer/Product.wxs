@@ -24,6 +24,7 @@
         <File Id="$(var.SC18IM700b.TargetFileName)" Source="$(var.SC18IM700b.TargetPath)" />
 
         <File Id="XBee.dll" Source="$(var.LaunchPad2.TargetDir)XBee.dll" />
+        <File Id="BinarySerializer.dll" Source="$(var.LaunchPad2.TargetDir)BinarySerializer.dll" />
         <File Id="fmodex.dll" Source="$(var.FMOD.TargetDir)fmodex.dll" />
         <File Id="WriteableBitmapEx.Wpf.dll" Source="$(var.LaunchPad2.TargetDir)WriteableBitmapEx.Wpf.dll" />
         <File Id="System.Windows.Interactivity.dll" Source="$(var.LaunchPad2.TargetDir)System.Windows.Interactivity.dll" />
