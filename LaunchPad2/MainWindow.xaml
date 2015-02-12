@@ -249,7 +249,7 @@
                 </Path>
             </Button>
 
-            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='s'}" Grid.Column="12" Foreground="{StaticResource MenuRedBrushKey}" FontSize="12" Margin="0,0,12,0">
+            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='%s'}" Grid.Column="12" Foreground="{StaticResource MenuTextBrushKey}" FontSize="12" Margin="3,3,12,3">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -478,21 +478,21 @@
                 <Button Grid.Column="10" ToolTip="Distribute to beats 1"
                     Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="0" Style="{StaticResource CueButtonStyle}">
                     <Grid>
-                        <Path Data="{DynamicResource CueDistributeOnBeatsGeometry}" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <Path Data="{DynamicResource CueDistributeOnBeatsGeometryKey}" Style="{StaticResource TrackButtonPathStyle}"/>
                         <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="1" Style="{StaticResource CueButtonNumberStyle}"/>
                     </Grid>
                 </Button>
                 <Button Grid.Column="11" ToolTip="Distribute to beats 2"
                     Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="1" Style="{StaticResource CueButtonStyle}">
                     <Grid>
-                        <Path Data="{DynamicResource CueDistributeOnBeatsGeometry}" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <Path Data="{DynamicResource CueDistributeOnBeatsGeometryKey}" Style="{StaticResource TrackButtonPathStyle}"/>
                         <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="2" Style="{StaticResource CueButtonNumberStyle}"/>
                     </Grid>
                 </Button>
                 <Button Grid.Column="12" ToolTip="Distribute to beats 3"
                     Command="{Binding CueDistributeOnBeatsCommand}" CommandParameter="2" Style="{StaticResource CueButtonStyle}">
                     <Grid>
-                        <Path Data="{DynamicResource CueDistributeOnBeatsGeometry}" Style="{StaticResource TrackButtonPathStyle}"/>
+                        <Path Data="{DynamicResource CueDistributeOnBeatsGeometryKey}" Style="{StaticResource TrackButtonPathStyle}"/>
                         <TextBlock Foreground="{StaticResource MenuDisabledBrushKey}" Text="3" Style="{StaticResource CueButtonNumberStyle}"/>
                     </Grid>
                 </Button>
@@ -539,12 +539,36 @@
                     </Grid>
                 </Button>
                 <StackPanel Grid.Column="19" HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal">
-                    <TextBlock Text="{Binding Zoom, Converter={StaticResource PercentageConverter}}" Foreground="{DynamicResource MenuTextBrushKey}" VerticalAlignment="Center"/>
+                    <ComboBox Text="{Binding Zoom, Converter={StaticResource PercentageConverter}}" Foreground="{StaticResource MenuTextBrushKey}" VerticalAlignment="Center" 
+                              Style="{DynamicResource ComboBoxDarkStyle}" IsEditable="True">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem">
+                                <Setter Property="Foreground" Value="{StaticResource MenuTextBrushKey}"/>
+                                <Setter Property="Background" Value="{StaticResource PanelControlBackgroundBrushKey}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource PanelControlBackgroundBrushKey}"/>
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Mode=OneWay, StringFormat=\{0:P0\}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        <ComboBox.ItemsSource>
+                            <x:Array Type="{x:Type system:Double}">
+                                <system:Double>.1</system:Double>
+                                <system:Double>.5</system:Double>
+                                <system:Double>1</system:Double>
+                                <system:Double>2</system:Double>
+                                <system:Double>4</system:Double>
+                                <system:Double>8</system:Double>
+                            </x:Array>
+                        </ComboBox.ItemsSource>
+                    </ComboBox>
                     <Slider Name="ZoomSlider" Orientation="Horizontal" Width="200" Maximum="1" Minimum="0.002" Value="{Binding Zoom}" Margin="6,6,0,6" TickFrequency="0.1" SmallChange="0.01"
                     Background="#7EFFFFFF"/>
                     <Button Template="{StaticResource ButtonTemplate}" Margin="4" Command="{Binding ZoomExtentsCommand}" CommandParameter="{Binding ElementName=TrackScrollViewer, Path=ActualWidth}">
                         <Border BorderBrush="{StaticResource MenuGrayBrushKey}" BorderThickness="1,0,1,0" Padding="1" >
-                            <Path Data="F1M-54.2975,806.375L-66.1491,794.524 -66.1491,802.853 -94.3314,802.853 -94.3314,794.524 -106.183,806.375 -94.3314,818.227 -94.3314,809.897 -66.1491,809.897 -66.1491,818.227 -54.2975,806.375z" Stretch="Uniform" Fill="{DynamicResource MenuTextBrushKey}" Width="18" Height="14" />
+                            <Path Data="{DynamicResource FillScreenGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuTextBrushKey}" Width="18" Height="14" />
                         </Border>
                     </Button>
                 </StackPanel>
@@ -766,7 +790,7 @@
 
             <controls:PropertiesPanel Grid.Row="1" DeviceSource="{Binding Devices}" NodeSource="{Binding Nodes}"/>
         </Grid>
-
+        
         <Border Grid.Row="3" Grid.ColumnSpan="2" Grid.Column="0" Background="{StaticResource StatusBarBrushKey}">
             <TextBlock Text="{Binding Status}" Foreground="{StaticResource MenuTextBrushKey}" Margin="4"/>
         </Border>

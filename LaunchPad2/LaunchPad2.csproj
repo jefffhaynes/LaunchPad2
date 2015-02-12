@@ -51,6 +51,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\BinarySerializer.3.5\lib\portable-net40+sl50+win\BinarySerializer.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationFramework.Aero2" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -139,6 +140,7 @@
     <Compile Include="ViewModels\NodeDiscoveryState.cs" />
     <Compile Include="ViewModels\EventCueGroupViewModel.cs" />
     <Compile Include="ViewModels\NodeViewModel.cs" />
+    <Compile Include="ViewModels\PercentViewModel.cs" />
     <Compile Include="ViewModels\PortViewModel.cs" />
     <Compile Include="ViewModels\RegionInfo.cs" />
     <Compile Include="ViewModels\SampleInfo.cs" />
