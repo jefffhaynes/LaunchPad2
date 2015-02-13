@@ -51,9 +51,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="XBee, Version=1.7.1.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="XBee, Version=1.7.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\XBee.1.7.1.0\lib\net45\XBee.dll</HintPath>
+      <HintPath>..\packages\XBee.1.7.2.0\lib\net45\XBee.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
