@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO.Ports;
+using System.Threading;
 using System.Threading.Tasks;
 using BinarySerialization;
 using SC18IM700;
@@ -15,6 +16,7 @@ namespace NodeControl
 
         private static XBeeController _xBee;
         private static bool _isInitialized;
+        private static readonly SemaphoreSlim InitializeSemaphore = new SemaphoreSlim(1);
 
         public static event EventHandler InitializingController;
 
@@ -35,21 +37,26 @@ namespace NodeControl
 
         public static async Task Initialize()
         {
-            if (!_isInitialized)
-            {
-                _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
+            if (_isInitialized)
+                return;
 
-                if (_xBee == null)
-                    throw new InvalidOperationException("No XBee found.");
+            await InitializeSemaphore.WaitAsync();
+
+            if (_isInitialized)
+                return;
+
+            _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
+
+            if (_xBee == null)
+                throw new InvalidOperationException("No XBee found.");
 
 #if TRACE
-                _xBee.FrameMemberDeserializing += XBeeOnFrameMemberDeserializing;
-                _xBee.FrameMemberDeserialized += XBeeOnFrameMemberDeserialized;
+            _xBee.FrameMemberDeserializing += XBeeOnFrameMemberDeserializing;
+            _xBee.FrameMemberDeserialized += XBeeOnFrameMemberDeserialized;
 #endif
 
-                _xBee.NodeDiscovered += XBeeOnNodeDiscovered;
-                _isInitialized = true;
-            }
+            _xBee.NodeDiscovered += XBeeOnNodeDiscovered;
+            _isInitialized = true;
         }
 
 #if TRACE
@@ -69,6 +76,8 @@ namespace NodeControl
 
         public static async void SetActivePorts(NodeAddress address, Ports ports)
         {
+            await Initialize();
+
             XBeeNode node = await _xBee.GetRemoteAsync(address);
 
             var gpioPorts = GpioPorts.None;
