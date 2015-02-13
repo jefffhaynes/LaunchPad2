@@ -8,6 +8,7 @@ using LaunchPad2.Controls;
 using LaunchPad2.Models;
 using LaunchPad2.ViewModels;
 using Microsoft.Win32;
+using NodeControl;
 
 namespace LaunchPad2
 {

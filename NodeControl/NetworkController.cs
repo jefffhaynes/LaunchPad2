@@ -30,10 +30,10 @@ namespace NodeControl
             if (DiscoveringNetwork != null)
                 DiscoveringNetwork(null, EventArgs.Empty);
 
-            await _xBee.DiscoverNetwork();
+            await _xBee.DiscoverNetwork(TimeSpan.FromSeconds(10));
         }
 
-        private static async Task Initialize()
+        public static async Task Initialize()
         {
             if (!_isInitialized)
             {
@@ -95,7 +95,7 @@ namespace NodeControl
 
             var gpioWrite = new GpioWrite(gpioPorts);
 
-            await node.TransmitDataAsync(gpioWrite.GetPacket());
+            await node.TransmitDataAsync(gpioWrite.GetPacket(), false);
         }
 
         public static async Task Arm(NodeAddress address)

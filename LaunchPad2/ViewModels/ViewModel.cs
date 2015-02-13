@@ -48,6 +48,8 @@ namespace LaunchPad2.ViewModels
             {
                 _countdownCancellationTokenSource = new CancellationTokenSource();
 
+                await NetworkController.Initialize();
+
                 AudioTrack.Position = TimeSpan.Zero;
                 CountdownTime = CountdownLength;
 
@@ -98,7 +100,7 @@ namespace LaunchPad2.ViewModels
 
             ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width));
 
-            DiscoverNetworkCommand = new RelayCommand(DiscoverNetwork);
+            DiscoverNetworkCommand = new RelayCommand(() => DiscoverNetwork());
 
             Tracks = new ObservableCollection<TrackViewModel>();
             Devices = new ObservableCollection<DeviceViewModel>();
@@ -953,7 +955,7 @@ namespace LaunchPad2.ViewModels
             });
         }
 
-        private async void DiscoverNetwork()
+        public async Task DiscoverNetwork()
         {
             foreach (NodeViewModel node in Nodes)
                 node.DiscoveryState = NodeDiscoveryState.Discovering;
