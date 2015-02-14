@@ -334,6 +334,8 @@ namespace LaunchPad2.ViewModels
         {
             SetStatus("Starting Show");
 
+            IsShowRunning = true;
+
             _countdownCancellationTokenSource = new CancellationTokenSource();
 
             await NetworkController.Initialize();
@@ -351,10 +353,9 @@ namespace LaunchPad2.ViewModels
             {
                 MessageBox.Show("Failed to arm network.");
                 SetStatus("Failed to Arm Network");
+                IsShowRunning = false;
                 return;
             }
-
-            IsShowRunning = true;
 
             DateTime start = DateTime.Now;
             while (CountdownTime > TimeSpan.Zero && !_countdownCancellationTokenSource.IsCancellationRequested)
@@ -995,8 +996,13 @@ namespace LaunchPad2.ViewModels
             }
             catch (Exception e)
             {
+                NetworkDiscoveryState = NetworkDiscoveryState.Failed;
                 MessageBox.Show(e.Message);
             }
+
+            foreach (NodeViewModel node in Nodes)
+                if (node.DiscoveryState == NodeDiscoveryState.Discovering)
+                    node.DiscoveryState = NodeDiscoveryState.None;
         }
 
         private void NetworkControllerOnDiscoveringNetwork(object sender, EventArgs eventArgs)

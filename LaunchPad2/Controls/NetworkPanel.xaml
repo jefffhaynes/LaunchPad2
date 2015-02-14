@@ -6,6 +6,39 @@
              xmlns:viewModels="clr-namespace:LaunchPad2.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignData ViewModel}">
+    <UserControl.Resources>
+        <Canvas x:Key="RadarCanvasKey" Height="24" Width="24">
+            <Ellipse Width="24" Height="24" StrokeThickness="1" Fill="#3F329832"/>
+            <Line X1="12" X2="12" Y1="12" Y2="0" StrokeThickness="1" Stroke="{DynamicResource MenuBrightGreenBrushKey}">
+                <Line.Style>
+                    <Style TargetType="{x:Type Line}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding NetworkDiscoveryState}" Value="Discovering">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation
+												Storyboard.TargetProperty="(RenderTransform).(RotateTransform.Angle)" 
+												From="0" To="360" Duration="0:0:1" RepeatBehavior="Forever"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard FillBehavior="Stop"/>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Line.Style>
+                <Line.RenderTransform>
+                    <RotateTransform CenterX="12" CenterY="12"/>
+                </Line.RenderTransform>
+            </Line>
+        </Canvas>
+
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -20,7 +53,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button Command="{Binding DiscoverNetworkCommand}" ToolTip="Discover Network" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Margin="3,0,3,3" Template="{StaticResource ButtonTemplate}">
+            <Button Command="{Binding DiscoverNetworkCommand}" ToolTip="Discover Network" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Margin="3,0,3,3" Template="{DynamicResource ButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Style.Triggers>
@@ -31,38 +64,6 @@
                     </Style>
                 </Button.Style>
                 <ContentPresenter>
-                    <ContentPresenter.Resources>
-                        <Style TargetType="{x:Type Line}">
-                            <Style.Triggers>
-
-                                <DataTrigger 
-         Binding="{Binding XPath=@Stock}" 
-         Value="out">
-                                    <DataTrigger.EnterActions>
-                                        <BeginStoryboard>
-                                            <Storyboard>
-                                                <DoubleAnimation
-                 Storyboard.TargetProperty="Opacity"
-                 From="0.25" To="0.5" Duration="0:0:1" 
-                 RepeatBehavior="Forever"
-                 AutoReverse="True"/>
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </DataTrigger.EnterActions>
-                                    <DataTrigger.ExitActions>
-                                        <BeginStoryboard>
-                                            <Storyboard FillBehavior="Stop">
-                                                <DoubleAnimation
-                  Storyboard.TargetProperty="Opacity"
-                  To="1" Duration="0:0:1" />
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </DataTrigger.ExitActions>
-
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ContentPresenter.Resources>
                     <ContentPresenter.Style >
                         <Style TargetType="ContentPresenter">
                             <Setter Property="Content">
@@ -87,53 +88,17 @@
                                 <DataTrigger Binding="{Binding NetworkDiscoveryState}" Value="Initializing">
                                     <Setter Property="Content">
                                         <Setter.Value>
-                                            <TextBlock Text="Initializing Controller..." Foreground="{StaticResource MenuTextBrushKey}"/>
+                                            <TextBlock Text="Initializing Controller..." Foreground="{DynamicResource MenuTextBrushKey}"/>
                                         </Setter.Value>
                                     </Setter>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding NetworkDiscoveryState}" Value="Discovering">
-                                    <Setter Property="Content">
-                                        <Setter.Value>
-                                            <Canvas Height="24" Width="24">
-                                                <Ellipse Width="24" Height="24" StrokeThickness="1" Fill="#3F329832"/>
-                                                <Line X1="12" X2="12" Y1="12" Y2="0" StrokeThickness="1" Stroke="{StaticResource MenuBrightGreenBrushKey}">
-                                                    <Line.Style>
-                                                        <Style TargetType="Line">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding NetworkDiscoveryState}" Value="Discovering">
-                                                                    <DataTrigger.EnterActions>
-                                                                        <BeginStoryboard>
-                                                                            <Storyboard>
-                                                                                <DoubleAnimation
-                                                                                    Storyboard.TargetProperty="(RenderTransform).(RotateTransform.Angle)" 
-                                                                                    From="0" To="360" Duration="0:0:1" RepeatBehavior="Forever"/>
-                                                                            </Storyboard>
-                                                                        </BeginStoryboard>
-                                                                    </DataTrigger.EnterActions>
-                                                                    <DataTrigger.ExitActions>
-                                                                        <BeginStoryboard>
-                                                                            <Storyboard FillBehavior="Stop"/>
-                                                                        </BeginStoryboard>
-                                                                    </DataTrigger.ExitActions>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Line.Style>
-                                                    <Line.RenderTransform>
-                                                        <RotateTransform CenterX="12" CenterY="12"/>
-                                                    </Line.RenderTransform>
-                                                </Line>
-                                            </Canvas>
-
-                                        </Setter.Value>
-                                    </Setter>
+                                    <Setter Property="Content" Value="{StaticResource RadarCanvasKey}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </ContentPresenter.Style>
                 </ContentPresenter>
-                
-                
             </Button>
         </Grid>
 
@@ -161,11 +126,15 @@
                                         <DataTrigger Binding="{Binding SignalStrength}" Value="High">
                                             <Setter Property="Fill" Value="{DynamicResource MenuBrightGreenBrushKey}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding DiscoveryState}" Value="Discovering">
-                                            <Setter Property="Fill" Value="{DynamicResource MenuGrayBrushKey}"/>
-                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding DiscoveryState}" Value="None">
                                             <Setter Property="Fill" Value="{DynamicResource MenuGrayBrushKey}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding DiscoveryState}" Value="Discovering">
+                                            <Setter Property="Fill">
+                                                <Setter.Value>
+                                                    <VisualBrush Stretch="None" Visual="{DynamicResource RadarCanvasKey}" />
+                                                </Setter.Value>
+                                            </Setter>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
