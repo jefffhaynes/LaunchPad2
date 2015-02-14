@@ -71,9 +71,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\WriteableBitmapEx.1.0.14.0\lib\net40\WriteableBitmapEx.Wpf.dll</HintPath>
     </Reference>
-    <Reference Include="XBee, Version=1.7.2.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="XBee, Version=1.7.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\XBee.1.7.2.0\lib\net45\XBee.dll</HintPath>
+      <HintPath>..\packages\XBee.1.7.3.0\lib\net45\XBee.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

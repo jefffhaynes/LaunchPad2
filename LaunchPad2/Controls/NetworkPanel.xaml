@@ -68,7 +68,7 @@
                         <Style TargetType="ContentPresenter">
                             <Setter Property="Content">
                                 <Setter.Value>
-                                    <Viewbox Stretch="Uniform" Width="24">
+                                    <Viewbox Stretch="Uniform" Width="24" Height="24">
                                         <Path Data="{DynamicResource DiscoverNetworkGeometryKey}">
                                             <Path.Style>
                                                 <Style TargetType="Path">
