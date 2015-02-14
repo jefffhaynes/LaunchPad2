@@ -164,6 +164,9 @@
                                         <DataTrigger Binding="{Binding DiscoveryState}" Value="Discovering">
                                             <Setter Property="Fill" Value="{DynamicResource MenuGrayBrushKey}"/>
                                         </DataTrigger>
+                                        <DataTrigger Binding="{Binding DiscoveryState}" Value="None">
+                                            <Setter Property="Fill" Value="{DynamicResource MenuGrayBrushKey}"/>
+                                        </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Rectangle.Style>
