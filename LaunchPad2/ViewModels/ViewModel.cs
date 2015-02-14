@@ -44,26 +44,7 @@ namespace LaunchPad2.ViewModels
             PlayCommand = new RelayCommand(() => AudioTrack.IsPaused = !AudioTrack.IsPaused, IsAudioFileLoaded);
             StopCommand = new RelayCommand(async () => { await Stop(); });
 
-            StartShowCommand = new RelayCommand(async () =>
-            {
-                _countdownCancellationTokenSource = new CancellationTokenSource();
-
-                AudioTrack.Position = TimeSpan.Zero;
-                CountdownTime = CountdownLength;
-
-                await Arm();
-                IsShowRunning = true;
-
-                DateTime start = DateTime.Now;
-                while (CountdownTime > TimeSpan.Zero && !_countdownCancellationTokenSource.IsCancellationRequested)
-                {
-                    CountdownTime = CountdownLength - (DateTime.Now - start);
-                    await Task.Delay(25);
-                }
-
-                if (!_countdownCancellationTokenSource.IsCancellationRequested)
-                    AudioTrack.IsPaused = false;
-            }, IsAudioFileLoaded);
+            StartShowCommand = new RelayCommand(StartShow, IsAudioFileLoaded);
 
             AbortShowCommand = new RelayCommand(async () =>
             {
@@ -98,7 +79,7 @@ namespace LaunchPad2.ViewModels
 
             ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width));
 
-            DiscoverNetworkCommand = new RelayCommand(DiscoverNetwork);
+            DiscoverNetworkCommand = new RelayCommand(() => DiscoverNetwork());
 
             Tracks = new ObservableCollection<TrackViewModel>();
             Devices = new ObservableCollection<DeviceViewModel>();
@@ -335,6 +316,7 @@ namespace LaunchPad2.ViewModels
             {
                 await Disarm();
                 IsShowRunning = false;
+                SetStatus("Show Aborted");
             }
 
             if (AudioTrack != null)
@@ -346,6 +328,45 @@ namespace LaunchPad2.ViewModels
             EventHandler handler = Stopped;
             if (handler != null)
                 handler(this, EventArgs.Empty);
+        }
+
+        private async void StartShow()
+        {
+            SetStatus("Starting Show");
+
+            _countdownCancellationTokenSource = new CancellationTokenSource();
+
+            await NetworkController.Initialize();
+
+            AudioTrack.Position = TimeSpan.Zero;
+            CountdownTime = CountdownLength;
+
+            try
+            {
+                SetStatus("Arming Network");
+                await Arm();
+                SetStatus("Network Armed");
+            }
+            catch
+            {
+                MessageBox.Show("Failed to arm network.");
+                SetStatus("Failed to Arm Network");
+                return;
+            }
+
+            IsShowRunning = true;
+
+            DateTime start = DateTime.Now;
+            while (CountdownTime > TimeSpan.Zero && !_countdownCancellationTokenSource.IsCancellationRequested)
+            {
+                CountdownTime = CountdownLength - (DateTime.Now - start);
+                await Task.Delay(25);
+            }
+
+            if (!_countdownCancellationTokenSource.IsCancellationRequested)
+                AudioTrack.IsPaused = false;
+
+            SetStatus("Show Running");
         }
 
         private async Task Arm()
@@ -953,7 +974,7 @@ namespace LaunchPad2.ViewModels
             });
         }
 
-        private async void DiscoverNetwork()
+        public async Task DiscoverNetwork()
         {
             foreach (NodeViewModel node in Nodes)
                 node.DiscoveryState = NodeDiscoveryState.Discovering;

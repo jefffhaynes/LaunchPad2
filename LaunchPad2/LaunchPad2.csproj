@@ -47,10 +47,11 @@
     <ApplicationIcon>LaunchPad.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BinarySerializer, Version=3.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="BinarySerializer, Version=3.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\BinarySerializer.3.5\lib\portable-net40+sl50+win\BinarySerializer.dll</HintPath>
+      <HintPath>..\packages\BinarySerializer.3.7\lib\portable-net40+sl50+win+MonoAndroid10+MonoTouch10\BinarySerializer.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationFramework.Aero2" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -70,9 +71,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\WriteableBitmapEx.1.0.14.0\lib\net40\WriteableBitmapEx.Wpf.dll</HintPath>
     </Reference>
-    <Reference Include="XBee, Version=1.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="XBee, Version=1.7.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\XBee.1.6.0.0\lib\net45\XBee.dll</HintPath>
+      <HintPath>..\packages\XBee.1.7.2.0\lib\net45\XBee.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +140,7 @@
     <Compile Include="ViewModels\NodeDiscoveryState.cs" />
     <Compile Include="ViewModels\EventCueGroupViewModel.cs" />
     <Compile Include="ViewModels\NodeViewModel.cs" />
+    <Compile Include="ViewModels\PercentViewModel.cs" />
     <Compile Include="ViewModels\PortViewModel.cs" />
     <Compile Include="ViewModels\RegionInfo.cs" />
     <Compile Include="ViewModels\SampleInfo.cs" />

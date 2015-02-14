@@ -17,12 +17,12 @@ namespace LaunchPad2.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var percent = (double)value / _decimation / 10;
-            return string.Format("{0:P}", percent);
+            return string.Format("{0:P0}", percent);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            return double.Parse((string) value) * _decimation * 10;
         }
     }
 }
