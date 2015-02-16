@@ -79,7 +79,7 @@ namespace LaunchPad2.ViewModels
 
             ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width));
 
-            DiscoverNetworkCommand = new RelayCommand(() => DiscoverNetwork());
+            DiscoverNetworkCommand = new RelayCommand(async () => await DiscoverNetwork());
 
             Tracks = new ObservableCollection<TrackViewModel>();
             Devices = new ObservableCollection<DeviceViewModel>();

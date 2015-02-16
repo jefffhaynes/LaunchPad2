@@ -95,6 +95,7 @@
     <Compile Include="Controls\PropertiesPanel.xaml.cs">
       <DependentUpon>PropertiesPanel.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CueTimeline.cs" />
     <Compile Include="Converters\ZoomPercentageConverter.cs" />
     <Compile Include="IGroupable.cs" />
     <Compile Include="IUndoMemento.cs" />

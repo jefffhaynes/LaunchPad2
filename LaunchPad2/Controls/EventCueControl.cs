@@ -213,7 +213,6 @@ namespace LaunchPad2.Controls
 
         protected override Size GetNaturalSize()
         {
-            //return new Size(MinGripWidth * 2 + LeadInBarWidth + 6, 0);
             return new Size(2, 0);
         }
 

@@ -577,7 +577,13 @@
             <ScrollViewer Name="TrackScrollViewer" Grid.Column="0" 
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" 
                           ScrollChanged="OnScrollChanged" Focusable="False" Grid.Row="1">
-                <controls:SelectionCanvas x:Name="SelectionCanvas" Focusable="True"
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <!--<controls:CueTimeline/>-->
+                    <controls:SelectionCanvas x:Name="SelectionCanvas" Focusable="True" Grid.Row="1"
                                           Width="{Binding ElementName=WaveformControl, Path=ActualWidth}"
                                           Height="{Binding ElementName=TracksControl, Path=ActualHeight}" 
                                           Background="#1E1E1E" HorizontalAlignment="Left" VerticalAlignment="Top"
@@ -587,186 +593,187 @@
                                           DeleteCommand="{Binding DeleteCommand}"
                                           SelectedItems="{Binding SelectedItems}"
                                           SelectedItem="{Binding SelectedItem}">
-                    <controls:SelectionCanvas.ContextMenu>
-                        <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                            <MenuItem Command="{Binding GroupCommand}" Header="Group">
-                                <MenuItem.Icon>
-                                    <Rectangle StrokeThickness="1" StrokeDashArray="2 2" Stroke="Black" 
+                        <controls:SelectionCanvas.ContextMenu>
+                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                <MenuItem Command="{Binding GroupCommand}" Header="Group">
+                                    <MenuItem.Icon>
+                                        <Rectangle StrokeThickness="1" StrokeDashArray="2 2" Stroke="Black" 
                                                VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
-                                </MenuItem.Icon>
-                                <MenuItem.Style>
-                                    <Style TargetType="MenuItem">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedItems}" Value="{x:Null}">
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding SelectedItems.Count}" Value="0">
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding SelectedItems.Count}" Value="1">
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </MenuItem.Style>
-                            </MenuItem>
-                            <MenuItem Command="{Binding UngroupCommand}" Header="Ungroup">
-                                <MenuItem.Style>
-                                    <Style TargetType="MenuItem">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedItems}" Value="{x:Null}">
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding SelectedItems.Count}" Value="0">
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding SelectedItems.Count}" Value="1">
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </MenuItem.Style>
-                            </MenuItem>
-                        </ContextMenu>
-                    </controls:SelectionCanvas.ContextMenu>
-                    <controls:AudioCueControl Height="{Binding ElementName=TracksControl, Path=ActualHeight}"
+                                    </MenuItem.Icon>
+                                    <MenuItem.Style>
+                                        <Style TargetType="MenuItem">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedItems}" Value="{x:Null}">
+                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding SelectedItems.Count}" Value="0">
+                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding SelectedItems.Count}" Value="1">
+                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </MenuItem.Style>
+                                </MenuItem>
+                                <MenuItem Command="{Binding UngroupCommand}" Header="Ungroup">
+                                    <MenuItem.Style>
+                                        <Style TargetType="MenuItem">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedItems}" Value="{x:Null}">
+                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding SelectedItems.Count}" Value="0">
+                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding SelectedItems.Count}" Value="1">
+                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </MenuItem.Style>
+                                </MenuItem>
+                            </ContextMenu>
+                        </controls:SelectionCanvas.ContextMenu>
+                        <controls:AudioCueControl Height="{Binding ElementName=TracksControl, Path=ActualHeight}"
                                               Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
                                               TimeScale="{Binding Zoom}"
                                               StrokeThickness="1" Stroke="{DynamicResource AudioCueBrushKey}" Cursor="SizeWE" Canvas.ZIndex="{x:Static system:Int32.MaxValue}">
-                    </controls:AudioCueControl>
+                        </controls:AudioCueControl>
 
-                    <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="{x:Static system:Int32.MaxValue}"
+                        <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="{x:Static system:Int32.MaxValue}"
                            Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
                            Width="1" Stroke="#4CFFFFFF" StrokeThickness="1">
-                        <Rectangle.Style>
-                            <Style TargetType="{x:Type Rectangle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue}" Value="{x:Null}">
-                                        <Setter Property="Visibility" Value="Hidden"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue.IsMoving}" Value="false">
-                                        <Setter Property="Visibility" Value="Hidden"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Rectangle.Style>
-                    </Rectangle>
+                            <Rectangle.Style>
+                                <Style TargetType="{x:Type Rectangle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Hidden"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue.IsMoving}" Value="false">
+                                            <Setter Property="Visibility" Value="Hidden"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Rectangle.Style>
+                        </Rectangle>
 
-                    <ItemsControl Name="TracksControl" HorizontalAlignment="Left" ItemsSource="{Binding Tracks}" 
+                        <ItemsControl Name="TracksControl" HorizontalAlignment="Left" ItemsSource="{Binding Tracks}" 
                               controls:DragDropHelper.IsDragSource="True" 
                               controls:DragDropHelper.IsDropTarget="True"
                               controls:DragDropHelper.DragDropGripName="HeaderGrip">
-                        <controls:DragDropHelper.DragDropTemplate>
-                            <DataTemplate DataType="viewModels:TrackViewModel">
-                                <Border Height="32" BorderBrush="{x:Null}">
-                                    <TextBlock Padding="6" VerticalAlignment="Center" Width="64" TextTrimming="CharacterEllipsis" 
+                            <controls:DragDropHelper.DragDropTemplate>
+                                <DataTemplate DataType="viewModels:TrackViewModel">
+                                    <Border Height="32" BorderBrush="{x:Null}">
+                                        <TextBlock Padding="6" VerticalAlignment="Center" Width="64" TextTrimming="CharacterEllipsis" 
                                                Background="{DynamicResource MenuTextBrushKey}" Text="{Binding Name}" />
-                                </Border>
-                            </DataTemplate>
-                        </controls:DragDropHelper.DragDropTemplate>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="viewModels:TrackViewModel">
-                                <Border BorderThickness="0,1,0,0" BorderBrush="#282828">
-                                    <Canvas Name="HeaderCanvas" Height="32">
-                                        <controls:TrackHeaderControl x:Name="TrackHeaderControl">
-                                            <StackPanel Orientation="Horizontal" >
-                                                <Rectangle Name="HeaderGrip" Height="{Binding ElementName=HeaderCanvas, Path=ActualHeight}" Width="32">
-                                                    <Rectangle.Style>
-                                                        <Style TargetType="Rectangle">
-                                                            <Setter Property="Fill" Value="{Binding Brush, Converter={StaticResource LighteningConverter}}"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Port.ShouldBeActive}" Value="True">
-                                                                    <Setter Property="Fill" Value="{DynamicResource CueActiveBrushKey}"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Rectangle.Style>
-                                                </Rectangle>
-                                                <Grid VerticalAlignment="Center">
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="Auto"/>
-                                                    </Grid.RowDefinitions>
-                                                    <TextBlock Text="{Binding Name}" Foreground="{DynamicResource MenuTextBrushKey}"  Margin="6,0,6,0"/>
-                                                    <TextBlock Grid.Row="1" Text="{Binding Device.Name}" Foreground="{DynamicResource MenuTextBrushKey}" Margin="6,0,6,2" FontSize="9">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Visibility" Value="Visible"/>
+                                    </Border>
+                                </DataTemplate>
+                            </controls:DragDropHelper.DragDropTemplate>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="viewModels:TrackViewModel">
+                                    <Border BorderThickness="0,1,0,0" BorderBrush="#282828">
+                                        <Canvas Name="HeaderCanvas" Height="32">
+                                            <controls:TrackHeaderControl x:Name="TrackHeaderControl">
+                                                <StackPanel Orientation="Horizontal" >
+                                                    <Rectangle Name="HeaderGrip" Height="{Binding ElementName=HeaderCanvas, Path=ActualHeight}" Width="32">
+                                                        <Rectangle.Style>
+                                                            <Style TargetType="Rectangle">
+                                                                <Setter Property="Fill" Value="{Binding Brush, Converter={StaticResource LighteningConverter}}"/>
                                                                 <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Device}" Value="{x:Null}">
-                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <DataTrigger Binding="{Binding Port.ShouldBeActive}" Value="True">
+                                                                        <Setter Property="Fill" Value="{DynamicResource CueActiveBrushKey}"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
-                                                </Grid>
-                                            </StackPanel>
-                                        </controls:TrackHeaderControl>
-                                        <ItemsControl ItemsSource="{Binding Cues}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <Canvas Height="{Binding ElementName=HeaderCanvas, Path=ActualHeight}" HorizontalAlignment="Stretch" 
-                                                    Width="{Binding ElementName=WaveformControl, Path=ActualWidth}">
-                                                        <Canvas.Style>
-                                                            <Style TargetType="{x:Type Canvas}">
-                                                                <Setter Property="Background" Value="{StaticResource TrackBackgroundBrushKey}" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding ElementName=TrackHeaderControl, Path=IsSelected}" Value="True">
-                                                                        <Setter Property="Background" Value="{Binding Source={StaticResource TrackBackgroundBrushKey}, Converter={StaticResource LighteningConverter}}" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Canvas.Style>
-                                                    </Canvas>
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="viewModels:EventCueViewModel">
-                                                    <controls:EventCueControl Sample="{Binding StartSample, Converter={StaticResource SampleDecimationConverter}}" 
+                                                        </Rectangle.Style>
+                                                    </Rectangle>
+                                                    <Grid VerticalAlignment="Center">
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource MenuTextBrushKey}"  Margin="6,0,6,0"/>
+                                                        <TextBlock Grid.Row="1" Text="{Binding Device.Name}" Foreground="{DynamicResource MenuTextBrushKey}" Margin="6,0,6,2" FontSize="9">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Device}" Value="{x:Null}">
+                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </controls:TrackHeaderControl>
+                                            <ItemsControl ItemsSource="{Binding Cues}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <Canvas Height="{Binding ElementName=HeaderCanvas, Path=ActualHeight}" HorizontalAlignment="Stretch" 
+                                                                Width="{Binding ElementName=WaveformControl, Path=ActualWidth}">
+                                                            <Canvas.Style>
+                                                                <Style TargetType="{x:Type Canvas}">
+                                                                    <Setter Property="Background" Value="{StaticResource TrackBackgroundBrushKey}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding ElementName=TrackHeaderControl, Path=IsSelected}" Value="True">
+                                                                            <Setter Property="Background" Value="{Binding Source={StaticResource TrackBackgroundBrushKey}, Converter={StaticResource LighteningConverter}}" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Canvas.Style>
+                                                        </Canvas>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="viewModels:EventCueViewModel">
+                                                        <controls:EventCueControl Sample="{Binding StartSample, Converter={StaticResource SampleDecimationConverter}}" 
                                                                               SampleLength="{Binding SampleLength, Converter={StaticResource SampleDecimationConverter}}"
                                                                               LeadInSampleLength="{Binding LeadInSampleLength, Converter={StaticResource SampleDecimationConverter}}"
                                                                               TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" IsSelected="{Binding IsSelected}"
                                                                               AutoscrollDistance="40" Height="32" BorderThickness="1" GripWidth="16" SnapToInterval="0:0:0.1">
-                                                        <controls:EventCueControl.Style>
-                                                            <Style TargetType="{x:Type controls:EventCueControl}">
-                                                                <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=DataContext.Brush}" />
-                                                                <Setter Property="GripBrush" Value="{Binding RelativeSource={RelativeSource Self}, Path=Background, Converter={StaticResource LighteningConverter}}"/>
-                                                                <Style.Triggers>
-                                                                    <Trigger Property="IsSelected" Value="True">
-                                                                        <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=DataContext.Brush, Converter={StaticResource LighteningConverter}}" />
-                                                                    </Trigger>
-                                                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                        <Setter Property="Background" Value="{StaticResource CueActiveBrushKey}" />
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding LeadInSampleLength}" Value="0">
-                                                                        <Setter Property="LeadInShown" Value="False"/>
-                                                                    </DataTrigger>
-                                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                                        <Setter Property="LeadInShown" Value="True"/>
-                                                                    </Trigger>
-                                                                    <DataTrigger Binding="{Binding IsLockedToDevice}" Value="True">
-                                                                        <Setter Property="CanResize" Value="False"/>
-                                                                        <Setter Property="LeadInBrush" Value="#3A3A3A"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </controls:EventCueControl.Style>
-                                                    </controls:EventCueControl>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </Canvas>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </controls:SelectionCanvas>
+                                                            <controls:EventCueControl.Style>
+                                                                <Style TargetType="{x:Type controls:EventCueControl}">
+                                                                    <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=DataContext.Brush}" />
+                                                                    <Setter Property="GripBrush" Value="{Binding RelativeSource={RelativeSource Self}, Path=Background, Converter={StaticResource LighteningConverter}}"/>
+                                                                    <Style.Triggers>
+                                                                        <Trigger Property="IsSelected" Value="True">
+                                                                            <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource AncestorType=Canvas}, Path=DataContext.Brush, Converter={StaticResource LighteningConverter}}" />
+                                                                        </Trigger>
+                                                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                                            <Setter Property="Background" Value="{StaticResource CueActiveBrushKey}" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding LeadInSampleLength}" Value="0">
+                                                                            <Setter Property="LeadInShown" Value="False"/>
+                                                                        </DataTrigger>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter Property="LeadInShown" Value="True"/>
+                                                                        </Trigger>
+                                                                        <DataTrigger Binding="{Binding IsLockedToDevice}" Value="True">
+                                                                            <Setter Property="CanResize" Value="False"/>
+                                                                            <Setter Property="LeadInBrush" Value="#3A3A3A"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </controls:EventCueControl.Style>
+                                                        </controls:EventCueControl>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Canvas>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </controls:SelectionCanvas>
+                </Grid>
             </ScrollViewer>
         </Grid>
 
