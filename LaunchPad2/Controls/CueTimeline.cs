@@ -13,6 +13,15 @@ namespace LaunchPad2.Controls
             "TimeScale", typeof(double), typeof(CueTimeline),
             new PropertyMetadata(1.0, TimeScaleChangedCallback));
 
+        public static readonly DependencyProperty SampleRateProperty = DependencyProperty.Register(
+            "SampleRate", typeof (double), typeof (CueTimeline), new PropertyMetadata(default(double)));
+
+        public double SampleRate
+        {
+            get { return (double) GetValue(SampleRateProperty); }
+            set { SetValue(SampleRateProperty, value); }
+        }
+
         static CueTimeline()
         {
             //DefaultStyleKeyProperty.OverrideMetadata(typeof(CueTimeline), new FrameworkPropertyMetadata(typeof(CueTimeline)));

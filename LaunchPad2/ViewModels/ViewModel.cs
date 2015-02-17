@@ -60,6 +60,7 @@ namespace LaunchPad2.ViewModels
 
             AddTrackCommand = new RelayCommand(() => AddTrack(), IsAudioFileLoaded);
             AddCueCommand = new RelayCommand(AddCue);
+            DeleteCueCommand = new RelayCommand(DeleteCue);
             DeleteCommand = new RelayCommand(Delete);
             CueAlignLeftCommand = new RelayCommand(() => DoUndoableCueMove(CueAlignLeft));
             CueAlignRightCommand = new RelayCommand(() => DoUndoableCueMove(CueAlignRight));
@@ -269,6 +270,8 @@ namespace LaunchPad2.ViewModels
 
         public ICommand AddCueCommand { get; private set; }
 
+        public ICommand DeleteCueCommand { get; private set; }
+
         public ICommand DeleteCommand { get; private set; }
 
         public ICommand CueAlignLeftCommand { get; private set; }
@@ -477,6 +480,13 @@ namespace LaunchPad2.ViewModels
             UndoManager.DoAndAdd(doAction, undoAction);
         }
 
+        private void DeleteCue()
+        {
+            var undoBatchMemento = new UndoBatchMemento();
+            BatchDelete(GetSelectedCues(), undoBatchMemento);
+            UndoManager.DoAndAdd(undoBatchMemento);
+        }
+
         private void Delete()
         {
             var undoBatchMemento = new UndoBatchMemento();
@@ -499,12 +509,12 @@ namespace LaunchPad2.ViewModels
                 SelectedItems.Remove(trackToRemove);
             }
 
-            Delete(GetSelectedCues(), undoBatchMemento);
+            BatchDelete(GetSelectedCues(), undoBatchMemento);
 
             UndoManager.DoAndAdd(undoBatchMemento);
         }
 
-        private void Delete(IEnumerable<EventCueViewModel> cues, UndoBatchMemento undoBatchMemento)
+        private void BatchDelete(IEnumerable<EventCueViewModel> cues, UndoBatchMemento undoBatchMemento)
         {
             List<EventCueViewModel> cuesToRemove = cues.ToList();
 
@@ -778,7 +788,7 @@ namespace LaunchPad2.ViewModels
                 /* Wipe out and populate selected tracks */
                 foreach (TrackViewModel track in selectedTracks)
                 {
-                    Delete(track.Cues, undoBatchMemento);
+                    BatchDelete(track.Cues, undoBatchMemento);
 
                     /* Higher energy values have shorter duration */
                     List<EventCueViewModel> cues =
