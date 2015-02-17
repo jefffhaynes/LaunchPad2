@@ -7,6 +7,8 @@ namespace LaunchPad2.ViewModels
     public class EventCueViewModel : ViewModelBase, IGroupable
     {
         private bool _isActive;
+        private bool _isLockedToDevice;
+        private bool _isSelected;
         private TimeSpan _leadIn;
         private TimeSpan _length;
         private string _notes;
@@ -24,7 +26,7 @@ namespace LaunchPad2.ViewModels
             Length = length;
         }
 
-        public EventCueViewModel(float sampleRate, TimeSpan start, TimeSpan length, TimeSpan leadIn) : 
+        public EventCueViewModel(float sampleRate, TimeSpan start, TimeSpan length, TimeSpan leadIn) :
             this(sampleRate, start, length)
         {
             LeadIn = leadIn;
@@ -40,7 +42,9 @@ namespace LaunchPad2.ViewModels
 
                 _start = value;
                 OnPropertyChanged();
+// ReSharper disable ExplicitCallerInfoArgument
                 OnPropertyChanged("StartSample");
+// ReSharper restore ExplicitCallerInfoArgument
             }
         }
 
@@ -54,7 +58,9 @@ namespace LaunchPad2.ViewModels
 
                 _length = value;
                 OnPropertyChanged();
+// ReSharper disable ExplicitCallerInfoArgument
                 OnPropertyChanged("SampleLength");
+// ReSharper restore ExplicitCallerInfoArgument
             }
         }
 
@@ -68,7 +74,9 @@ namespace LaunchPad2.ViewModels
 
                 _leadIn = value;
                 OnPropertyChanged();
+// ReSharper disable ExplicitCallerInfoArgument
                 OnPropertyChanged("LeadInSampleLength");
+// ReSharper restore ExplicitCallerInfoArgument
             }
         }
 
@@ -77,35 +85,6 @@ namespace LaunchPad2.ViewModels
             get { return Start + Length; }
             set { Start = value - Length; }
         }
-
-        public EventCueGroupViewModel Group { get; set; }
-
-        public IGroupable GetRootGroupable()
-        {
-            IGroupable root = this;
-
-            while (root.Group != null)
-                root = root.Group;
-
-            return root;
-        }
-
-        public IEnumerable<IGroupable> GetDescendants()
-        {
-            yield return this;
-        }
-
-        public void Select()
-        {
-            IsSelected = true;
-        }
-
-        public void Unselect()
-        {
-            IsSelected = false;
-        }
-
-        private bool _isLockedToDevice;
 
         public bool IsLockedToDevice
         {
@@ -130,9 +109,11 @@ namespace LaunchPad2.ViewModels
                 {
                     _sampleRate = value;
                     OnPropertyChanged();
+// ReSharper disable ExplicitCallerInfoArgument
                     OnPropertyChanged("StartSample");
                     OnPropertyChanged("SampleLength");
                     OnPropertyChanged("LeadInSampleLength");
+// ReSharper restore ExplicitCallerInfoArgument
                 }
             }
         }
@@ -176,8 +157,6 @@ namespace LaunchPad2.ViewModels
             set { End = FromSample(value); }
         }
 
-        private bool _isSelected;
-
         public bool IsSelected
         {
             get { return _isSelected; }
@@ -189,10 +168,10 @@ namespace LaunchPad2.ViewModels
 
                     if (Group != null)
                     {
-                        var root = GetRootGroupable();
-                        var descendants = root.GetDescendants().OfType<EventCueViewModel>();
+                        IGroupable root = GetRootGroupable();
+                        IEnumerable<EventCueViewModel> descendants = root.GetDescendants().OfType<EventCueViewModel>();
 
-                        foreach (var descendant in descendants)
+                        foreach (EventCueViewModel descendant in descendants)
                             descendant.IsSelected = value;
                     }
 
@@ -227,6 +206,33 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        public EventCueGroupViewModel Group { get; set; }
+
+        public IGroupable GetRootGroupable()
+        {
+            IGroupable root = this;
+
+            while (root.Group != null)
+                root = root.Group;
+
+            return root;
+        }
+
+        public IEnumerable<IGroupable> GetDescendants()
+        {
+            yield return this;
+        }
+
+        public void Select()
+        {
+            IsSelected = true;
+        }
+
+        public void Unselect()
+        {
+            IsSelected = false;
+        }
+
         public bool Intersects(TimeSpan time)
         {
             if (time < Start - LeadIn)
@@ -237,7 +243,7 @@ namespace LaunchPad2.ViewModels
 
         public bool Intersects(EventCueViewModel cue)
         {
-            if(cue.End < Start - LeadIn)
+            if (cue.End < Start - LeadIn)
                 return false;
 
             return cue.Start <= End;
@@ -251,7 +257,7 @@ namespace LaunchPad2.ViewModels
 
         public TimeSpan FromSample(uint samples)
         {
-            return TimeSpan.FromMilliseconds((double)samples*1000/(SampleRate));
+            return TimeSpan.FromMilliseconds((double) samples*1000/(SampleRate));
         }
 
         public EventCueViewModel Clone()

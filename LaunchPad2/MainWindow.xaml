@@ -378,8 +378,6 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <!--<Rectangle Width="32" VerticalAlignment="Stretch" Grid.Row="1" Fill="{StaticResource PanelBackgroundBrushKey}"/>-->
-
                 <Button Margin="6,3,3,3" Background="Transparent" BorderThickness="0" Command="{Binding AddTrackCommand}"
                         ToolTip="Create new track." Template="{StaticResource ButtonTemplate}" Grid.Column="1">
                     <Viewbox Stretch="Uniform" Height="14.208" Width="32">

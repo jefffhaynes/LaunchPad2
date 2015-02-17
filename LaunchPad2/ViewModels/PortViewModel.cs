@@ -20,6 +20,9 @@ namespace LaunchPad2.ViewModels
 
         public Ports Port { get; private set; }
 
+        /// <summary>
+        /// Used to indicate that this port should be active, but hasn't necessarily been synced with the remote device yet.
+        /// </summary>
         public bool ShouldBeActive
         {
             get { return _shouldBeActive; }
@@ -41,7 +44,7 @@ namespace LaunchPad2.ViewModels
             {
                 if (_isActive != value)
                 {
-                    _isActive = value;
+                    ShouldBeActive = value;
 
                     if (StateChanged != null)
                         StateChanged(this, EventArgs.Empty);
