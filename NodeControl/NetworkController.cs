@@ -16,11 +16,17 @@ namespace NodeControl
 
         private static XBeeController _xBee;
         private static bool _isInitialized;
+        private static bool _portChange = true;
         private static readonly SemaphoreSlim InitializeSemaphore = new SemaphoreSlim(1);
 
         public static event EventHandler InitializingController;
 
         public static event EventHandler DiscoveringNetwork;
+
+        static NetworkController()
+        {
+            SerialPortService.PortsChanged += (sender, args) => _portChange = true;
+        }
 
         public static async Task DiscoverNetworkAsync()
         {
@@ -35,28 +41,43 @@ namespace NodeControl
             await _xBee.DiscoverNetwork(TimeSpan.FromSeconds(10));
         }
 
-        public static async Task Initialize()
+        public static async Task<bool> Initialize()
         {
             if (_isInitialized)
-                return;
+                return true;
 
             await InitializeSemaphore.WaitAsync();
 
-            if (_isInitialized)
-                return;
+            try
+            {
+                if (_isInitialized)
+                    return true;
 
-            _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
+                // Don't bother checking if nothing has changed
+                if (!_portChange)
+                    return false;
 
-            if (_xBee == null)
-                throw new InvalidOperationException("No XBee found.");
+                _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
+
+                _portChange = false;
+
+                if (_xBee == null)
+                    return false;
 
 #if TRACE
-            _xBee.FrameMemberDeserializing += XBeeOnFrameMemberDeserializing;
-            _xBee.FrameMemberDeserialized += XBeeOnFrameMemberDeserialized;
+                _xBee.FrameMemberDeserializing += XBeeOnFrameMemberDeserializing;
+                _xBee.FrameMemberDeserialized += XBeeOnFrameMemberDeserialized;
 #endif
 
-            _xBee.NodeDiscovered += XBeeOnNodeDiscovered;
-            _isInitialized = true;
+                _xBee.NodeDiscovered += XBeeOnNodeDiscovered;
+                _isInitialized = true;
+            }
+            finally
+            {
+                InitializeSemaphore.Release();
+            }
+
+            return true;
         }
 
 #if TRACE
@@ -76,7 +97,8 @@ namespace NodeControl
 
         public static async void SetActivePorts(NodeAddress address, Ports ports)
         {
-            await Initialize();
+            if (!await Initialize())
+                return;
 
             XBeeNode node = await _xBee.GetRemoteAsync(address);
 

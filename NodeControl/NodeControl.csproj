@@ -46,6 +46,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -62,14 +63,17 @@
     <Compile Include="ControlObject.cs" />
     <Compile Include="ControlObjectPayload.cs" />
     <Compile Include="DisarmCommand.cs" />
+    <Compile Include="EventType.cs" />
     <Compile Include="FireControlCommand.cs" />
     <Compile Include="NetworkController.cs" />
     <Compile Include="ObjectType.cs" />
+    <Compile Include="PortsChangedArgs.cs" />
     <Compile Include="PortState.cs" />
     <Compile Include="Ports.cs" />
     <Compile Include="PortStatus.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestStatusCommand.cs" />
+    <Compile Include="SerialPortService.cs" />
     <Compile Include="StatusCommand.cs" />
     <Compile Include="Varuint.cs" />
   </ItemGroup>
