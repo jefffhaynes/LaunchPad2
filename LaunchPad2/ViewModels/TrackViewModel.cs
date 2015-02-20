@@ -30,19 +30,18 @@ namespace LaunchPad2.ViewModels
         private string _notes;
         private PortViewModel _port;
 
-        public TrackViewModel()
+        public TrackViewModel() : this(null, DefaultBrush)
         {
             Cues = new ObservableCollection<EventCueViewModel>();
-            _brush = DefaultBrush;
-
-            ClearDeviceCommand = new RelayCommand(ClearDevice);
-            ClearNodeCommand = new RelayCommand(ClearNode);
         }
 
         public TrackViewModel(string name, Brush brush)
         {
             _name = name;
             _brush = brush;
+
+            ClearDeviceCommand = new RelayCommand(ClearDevice);
+            ClearNodeCommand = new RelayCommand(ClearNode);
         }
 
         public static IEnumerable<BrushViewModel> Brushes

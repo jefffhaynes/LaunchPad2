@@ -23,6 +23,7 @@ namespace LaunchPad2
             InitializeComponent();
             DataContext = _viewModel;
             _viewModel.Stopped += (sender, args) => AudioScrollViewer.ScrollToHorizontalOffset(0);
+            Closing += (sender, args) => SerialPortService.CleanUp();
         }
 
         private void LoadAudioButtonOnClick(object sender, RoutedEventArgs e)
