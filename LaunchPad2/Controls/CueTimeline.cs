@@ -2,6 +2,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using FMOD;
+using LaunchPad2.Annotations;
 
 namespace LaunchPad2.Controls
 {
@@ -13,13 +15,17 @@ namespace LaunchPad2.Controls
             "TimeScale", typeof(double), typeof(CueTimeline),
             new PropertyMetadata(1.0, TimeScaleChangedCallback));
 
-        public static readonly DependencyProperty SampleRateProperty = DependencyProperty.Register(
-            "SampleRate", typeof (double), typeof (CueTimeline), new PropertyMetadata(default(double)));
+        public static readonly DependencyProperty AudioTrackProperty = DependencyProperty.Register(
+            "AudioTrack", typeof(AudioTrack), typeof(CueTimeline), 
+            new FrameworkPropertyMetadata(default(AudioTrack), 
+                FrameworkPropertyMetadataOptions.AffectsArrange, 
+                AudioTrackChangedCallback));
 
-        public double SampleRate
+
+        public AudioTrack AudioTrack
         {
-            get { return (double) GetValue(SampleRateProperty); }
-            set { SetValue(SampleRateProperty, value); }
+            get { return (AudioTrack)GetValue(AudioTrackProperty); }
+            set { SetValue(AudioTrackProperty, value); }
         }
 
         static CueTimeline()
@@ -51,6 +57,11 @@ namespace LaunchPad2.Controls
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
+            if (AudioTrack != null)
+            {
+                var length = AudioTrack.Length;
+            }
+
             return arrangeBounds;
         }
 
@@ -66,7 +77,20 @@ namespace LaunchPad2.Controls
             control.TimeScaleChangedCallback(e);
         }
 
+
+        private static void AudioTrackChangedCallback(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (CueTimeline)dependencyObject;
+            control.AudioTrackChangedCallback(e);
+        }
+
         protected virtual void TimeScaleChangedCallback(DependencyPropertyChangedEventArgs e)
+        {
+
+        }
+
+
+        protected virtual void AudioTrackChangedCallback(DependencyPropertyChangedEventArgs e)
         {
 
         }

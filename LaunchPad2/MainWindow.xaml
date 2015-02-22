@@ -635,7 +635,8 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!--<controls:CueTimeline Grid.Row="0" Grid.Column="1"/>-->
+                    <controls:CueTimeline AudioTrack="{Binding AudioTrack}" Grid.Row="0"/>
+                    
                     <controls:SelectionCanvas x:Name="SelectionCanvas" Focusable="True" Grid.Row="1" Grid.Column="0"
                                           Width="{Binding ElementName=WaveformControl, Path=ActualWidth}"
                                           Height="{Binding ElementName=TracksControl, Path=ActualHeight}" 
