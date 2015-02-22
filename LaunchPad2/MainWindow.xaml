@@ -289,7 +289,7 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <Rectangle Width="32" VerticalAlignment="Stretch" Grid.RowSpan="2" Fill="{StaticResource MenuDisabledBrushKey}"/>
-                <waveform:WaveformControl Name="WaveformControl" Grid.Column="1"
+                <waveform:WaveformControl Name="WaveformControl" Grid.Row="0" Grid.Column="1"
                                           Samples="{Binding Path=AudioTrack.Samples, Converter={StaticResource SamplesDecimationConverter}}"
                                           TimeScale="{Binding Zoom}" 
                                           SamplePosition="{Binding Path=AudioTrack.SamplePosition, Converter={StaticResource SampleDecimationConverter}}"
@@ -308,7 +308,7 @@
                                               TimeScale="{Binding Zoom}" AutoscrollDistance="300" UseLayoutRounding="False"
                                               StrokeThickness="2" Stroke="Red" Cursor="SizeWE" Focusable="False">
                     </controls:AudioCueControl>
-                    <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="{x:Static system:Int32.MaxValue}"
+                    <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="2"
                            Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
                            Width="1" Stroke="#4CFFFFFF" StrokeThickness="1">
                         <Rectangle.Style>
@@ -630,12 +630,26 @@
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" 
                           ScrollChanged="OnScrollChanged" Focusable="False" Grid.Row="1">
                 <Grid>
+      
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <controls:CueTimeline AudioTrack="{Binding AudioTrack}" Grid.Row="0"/>
+                    <Border BorderThickness="0,1,0,1" BorderBrush="{StaticResource GridSplitterBackgroundBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="32"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Rectangle Width="32" VerticalAlignment="Stretch" Fill="{StaticResource MenuDisabledBrushKey}"/>
+                            <controls:CueTimeline AudioTrack="{Binding AudioTrack}" Height="32" FontSize="12" TimeScale="{Binding Zoom}" ClipToBounds="True"
+                                          Grid.Row="0" Grid.Column="1"
+                                          Width="{Binding ElementName=WaveformControl, Path=ActualWidth}" HorizontalAlignment="Left"
+                                          Foreground="{StaticResource MenuDisabledBrushKey}" Background="{StaticResource PanelBackgroundBrushKey}"/>
+                        </Grid>
+                    </Border>
+
                     
                     <controls:SelectionCanvas x:Name="SelectionCanvas" Focusable="True" Grid.Row="1" Grid.Column="0"
                                           Width="{Binding ElementName=WaveformControl, Path=ActualWidth}"
@@ -692,10 +706,10 @@
                         <controls:AudioCueControl Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Margin="32,1,0,1"
                                               Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
                                               TimeScale="{Binding Zoom}"
-                                              StrokeThickness="1" Stroke="{DynamicResource AudioCueBrushKey}" Cursor="SizeWE" Canvas.ZIndex="{x:Static system:Int32.MaxValue}">
+                                              StrokeThickness="1" Stroke="{DynamicResource AudioCueBrushKey}" Cursor="SizeWE" Canvas.ZIndex="1">
                         </controls:AudioCueControl>
 
-                        <Rectangle Name="SelectedCueGuide" Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="{x:Static system:Int32.MaxValue}"
+                        <Rectangle Name="SelectedCueGuide" Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="1"
                            Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
                            Width="1" Stroke="#4CFFFFFF" StrokeThickness="1" Margin="32,0,0,0">
                             <Rectangle.Style>
@@ -733,7 +747,7 @@
                                 <DataTemplate DataType="viewModels:TrackViewModel">
                                     <Border BorderThickness="0,1,0,0" BorderBrush="#282828">
                                         <Canvas Name="HeaderCanvas" Height="32">
-                                            <controls:TrackHeaderControl x:Name="TrackHeaderControl" Margin="0,0,0,0">
+                                            <controls:TrackHeaderControl x:Name="TrackHeaderControl" Canvas.ZIndex="2">
                                                 <StackPanel Orientation="Horizontal" >
                                                     <Rectangle Name="HeaderGrip" Height="{Binding ElementName=HeaderCanvas, Path=ActualHeight}" Width="32">
                                                         <Rectangle.Style>
@@ -768,7 +782,7 @@
                                                     </Grid>
                                                 </StackPanel>
                                             </controls:TrackHeaderControl>
-                                            <ItemsControl ItemsSource="{Binding Cues}"  Margin="32,0,0,0">
+                                            <ItemsControl ItemsSource="{Binding Cues}" Margin="32,0,0,0">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
                                                         <Canvas Height="{Binding ElementName=HeaderCanvas, Path=ActualHeight}" HorizontalAlignment="Stretch" 

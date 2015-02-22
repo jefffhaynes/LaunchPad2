@@ -78,7 +78,7 @@ namespace LaunchPad2.ViewModels
             GroupCommand = new RelayCommand(GroupSelected);
             UngroupCommand = new RelayCommand(UngroupSelected);
 
-            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width));
+            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width - 32)); // 32 is for track header (yeah, total kludge)
 
             DiscoverNetworkCommand = new RelayCommand(async () => await DiscoverNetwork());
 
