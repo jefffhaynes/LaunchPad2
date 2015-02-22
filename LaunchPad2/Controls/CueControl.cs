@@ -251,9 +251,9 @@ namespace LaunchPad2.Controls
             {
                 if (clickPosition.X < 0)
                     _cueMoveMode = CueMoveMode.LeadIn;
-                else if (clickPosition.X > _clickWidth - GripWidth)
+                else if (clickPosition.X > _clickWidth - GetGripWidth())
                     _cueMoveMode = CueMoveMode.RightGrip;
-                else if (clickPosition.X < GripWidth)
+                else if (clickPosition.X < GetGripWidth())
                     _cueMoveMode = CueMoveMode.LeftGrip;
                 else _cueMoveMode = CueMoveMode.Normal;
             }
@@ -390,6 +390,11 @@ namespace LaunchPad2.Controls
         protected virtual void SetWidth(double width)
         {
             throw new NotImplementedException();
+        }
+
+        protected virtual double GetGripWidth()
+        {
+            return 0;
         }
 
         protected virtual double GetWidth()

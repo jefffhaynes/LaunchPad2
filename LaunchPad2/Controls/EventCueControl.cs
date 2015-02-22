@@ -117,7 +117,7 @@ namespace LaunchPad2.Controls
                 arrangeBounds.Width - leftInset - rightInset,
                 arrangeBounds.Height - topInset - bottomInset);
 
-            var gripWidth = Math.Min(GripWidth, _rect.Width / 2);
+            var gripWidth = GetGripWidth();
 
             if (gripWidth > MinGripWidth)
             {
@@ -209,6 +209,11 @@ namespace LaunchPad2.Controls
                 _contentPresenter = FindContentPresenter();
 
             return (double) _contentPresenter.GetValue(WidthProperty);
+        }
+
+        protected override double GetGripWidth()
+        {
+            return Math.Min(GripWidth, _rect.Width / 3);
         }
 
         protected override Size GetNaturalSize()
