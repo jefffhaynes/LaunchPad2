@@ -508,6 +508,10 @@ namespace LaunchPad2.Controls
         private void SetCueSelection()
         {
             SelectedCues = GetSelectedCues().Select(cue => cue.DataContext).ToList();
+
+            if (SelectedCues.Count == 0)
+                SelectedCue = null;
+
             SelectedItems = SelectedCues;
             SelectedItem = SelectedItems.Count == 1 ? SelectedItems[0] : null;
             SelectedTracks = null;
@@ -517,6 +521,7 @@ namespace LaunchPad2.Controls
         {
             foreach (EventCueControl eventCue in Cues)
                 eventCue.IsSelected = false;
+            SelectedCue = null;
         }
 
         private void ClearTrackSelection()

@@ -126,8 +126,8 @@ namespace LaunchPad2.Controls
                 }
                 else if (naturalLabelPeriod < 5000) // 5 seconds
                 {
-                    _labelPeriod = TimeSpan.FromSeconds(5); 
-                    _labelMinorTickPeriod = TimeSpan.FromMilliseconds(500);
+                    _labelPeriod = TimeSpan.FromSeconds(5);
+                    _labelMinorTickPeriod = TimeSpan.FromSeconds(1);
                 }
                 else if (naturalLabelPeriod < 10000) // 10 seconds
                 {
@@ -139,34 +139,20 @@ namespace LaunchPad2.Controls
                     _labelPeriod = TimeSpan.FromSeconds(30); 
                     _labelMinorTickPeriod = TimeSpan.FromSeconds(5);
                 }
-                else // 1 minute
+                else if (naturalLabelPeriod < 60000) // 1 minute
                 {
                     _labelPeriod = TimeSpan.FromMinutes(1); 
                     _labelMinorTickPeriod = TimeSpan.FromSeconds(10);
                 }
-
-                var labelCount = Math.Ceiling(length.TotalMilliseconds/_labelPeriod.TotalMilliseconds);
-
-                double labelStep = GetStep(_labelPeriod);
-
-                Children.Clear();
-
-                for (int i = 0; i < labelCount; i++)
+                else if (naturalLabelPeriod < 120000) // 2 minutes
                 {
-                    var label = new TextBlock
-                    {
-                        Text = " " + TimeSpan.FromMilliseconds(_labelPeriod.TotalMilliseconds*i).ToString("mm\\:ss"),
-                        Foreground = Foreground,
-                        FontSize = FontSize,
-                        FontWeight = FontWeight,
-                        FontFamily = FontFamily,
-                        FontStretch = FontStretch,
-                        FontStyle = FontStyle
-                    };
-
-                    label.SetValue(LeftProperty, labelStep*i);
-                    label.SetValue(TopProperty, 2.0);
-                    Children.Add(label);
+                    _labelPeriod = TimeSpan.FromMinutes(2);
+                    _labelMinorTickPeriod = TimeSpan.FromSeconds(20);
+                }
+                else // 5 minutes
+                {
+                    _labelPeriod = TimeSpan.FromMinutes(5);
+                    _labelMinorTickPeriod = TimeSpan.FromMinutes(1);
                 }
 
                 _lastWidth = arrangeBounds.Width;
@@ -199,6 +185,9 @@ namespace LaunchPad2.Controls
                     var x = tickStep*i;
                     drawingContext.DrawLine(pen, new Point(x, 0), new Point(x, tickHeight));
 
+                    var label = TimeSpan.FromMilliseconds(_labelPeriod.TotalMilliseconds*i).ToString("mm\\:ss");
+                    drawingContext.DrawText(GetFormattedText(label), new Point(x + 2, 0));
+
                     for (int j = 1; j < minorTickCount; j++)
                     {
                         var minorX = x + minorTickStep*j;
@@ -206,7 +195,6 @@ namespace LaunchPad2.Controls
                     }
                 }
             }
-
         }
 
         private double GetStep(TimeSpan period)
@@ -221,7 +209,6 @@ namespace LaunchPad2.Controls
             control.TimeScaleChangedCallback(e);
         }
 
-
         private static void AudioTrackChangedCallback(DependencyObject dependencyObject,
             DependencyPropertyChangedEventArgs e)
         {
@@ -234,7 +221,6 @@ namespace LaunchPad2.Controls
             _isDirty = true;
         }
 
-
         protected virtual void AudioTrackChangedCallback(DependencyPropertyChangedEventArgs e)
         {
             _isDirty = true;
@@ -242,10 +228,14 @@ namespace LaunchPad2.Controls
 
         private Size MeasureString(string value)
         {
-            var formattedText = new FormattedText(value, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
-                new Typeface(FontFamily, FontStyle, FontWeight, FontStretch), FontSize, Brushes.Black);
-
+            var formattedText = GetFormattedText(value);
             return new Size(formattedText.Width, formattedText.Height);
+        }
+
+        private FormattedText GetFormattedText(string value)
+        {
+            return new FormattedText(value, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
+                new Typeface(FontFamily, FontStyle, FontWeight, FontStretch), FontSize, Foreground);
         }
     }
 }

@@ -66,6 +66,19 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="SelectedCueIndicatorStyle" TargetType="{x:Type Rectangle}">
+            <Setter Property="Width" Value="1"/>
+            <Setter Property="Stroke" Value="#4CFFFFFF"/>
+            <Setter Property="StrokeThickness" Value="1"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedCue, ElementName=SelectionCanvas}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Hidden"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding SelectedCue.IsMoving, ElementName=SelectionCanvas}" Value="false">
+                    <Setter Property="Visibility" Value="Hidden"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     <Window.Title>
         <Binding Path="File" Converter="{StaticResource FileTitleConverter}"/>
@@ -630,7 +643,7 @@
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" 
                           ScrollChanged="OnScrollChanged" Focusable="False" Grid.Row="1">
                 <Grid>
-      
+
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -643,14 +656,19 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Rectangle Width="32" VerticalAlignment="Stretch" Fill="{StaticResource MenuDisabledBrushKey}"/>
-                            <controls:CueTimeline AudioTrack="{Binding AudioTrack}" Height="32" FontSize="12" TimeScale="{Binding Zoom}" ClipToBounds="True"
-                                          Grid.Row="0" Grid.Column="1"
-                                          Width="{Binding ElementName=WaveformControl, Path=ActualWidth}" HorizontalAlignment="Left"
-                                          Foreground="{StaticResource MenuDisabledBrushKey}" Background="{StaticResource PanelBackgroundBrushKey}"/>
+                            <controls:CueTimeline AudioTrack="{Binding AudioTrack}" Height="32" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" 
+                                                  TimeScale="{Binding Zoom}" ClipToBounds="True"
+                                                  Width="{Binding ElementName=WaveformControl, Path=ActualWidth}" 
+                                                  Foreground="{StaticResource MenuDisabledBrushKey}" 
+                                                  Background="{StaticResource PanelBackgroundBrushKey}">
+                                <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="1"
+                                           Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
+                                           Style="{DynamicResource SelectedCueIndicatorStyle}"/>
+                            </controls:CueTimeline>
                         </Grid>
                     </Border>
 
-                    
+
                     <controls:SelectionCanvas x:Name="SelectionCanvas" Focusable="True" Grid.Row="1" Grid.Column="0"
                                           Width="{Binding ElementName=WaveformControl, Path=ActualWidth}"
                                           Height="{Binding ElementName=TracksControl, Path=ActualHeight}" 
@@ -709,22 +727,10 @@
                                               StrokeThickness="1" Stroke="{DynamicResource AudioCueBrushKey}" Cursor="SizeWE" Canvas.ZIndex="1">
                         </controls:AudioCueControl>
 
-                        <Rectangle Name="SelectedCueGuide" Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="1"
-                           Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
-                           Width="1" Stroke="#4CFFFFFF" StrokeThickness="1" Margin="32,0,0,0">
-                            <Rectangle.Style>
-                                <Style TargetType="{x:Type Rectangle}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue}" Value="{x:Null}">
-                                            <Setter Property="Visibility" Value="Hidden"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding ElementName=SelectionCanvas, Path=SelectedCue.IsMoving}" Value="false">
-                                            <Setter Property="Visibility" Value="Hidden"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Rectangle.Style>
-                        </Rectangle>
+                        <Rectangle Name="SelectedCueGuide" Margin="32,0,0,0" 
+                                   Height="{Binding ElementName=TracksControl, Path=ActualHeight}" 
+                                   Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" Canvas.ZIndex="1"
+                                   Style="{DynamicResource SelectedCueIndicatorStyle}"/>
 
                         <ItemsControl Name="TracksControl" HorizontalAlignment="Left" ItemsSource="{Binding Tracks}" 
                               controls:DragDropHelper.IsDragSource="True" 
