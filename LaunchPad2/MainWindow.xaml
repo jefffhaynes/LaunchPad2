@@ -629,7 +629,7 @@
                             </x:Array>
                         </ComboBox.ItemsSource>
                     </ComboBox>
-                    <Slider Name="ZoomSlider" Orientation="Horizontal" Width="200" Maximum="1" Minimum="0.002" Value="{Binding Zoom}" Margin="6,6,0,6" TickFrequency="0.1" SmallChange="0.01"
+                    <Slider Name="ZoomSlider" Orientation="Horizontal" Width="200" Maximum="1" Minimum="0.002" Value="{Binding Zoom}" Margin="6,6,0,6" TickFrequency="0.1" LargeChange="0.1" SmallChange="0.01"
                     Background="#7EFFFFFF"/>
                     <Button Template="{StaticResource ButtonTemplate}" Margin="4" Command="{Binding ZoomExtentsCommand}" CommandParameter="{Binding ElementName=TrackScrollViewer, Path=ActualWidth}">
                         <Border BorderBrush="{StaticResource MenuGrayBrushKey}" BorderThickness="1,0,1,0" Padding="1" >
@@ -660,7 +660,9 @@
                                                   TimeScale="{Binding Zoom}" ClipToBounds="True"
                                                   Width="{Binding ElementName=WaveformControl, Path=ActualWidth}" 
                                                   Foreground="{StaticResource MenuDisabledBrushKey}" 
-                                                  Background="{StaticResource PanelBackgroundBrushKey}">
+                                                  Background="{StaticResource PanelBackgroundBrushKey}"
+                                                  RegionStart="{Binding SelectedRegionStart}"
+                                                  RegionLength="{Binding SelectedRegionLength}">
                                 <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="1"
                                            Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
                                            Style="{DynamicResource SelectedCueIndicatorStyle}"/>

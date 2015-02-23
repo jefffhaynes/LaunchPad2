@@ -237,6 +237,36 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        private TimeSpan _selectedRegionStart;
+
+        public TimeSpan SelectedRegionStart
+        {
+            get { return _selectedRegionStart; }
+            set
+            {
+                if (_selectedRegionStart != value)
+                {
+                    _selectedRegionStart = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private TimeSpan _selectedRegionLength;
+
+        public TimeSpan SelectedRegionLength
+        {
+            get { return _selectedRegionLength; }
+            set
+            {
+                if (_selectedRegionLength != value)
+                {
+                    _selectedRegionLength = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public NetworkDiscoveryState NetworkDiscoveryState
         {
             get { return _networkDiscoveryState; }

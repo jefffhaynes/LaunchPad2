@@ -530,6 +530,7 @@ namespace LaunchPad2.Controls
                 track.IsSelected = false;
         }
 
+        // TODO make this a ScrollViewer attached behavior 
         private async void AutoScroll()
         {
             if (_scrollViewer == null)
