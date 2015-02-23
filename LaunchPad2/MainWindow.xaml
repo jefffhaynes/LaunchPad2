@@ -468,7 +468,7 @@
                 </Button>
 
                 <Button Margin="3" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Grid.Column="3" Command="{Binding DeleteCueCommand}"
-                        ToolTip="Create new cue" Template="{StaticResource ButtonTemplate}">
+                        ToolTip="Delete Cues" Template="{StaticResource ButtonTemplate}">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Style.Triggers>
