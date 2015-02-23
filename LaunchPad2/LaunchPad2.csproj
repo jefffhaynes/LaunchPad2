@@ -83,6 +83,7 @@
     </ApplicationDefinition>
     <Compile Include="ActionBatch.cs" />
     <Compile Include="ComponentExtensions.cs" />
+    <Compile Include="Controls\RegionCueControl.cs" />
     <Compile Include="Controls\LibraryPanel.xaml.cs">
       <DependentUpon>LibraryPanel.xaml</DependentUpon>
     </Compile>

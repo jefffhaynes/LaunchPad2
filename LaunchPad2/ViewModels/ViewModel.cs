@@ -33,6 +33,8 @@ namespace LaunchPad2.ViewModels
         private bool _isShowRunning;
         private NetworkDiscoveryState _networkDiscoveryState;
         private object _selectedItem;
+        private TimeSpan _selectedRegionLength;
+        private TimeSpan _selectedRegionStart;
         private string _status;
         private double _zoom;
 
@@ -78,7 +80,8 @@ namespace LaunchPad2.ViewModels
             GroupCommand = new RelayCommand(GroupSelected);
             UngroupCommand = new RelayCommand(UngroupSelected);
 
-            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width - 32)); // 32 is for track header (yeah, total kludge)
+            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width - 32));
+                // 32 is for track header (yeah, total kludge)
 
             DiscoverNetworkCommand = new RelayCommand(async () => await DiscoverNetwork());
 
@@ -191,7 +194,21 @@ namespace LaunchPad2.ViewModels
                     }
 
                     OnPropertyChanged();
+// ReSharper disable ExplicitCallerInfoArgument
+                    OnPropertyChanged("SampleRate");
+// ReSharper restore ExplicitCallerInfoArgument
                 }
+            }
+        }
+
+        public float SampleRate
+        {
+            get
+            {
+                if (AudioTrack == null)
+                    return 0;
+
+                return AudioTrack.SampleRate;
             }
         }
 
@@ -237,8 +254,6 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        private TimeSpan _selectedRegionStart;
-
         public TimeSpan SelectedRegionStart
         {
             get { return _selectedRegionStart; }
@@ -248,11 +263,12 @@ namespace LaunchPad2.ViewModels
                 {
                     _selectedRegionStart = value;
                     OnPropertyChanged();
+// ReSharper disable ExplicitCallerInfoArgument
+                    OnPropertyChanged("SelectedRegionStartSample");
+// ReSharper restore ExplicitCallerInfoArgument
                 }
             }
         }
-
-        private TimeSpan _selectedRegionLength;
 
         public TimeSpan SelectedRegionLength
         {
@@ -263,7 +279,34 @@ namespace LaunchPad2.ViewModels
                 {
                     _selectedRegionLength = value;
                     OnPropertyChanged();
+// ReSharper disable ExplicitCallerInfoArgument
+                    OnPropertyChanged("SelectedRegionLengthSample");
+// ReSharper restore ExplicitCallerInfoArgument
                 }
+            }
+        }
+
+        public uint SelectedRegionStartSample
+        {
+            get { return AudioTrack == null ? 0 : (uint) AudioTrack.ToSamples(SelectedRegionStart); }
+            set
+            {
+                if (AudioTrack == null)
+                    return;
+
+                SelectedRegionStart = AudioTrack.ToTime(value);
+            }
+        }
+
+        public int SelectedRegionLengthSample
+        {
+            get { return AudioTrack == null ? 0 : (int) AudioTrack.ToSamples(SelectedRegionLength); }
+            set
+            {
+                if (AudioTrack == null)
+                    return;
+
+                SelectedRegionLength = AudioTrack.ToTime(value);
             }
         }
 
@@ -491,7 +534,7 @@ namespace LaunchPad2.ViewModels
             if (position == TimeSpan.Zero && AudioTrack.Length > DefaultCuePosition)
                 position = DefaultCuePosition;
 
-            float sampleRate = AudioTrack.SampleRate;
+            float sampleRate = SampleRate;
             Dictionary<TrackViewModel, EventCueViewModel> trackCues = GetSelectedTracks().ToDictionary(track => track,
                 track => new EventCueViewModel(sampleRate, position, DefaultCueLength));
 
@@ -575,7 +618,7 @@ namespace LaunchPad2.ViewModels
                 return;
 
             foreach (EventCueViewModel cue in AllCues)
-                cue.SampleRate = AudioTrack.SampleRate;
+                cue.SampleRate = SampleRate;
         }
 
         public void StartMove()
@@ -727,7 +770,7 @@ namespace LaunchPad2.ViewModels
             double length = GetSelectedCues().Max(cue => cue.SampleLength);
 
             foreach (EventCueViewModel cue in GetSelectedCues())
-                cue.SampleLength = (uint) length;
+                cue.SampleLength = (int) length;
         }
 
         private void CueDistributeLeft()
@@ -826,7 +869,7 @@ namespace LaunchPad2.ViewModels
                             value =>
                             {
                                 const int durationMs = 500;
-                                return new EventCueViewModel(AudioTrack.SampleRate, value.Time,
+                                return new EventCueViewModel(SampleRate, value.Time,
                                     TimeSpan.FromMilliseconds(durationMs));
                             })
                             .ToList();

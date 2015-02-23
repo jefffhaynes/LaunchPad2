@@ -318,6 +318,7 @@
                 <Canvas HorizontalAlignment="Left" Grid.Row="0" Focusable="False" Grid.Column="1">
                     <controls:AudioCueControl Height="{Binding ElementName=AudioPanel, Path=ActualHeight}"
                                               Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
+                                              SampleRate="{Binding SampleRate}"
                                               TimeScale="{Binding Zoom}" AutoscrollDistance="300" UseLayoutRounding="False"
                                               StrokeThickness="2" Stroke="Red" Cursor="SizeWE" Focusable="False">
                     </controls:AudioCueControl>
@@ -666,6 +667,12 @@
                                 <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="1"
                                            Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
                                            Style="{DynamicResource SelectedCueIndicatorStyle}"/>
+                                <controls:RegionCueControl Sample="{Binding SelectedRegionStartSample, Converter={StaticResource SampleDecimationConverter}}" 
+                                                          SampleLength="{Binding SelectedRegionLengthSample, Converter={StaticResource SampleDecimationConverter}}" 
+                                                          SampleRate="{Binding SampleRate}"
+                                                          BorderBrush="{StaticResource StatusBarBrushKey}" BorderThickness="2,0"
+                                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#B368217A"
+                                                          AutoscrollDistance="40" Height="32" GripWidth="16" SnapToInterval="0:0:0.1"/>
                             </controls:CueTimeline>
                         </Grid>
                     </Border>
@@ -724,11 +731,20 @@
                             </ContextMenu>
                         </controls:SelectionCanvas.ContextMenu>
                         <controls:AudioCueControl Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Margin="32,1,0,1"
-                                              Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
-                                              TimeScale="{Binding Zoom}"
-                                              StrokeThickness="1" Stroke="{DynamicResource AudioCueBrushKey}" Cursor="SizeWE" Canvas.ZIndex="1">
+                                                  Sample="{Binding Path=AudioTrack.SamplePosition, Mode=TwoWay, Converter={StaticResource SampleDecimationConverter}}"
+                                                  SampleRate="{Binding SampleRate}"
+                                                  TimeScale="{Binding Zoom}"
+                                                  StrokeThickness="1" Stroke="{DynamicResource AudioCueBrushKey}" Cursor="SizeWE" Canvas.ZIndex="1">
                         </controls:AudioCueControl>
 
+                        <controls:RegionCueControl Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Margin="32,1,0,1" Canvas.ZIndex="1"
+                                                   Sample="{Binding SelectedRegionStartSample, Converter={StaticResource SampleDecimationConverter}}" 
+                                                          SampleLength="{Binding SelectedRegionLengthSample, Converter={StaticResource SampleDecimationConverter}}" 
+                                                          SampleRate="{Binding SampleRate}"
+                                                          BorderBrush="{StaticResource StatusBarBrushKey}" BorderThickness="2,0"
+                                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#B368217A"
+                                                          AutoscrollDistance="40" GripWidth="16" SnapToInterval="0:0:0.1"/>
+                        
                         <Rectangle Name="SelectedCueGuide" Margin="32,0,0,0" 
                                    Height="{Binding ElementName=TracksControl, Path=ActualHeight}" 
                                    Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" Canvas.ZIndex="1"
@@ -813,6 +829,7 @@
                                                         <controls:EventCueControl Sample="{Binding StartSample, Converter={StaticResource SampleDecimationConverter}}" 
                                                                               SampleLength="{Binding SampleLength, Converter={StaticResource SampleDecimationConverter}}"
                                                                               LeadInSampleLength="{Binding LeadInSampleLength, Converter={StaticResource SampleDecimationConverter}}"
+                                                                                  SampleRate="{Binding SampleRate}"
                                                                               TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" IsSelected="{Binding IsSelected}"
                                                                               AutoscrollDistance="40" Height="32" BorderThickness="1" GripWidth="16" SnapToInterval="0:0:0.1" >
                                                             <controls:EventCueControl.Style>

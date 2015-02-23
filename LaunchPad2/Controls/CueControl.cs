@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using LaunchPad2.Annotations;
 using LaunchPad2.Converters;
-using LaunchPad2.ViewModels;
 
 namespace LaunchPad2.Controls
 {
@@ -18,12 +18,15 @@ namespace LaunchPad2.Controls
                 FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, SampleChangedCallback));
 
         public static readonly DependencyProperty SampleLengthProperty = DependencyProperty.Register(
-            "SampleLength", typeof (uint), typeof (CueControl),
-            new FrameworkPropertyMetadata(default(uint),
+            "SampleLength", typeof (int), typeof (CueControl),
+            new FrameworkPropertyMetadata(default(int),
                 FrameworkPropertyMetadataOptions.AffectsParentMeasure |
                 FrameworkPropertyMetadataOptions.AffectsArrange |
                 FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                 SampleLengthChangedCallback, CoerceSampleLengthCallback));
+
+        public static readonly DependencyProperty SampleRateProperty = DependencyProperty.Register(
+            "SampleRate", typeof (float), typeof (CueControl), new PropertyMetadata(default(float)));
 
         public static readonly DependencyProperty TimeScaleProperty = DependencyProperty.Register(
             "TimeScale", typeof (double), typeof (CueControl),
@@ -45,8 +48,6 @@ namespace LaunchPad2.Controls
         public static readonly DependencyProperty CanResizeProperty = DependencyProperty.Register(
             "CanResize", typeof (bool), typeof (CueControl), new PropertyMetadata(true));
 
-        private static readonly SampleDecimationConverter SampleDecimationConverter = new SampleDecimationConverter();
-
         private Canvas _canvas;
         private Point _canvasClickPosition;
 
@@ -61,6 +62,12 @@ namespace LaunchPad2.Controls
             MouseLeftButtonDown += OnLeftButtonDown;
             MouseMove += OnMouseMove;
             MouseLeftButtonUp += OnLeftButtonUp;
+        }
+
+        public float SampleRate
+        {
+            get { return (float) GetValue(SampleRateProperty); }
+            set { SetValue(SampleRateProperty, value); }
         }
 
         public bool CanResize
@@ -99,9 +106,9 @@ namespace LaunchPad2.Controls
             set { SetValue(SampleProperty, value); }
         }
 
-        public uint SampleLength
+        public int SampleLength
         {
-            get { return (uint) GetValue(SampleLengthProperty); }
+            get { return (int) GetValue(SampleLengthProperty); }
             set { SetValue(SampleLengthProperty, value); }
         }
 
@@ -166,13 +173,13 @@ namespace LaunchPad2.Controls
         private static void SampleLengthChangedCallback(DependencyObject dependencyObject,
             DependencyPropertyChangedEventArgs e)
         {
-            var control = (EventCueControl) dependencyObject;
+            var control = (CueControl) dependencyObject;
             control.SampleLengthChangedCallback(e);
         }
 
         private void SampleLengthChangedCallback(DependencyPropertyChangedEventArgs e)
         {
-            double length = (uint) e.NewValue*TimeScale;
+            double length = (int) e.NewValue*TimeScale;
             SetWidth(length);
         }
 
@@ -284,13 +291,13 @@ namespace LaunchPad2.Controls
                     double boundedWidth = Math.Max(width, naturalWidth);
                     double sampleLength = boundedWidth/TimeScale;
 
-                    uint minSampleLength = ToSample(MinCueLength);
+                    int minSampleLength = ToSample(MinCueLength);
                     if (sampleLength < minSampleLength)
                         sampleLength = minSampleLength;
 
                     double snappedSampleLength = Snap(sampleLength);
 
-                    SetValue(SampleLengthProperty, (uint) snappedSampleLength);
+                    SetValue(SampleLengthProperty, (int) snappedSampleLength);
 
                     /* Work backwards to get snapped delta for routed event */
                     double snappedWidth = snappedSampleLength*TimeScale;
@@ -344,36 +351,31 @@ namespace LaunchPad2.Controls
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                 return value;
 
-            uint samples = ToSample(SnapToInterval);
+            int samples = ToSample(SnapToInterval);
             return value - value%samples;
         }
 
         private static object CoerceSampleLengthCallback(DependencyObject dependencyObject, object baseValue)
         {
             var control = (CueControl) dependencyObject;
-            var sampleLength = (uint) baseValue;
+            var sampleLength = (int) baseValue;
             return control.CoerceSampleLengthCallback(sampleLength);
         }
 
-        private object CoerceSampleLengthCallback(uint sampleLength)
+        protected virtual object CoerceSampleLengthCallback(int sampleLength)
         {
-            uint minSampleLength = ToSample(MinCueLength);
+            int minSampleLength = ToSample(MinCueLength);
             if (sampleLength < minSampleLength)
                 return minSampleLength;
 
             return sampleLength;
         }
 
-        private uint ToSample(TimeSpan timeSpan)
+        private int ToSample(TimeSpan timeSpan)
         {
-            /* Following is an unfortunate hack to get samples per snap interval. */
-            var cue = DataContext as EventCueViewModel;
-            if (cue == null)
-                throw new InvalidOperationException("Expected DataContext to be EventCueViewModel");
-
-            uint samples = cue.ToSample(timeSpan);
-
-            return (uint) SampleDecimationConverter.Convert(samples, null, null, null);
+            double totalSeconds = timeSpan.TotalMilliseconds/1000;
+            var samples = (int) (totalSeconds*SampleRate);
+            return (int)(samples*Settings.Default.Decimation);
         }
 
         protected virtual void SetLeft(double left)

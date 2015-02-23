@@ -120,7 +120,7 @@ namespace LaunchPad2.ViewModels
 
         public uint StartSample
         {
-            get { return ToSample(Start); }
+            get { return (uint)ToSample(Start); }
 
             set
             {
@@ -129,9 +129,9 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        public uint SampleLength
+        public int SampleLength
         {
-            get { return ToSample(Length); }
+            get { return (int)ToSample(Length); }
 
             set
             {
@@ -142,7 +142,7 @@ namespace LaunchPad2.ViewModels
 
         public uint LeadInSampleLength
         {
-            get { return ToSample(LeadIn); }
+            get { return (uint)ToSample(LeadIn); }
 
             set
             {
@@ -153,7 +153,7 @@ namespace LaunchPad2.ViewModels
 
         public uint EndSample
         {
-            get { return ToSample(End); }
+            get { return (uint)ToSample(End); }
             set { End = FromSample(value); }
         }
 
@@ -249,15 +249,15 @@ namespace LaunchPad2.ViewModels
             return cue.Start <= End;
         }
 
-        public uint ToSample(TimeSpan time)
+        public double ToSample(TimeSpan time)
         {
             double totalSeconds = time.TotalMilliseconds/1000;
-            return (uint) (totalSeconds*SampleRate);
+            return (int) (totalSeconds*SampleRate);
         }
 
-        public TimeSpan FromSample(uint samples)
+        public TimeSpan FromSample(double samples)
         {
-            return TimeSpan.FromMilliseconds((double) samples*1000/(SampleRate));
+            return TimeSpan.FromMilliseconds(samples*1000/(SampleRate));
         }
 
         public EventCueViewModel Clone()

@@ -260,7 +260,7 @@ namespace LaunchPad2.Controls
                             {
                                 if (cue.Key.CanResize)
                                 {
-                                    cue.Key.SetValue(CueControl.SampleLengthProperty, (uint) cue.Value);
+                                    cue.Key.SetValue(CueControl.SampleLengthProperty, (int) cue.Value);
                                 }
                             }
                         }
@@ -280,7 +280,7 @@ namespace LaunchPad2.Controls
                             {
                                 if (cue.Key.CanResize)
                                 {
-                                    cue.Key.SetValue(CueControl.SampleLengthProperty, (uint) cue.Value);
+                                    cue.Key.SetValue(CueControl.SampleLengthProperty, (int) cue.Value);
                                 }
                             }
                         }

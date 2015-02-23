@@ -16,14 +16,14 @@ namespace LaunchPad2.Converters
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var sample = (uint) value;
-            return (uint)(sample*_decimation);
+            var sample = System.Convert.ToDouble(value);
+            return sample * _decimation;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var decimatedSample = (uint) value;
-            return (uint)(decimatedSample/_decimation);
+            var decimatedSample = System.Convert.ToDouble(value);
+            return decimatedSample/_decimation;
         }
     }
 }
