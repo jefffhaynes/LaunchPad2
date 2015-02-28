@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 
 namespace LaunchPad2.Controls
 {
-    public class RegionCueControl : CueControl
+    public class RegionCueControl : CueControlBase
     {
         private ContentPresenter _contentPresenter;
         private Rect _rect;
-
-        protected override bool HasGrips
-        {
-            get { return false; }
-        }
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {

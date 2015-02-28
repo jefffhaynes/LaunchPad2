@@ -672,7 +672,7 @@
                                                           SampleRate="{Binding SampleRate}"
                                                           BorderBrush="{StaticResource StatusBarBrushKey}" BorderThickness="2,0"
                                                           TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#B368217A"
-                                                          AutoscrollDistance="40" Height="32" GripWidth="16" SnapToInterval="0:0:0.1"/>
+                                                          AutoscrollDistance="40" Height="32" SnapToInterval="0:0:0.1"/>
                             </controls:CueTimeline>
                         </Grid>
                     </Border>
@@ -742,9 +742,8 @@
                                                           SampleLength="{Binding SelectedRegionLengthSample, Converter={StaticResource SampleDecimationConverter}}" 
                                                           SampleRate="{Binding SampleRate}"
                                                           BorderBrush="{StaticResource StatusBarBrushKey}" BorderThickness="2,0"
-                                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#B368217A"
-                                                          AutoscrollDistance="40" GripWidth="16" SnapToInterval="0:0:0.1"/>
-                        
+                                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#4C68217A"/>
+
                         <Rectangle Name="SelectedCueGuide" Margin="32,0,0,0" 
                                    Height="{Binding ElementName=TracksControl, Path=ActualHeight}" 
                                    Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" Canvas.ZIndex="1"
@@ -806,6 +805,7 @@
                                                     </Grid>
                                                 </StackPanel>
                                             </controls:TrackHeaderControl>
+                                            
                                             <ItemsControl ItemsSource="{Binding Cues}" Margin="32,0,0,0">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
