@@ -10,8 +10,9 @@
         xmlns:viewModels="clr-namespace:LaunchPad2.ViewModels"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Height="600" Width="1280" d:DataContext="{d:DesignData viewModels:ViewModel}"
-        Background="{StaticResource PanelHorizontalLineBrushKey}" Icon="LaunchPad.ico">
+        Height="600" Width="1280"
+        Background="{StaticResource PanelHorizontalLineBrushKey}" Icon="LaunchPad.ico"
+        d:DataContext="{d:DesignData ViewModel}">
     <Window.Resources>
         <converters:FileTitleConverter x:Key="FileTitleConverter"/>
         <converters:SamplesDecimationConverter x:Key="SamplesDecimationConverter"/>
@@ -75,6 +76,13 @@
                     <Setter Property="Visibility" Value="Hidden"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding SelectedCue.IsMoving, ElementName=SelectionCanvas}" Value="false">
+                    <Setter Property="Visibility" Value="Hidden"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RegionCueStyle" TargetType="{x:Type controls:RegionCueControl}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding SelectedRegionSampleLength}" Value="0">
                     <Setter Property="Visibility" Value="Hidden"/>
                 </DataTrigger>
             </Style.Triggers>
@@ -667,12 +675,13 @@
                                 <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="1"
                                            Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
                                            Style="{DynamicResource SelectedCueIndicatorStyle}"/>
+
                                 <controls:RegionCueControl Sample="{Binding SelectedRegionStartSample, Converter={StaticResource SampleDecimationConverter}}" 
-                                                          SampleLength="{Binding SelectedRegionLengthSample, Converter={StaticResource SampleDecimationConverter}}" 
+                                                          SampleLength="{Binding SelectedRegionSampleLength, Converter={StaticResource SampleDecimationConverter}}" 
                                                           SampleRate="{Binding SampleRate}"
                                                           BorderBrush="{StaticResource StatusBarBrushKey}" BorderThickness="2,0"
                                                           TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#B368217A"
-                                                          AutoscrollDistance="40" Height="32" SnapToInterval="0:0:0.1"/>
+                                                          AutoscrollDistance="40" Height="32" SnapToInterval="0:0:0.1" Style="{DynamicResource RegionCueStyle}"/>
                             </controls:CueTimeline>
                         </Grid>
                     </Border>
@@ -739,10 +748,10 @@
 
                         <controls:RegionCueControl Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Margin="32,1,0,1" Canvas.ZIndex="1"
                                                    Sample="{Binding SelectedRegionStartSample, Converter={StaticResource SampleDecimationConverter}}" 
-                                                          SampleLength="{Binding SelectedRegionLengthSample, Converter={StaticResource SampleDecimationConverter}}" 
+                                                          SampleLength="{Binding SelectedRegionSampleLength, Converter={StaticResource SampleDecimationConverter}}" 
                                                           SampleRate="{Binding SampleRate}"
                                                           BorderBrush="{StaticResource StatusBarBrushKey}" BorderThickness="2,0"
-                                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#4C68217A"/>
+                                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#4C68217A" Style="{DynamicResource RegionCueStyle}"/>
 
                         <Rectangle Name="SelectedCueGuide" Margin="32,0,0,0" 
                                    Height="{Binding ElementName=TracksControl, Path=ActualHeight}" 
@@ -805,7 +814,7 @@
                                                     </Grid>
                                                 </StackPanel>
                                             </controls:TrackHeaderControl>
-                                            
+
                                             <ItemsControl ItemsSource="{Binding Cues}" Margin="32,0,0,0">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>

@@ -213,7 +213,7 @@ namespace LaunchPad2.Controls
         {
             CaptureMouse();
             _clickPosition = e.GetPosition(this);
-            RegionStart = ToTimeSpan(_clickPosition.X);
+            RegionLength = TimeSpan.Zero;
             _selectingRegion = true;
         }
 
@@ -222,10 +222,13 @@ namespace LaunchPad2.Controls
             if (_selectingRegion)
             {
                 var position = e.GetPosition(this);
-                if (Math.Abs(_clickPosition.X - position.X) > 2.0)
+                var delta = _clickPosition.X - position.X;
+                var length = Math.Abs(delta);
+
+                if (length > 2.0)
                 {
-                    var time = ToTimeSpan(position.X);
-                    RegionLength = time - RegionStart;
+                    RegionLength = ToTimeSpan(length);
+                    RegionStart = delta < 0 ? ToTimeSpan(_clickPosition.X) : ToTimeSpan(_clickPosition.X - length);
                 }
             }
         }

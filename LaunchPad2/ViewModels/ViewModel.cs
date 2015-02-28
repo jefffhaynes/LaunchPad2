@@ -278,10 +278,15 @@ namespace LaunchPad2.ViewModels
                     _selectedRegionLength = value;
                     OnPropertyChanged();
 // ReSharper disable ExplicitCallerInfoArgument
-                    OnPropertyChanged("SelectedRegionLengthSample");
+                    OnPropertyChanged("SelectedRegionSampleLength");
 // ReSharper restore ExplicitCallerInfoArgument
                 }
             }
+        }
+
+        public TimeSpan SelectedRegionEnd
+        {
+            get { return SelectedRegionStart + SelectedRegionLength; }
         }
 
         public uint SelectedRegionStartSample
@@ -296,7 +301,7 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        public int SelectedRegionLengthSample
+        public int SelectedRegionSampleLength
         {
             get { return AudioTrack == null ? 0 : (int) AudioTrack.ToSamples(SelectedRegionLength); }
             set
@@ -562,8 +567,17 @@ namespace LaunchPad2.ViewModels
         private void DeleteCue()
         {
             var undoBatchMemento = new UndoBatchMemento();
-            BatchDelete(GetSelectedCues(), undoBatchMemento);
+            DeleteCue(undoBatchMemento);
             UndoManager.DoAndAdd(undoBatchMemento);
+        }
+
+        private void DeleteCue(UndoBatchMemento undoBatchMemento)
+        {
+            var cues = SelectedRegionLength > TimeSpan.Zero
+                ? GetSelectedCues().Where(cue => cue.Start > SelectedRegionStart && cue.Start < SelectedRegionEnd)
+                : GetSelectedCues();
+
+            BatchDelete(cues, undoBatchMemento);
         }
 
         private void Delete()
@@ -854,7 +868,6 @@ namespace LaunchPad2.ViewModels
                     {
                         SampleInfo<double> sample = nearestNeighborOrdered[valueIndex++];
                         cue.Start = sample.Time;
-                        //cue.LeadIn = TimeSpan.FromMilliseconds(sample.Value);
                     } while (
                         selectedCues.Where(c => c != cue).Any(c => c.Intersects(cue)) &&
                         valueIndex < energyAndTimeOrderedByEnergy.Count);
@@ -867,17 +880,18 @@ namespace LaunchPad2.ViewModels
                 /* Wipe out and populate selected tracks */
                 foreach (TrackViewModel track in selectedTracks)
                 {
-                    BatchDelete(track.Cues, undoBatchMemento);
+                    DeleteCue(undoBatchMemento);
 
-                    /* Higher energy values have shorter duration */
+                    var sampleDuration = TimeSpan.FromMilliseconds(500);
+
+                    var regionalEnergyAndTimeOrderedByEnergy = SelectedRegionLength > TimeSpan.Zero
+                        ? energyAndTimeOrderedByEnergy.Where(
+                            sample => sample.Time > SelectedRegionStart && sample.Time + sampleDuration < SelectedRegionEnd)
+                        : energyAndTimeOrderedByEnergy;
+
                     List<EventCueViewModel> cues =
-                        energyAndTimeOrderedByEnergy.Select(
-                            value =>
-                            {
-                                const int durationMs = 500;
-                                return new EventCueViewModel(SampleRate, value.Time,
-                                    TimeSpan.FromMilliseconds(durationMs));
-                            })
+                        regionalEnergyAndTimeOrderedByEnergy.Select(
+                            value => new EventCueViewModel(SampleRate, value.Time, sampleDuration))
                             .ToList();
 
                     ObservableCollection<EventCueViewModel> trackCues = track.Cues;
