@@ -554,6 +554,7 @@ namespace FMOD
             {
                 case CHANNEL_CALLBACKTYPE.END:
                     Load();
+                    OnPropertyChanged("IsPaused");
                     break;
             }
             return RESULT.OK;

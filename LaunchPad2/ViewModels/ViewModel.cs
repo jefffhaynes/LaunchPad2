@@ -43,7 +43,7 @@ namespace LaunchPad2.ViewModels
             UndoCommand = new RelayCommand(UndoManager.Undo);
             RedoCommand = new RelayCommand(UndoManager.Redo);
 
-            PlayCommand = new RelayCommand(() => AudioTrack.IsPaused = !AudioTrack.IsPaused, IsAudioFileLoaded);
+            PlayCommand = new RelayCommand(Play, IsAudioFileLoaded);
             StopCommand = new RelayCommand(async () => { await Stop(); });
 
             StartShowCommand = new RelayCommand(StartShow, IsAudioFileLoaded);
@@ -80,8 +80,7 @@ namespace LaunchPad2.ViewModels
             GroupCommand = new RelayCommand(GroupSelected);
             UngroupCommand = new RelayCommand(UngroupSelected);
 
-            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width - 32));
-                // 32 is for track header (yeah, total kludge)
+            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width - 32)); // 32 is for track header (yeah, total kludge)
 
             DiscoverNetworkCommand = new RelayCommand(async () => await DiscoverNetwork());
 
@@ -162,7 +161,6 @@ namespace LaunchPad2.ViewModels
                 {
                     _audioFile = value;
                     AudioTrack = new AudioTrack(value);
-
                     OnPropertyChanged();
                 }
             }
@@ -384,6 +382,14 @@ namespace LaunchPad2.ViewModels
             Status = status;
             await Task.Delay(TimeSpan.FromSeconds(60));
             Status = "Ready";
+        }
+
+        private async void Play()
+        {
+            if (AudioTrack.SamplePosition == 0)
+                await Stop();
+
+            AudioTrack.IsPaused = !AudioTrack.IsPaused;
         }
 
         private async Task Stop()

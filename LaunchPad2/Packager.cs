@@ -49,6 +49,19 @@ namespace LaunchPad2
             }
         }
 
+        public static void Update(string filename, Model model)
+        {
+            Uri partUriDocument =
+                PackUriHelper.CreatePartUri(
+                    new Uri(DocumentUriPath, UriKind.Relative));
+
+            using (var package = Package.Open(filename, FileMode.Open))
+            {
+                PackagePart packagePartDocument = package.GetPart(partUriDocument);
+                Serializer.Serialize(packagePartDocument.GetStream(), model);
+            }
+        }
+
         public static Model Unpack(string filename, out TemporaryFile temporaryAudioFile)
         {
             using (var package = Package.Open(filename, FileMode.Open))

@@ -17,6 +17,7 @@ namespace LaunchPad2
 // ReSharper disable once NotAccessedField.Local
         private TemporaryFile _temporaryAudioFile;
         private ViewModel _viewModel = new ViewModel();
+        private bool _audioFileChanged;
 
         public MainWindow()
         {
@@ -39,6 +40,8 @@ namespace LaunchPad2
             {
                 _viewModel.AudioFile = dialog.FileName;
             }
+
+            _audioFileChanged = true;
         }
 
         private async void SaveButtonOnClick(object sender, RoutedEventArgs e)
@@ -49,7 +52,14 @@ namespace LaunchPad2
             {
                 _viewModel.SetStatus("Saving...");
                 var model = new Model(_viewModel);
-                await Task.Run(() => Packager.Pack(_viewModel.File, model, _viewModel.AudioFile));
+
+                await Task.Run(() =>
+                {
+                    if (_audioFileChanged)
+                        Packager.Pack(_viewModel.File, model, _viewModel.AudioFile);
+                    else Packager.Update(_viewModel.File, model);
+                });
+
                 _viewModel.SetStatus("Saved");
             }
         }
