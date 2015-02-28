@@ -179,6 +179,7 @@ namespace LaunchPad2.ViewModels
             {
                 cue.LeadIn = Device.LeadIn;
                 cue.Length = Device.Length;
+                cue.IsLockedToDevice = true;
             }
         }
 
