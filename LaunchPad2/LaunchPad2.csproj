@@ -82,6 +82,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ActionBatch.cs" />
+    <Compile Include="ColorExtensions.cs" />
     <Compile Include="ComponentExtensions.cs" />
     <Compile Include="Controls\CueControlBase.cs" />
     <Compile Include="Controls\RegionCueControl.cs" />

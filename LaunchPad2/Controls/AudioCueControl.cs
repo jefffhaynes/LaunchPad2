@@ -4,6 +4,7 @@ using System.Windows.Media;
 
 namespace LaunchPad2.Controls
 {
+    // TODO inherit from CueControlBase instead
     public class AudioCueControl : CueControl
     {
         public static readonly DependencyProperty StrokeThicknessProperty = DependencyProperty.Register(
