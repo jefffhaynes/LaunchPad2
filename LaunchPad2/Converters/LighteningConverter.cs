@@ -14,26 +14,17 @@ namespace LaunchPad2.Converters
             if (brush == null)
                 return value;
 
-            var c = brush.Color;
-            Color color = Color.FromArgb(c.A, c.R, c.G, c.B);
+            var color = brush.GetColor();
 
             var factor = System.Convert.ToDouble(parameter ?? 0.25);
-            var lightColor = Lighten(color, factor);
+            var lightColor = color.Lighten(factor);
 
-            return new SolidColorBrush(System.Windows.Media.Color.FromArgb(lightColor.A, lightColor.R, lightColor.G, lightColor.B));
+            return lightColor.GetSolidColorBrush();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
-        }
-
-        private static Color Lighten(Color color, double factor)
-        {
-            double red = (255 - color.R) * factor + color.R;
-            double green = (255 - color.G) * factor + color.G;
-            double blue = (255 - color.B) * factor + color.B;
-            return Color.FromArgb(color.A, (int)red, (int)green, (int)blue);
         }
     }
 }
