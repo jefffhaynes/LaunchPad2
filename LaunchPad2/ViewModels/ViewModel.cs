@@ -166,9 +166,29 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        private bool _repeat;
+
+        public bool Repeat
+        {
+            get { return _repeat; }
+            set
+            {
+                if (_repeat != value)
+                {
+                    _repeat = value;
+
+                    if (AudioTrack != null)
+                        AudioTrack.Repeat = value;
+
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public AudioTrack AudioTrack
         {
             get { return _audioTrack; }
+
             set
             {
                 if (_audioTrack != value)
@@ -187,6 +207,7 @@ namespace LaunchPad2.ViewModels
 
                     if (_audioTrack != null)
                     {
+                        _audioTrack.Repeat = Repeat;
                         _audioTrack.PositionChanged += AudioTrackOnPositionChanged;
                         _audioTrack.StatusChanged += AudioTrackOnStatusChanged;
                     }

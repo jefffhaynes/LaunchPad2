@@ -128,6 +128,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -135,18 +136,18 @@
                     ToolTip="Open Project" Template="{StaticResource TouchButtonTemplate}">
                 <Path Data="{DynamicResource LoadGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBrownBrushKey}"/>
             </Button>
-            <Button Click="SaveButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="1"
+            <Button Click="SaveButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="2"
                      Template="{StaticResource TouchButtonTemplate}">
                 <Button.ToolTip>
                     <ToolTip Content="{Binding File, Converter={StaticResource FileTitleConverter}}" ContentStringFormat="Save {0} (Ctrl+S)"/>
                 </Button.ToolTip>
                 <Path Data="{DynamicResource SaveGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" />
             </Button>
-            <Button Click="SaveAsButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="2"
+            <Button Click="SaveAsButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="3"
                     ToolTip="Save As" Template="{StaticResource TouchButtonTemplate}">
                 <Path Data="{DynamicResource SaveAsGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" />
             </Button>
-            <Button Click="LoadAudioButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="3"
+            <Button Click="LoadAudioButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="1"
                     ToolTip="Open Audio File" Template="{StaticResource TouchButtonTemplate}">
                 <Path Data="{DynamicResource LoadAudioGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" />
             </Button>
@@ -199,7 +200,7 @@
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
-                <Path Stretch="Uniform">
+                <Path Stretch="Uniform" Margin="2">
                     <Path.Style>
                         <Style TargetType="Path">
                             <Setter Property="Data" Value="{DynamicResource PlayGeometryKey}"/>
@@ -235,9 +236,24 @@
 
             </Button>
 
-            <controls:MenuSeparator Grid.Column="10"/>
+            <ToggleButton Grid.Row="0" Grid.Column="10" Template="{StaticResource TouchToggleButtonTemplate}" ToolTip="Repeat" IsChecked="{Binding Repeat}">
+                <Path Data="{DynamicResource RepeatGeometryKey}" Stretch="Uniform">
+                    <Path.Style>
+                        <Style TargetType="Path">
+                            <Setter Property="Fill" Value="{StaticResource MenuBlueBrushKey}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Repeat}" Value="True">
+                                    <Setter Property="Fill" Value="{StaticResource MenuBrightBlueBrushKey}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Path.Style>
+                </Path>
+            </ToggleButton>
 
-            <Button Grid.Row="0" Grid.Column="11" Margin="3" BorderThickness="0"
+            <controls:MenuSeparator Grid.Column="11"/>
+
+            <Button Grid.Row="0" Grid.Column="12" Margin="3" BorderThickness="0"
                     Template="{StaticResource TouchButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
@@ -270,7 +286,7 @@
                 </Path>
             </Button>
 
-            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='%s'}" Grid.Column="12" Foreground="{StaticResource MenuTextBrushKey}" FontSize="12" Margin="3,3,12,3">
+            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='%s'}" Grid.Column="13" Foreground="{StaticResource MenuTextBrushKey}" FontSize="12" Margin="3,3,12,3">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -283,7 +299,7 @@
                 </TextBlock.Style>
             </TextBlock>
 
-            <Rectangle Grid.Column="13" Fill="{StaticResource WarningBrushKey}">
+            <Rectangle Grid.Column="14" Fill="{StaticResource WarningBrushKey}">
                 <Rectangle.Style>
                     <Style TargetType="Rectangle">
                         <Setter Property="Visibility" Value="Collapsed"/>

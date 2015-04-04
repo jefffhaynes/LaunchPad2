@@ -7,9 +7,10 @@
     <Application.Resources>
 
         <SolidColorBrush x:Key="MenuTextBrushKey" Color="#FFEDEDED"/>
-        <SolidColorBrush x:Key="MenuSelectedTextBrushKey" Color="#FF0E94F8"/>
+        <SolidColorBrush x:Key="MenuSelectedTextBrushKey" Color="#008EF8"/>
         <SolidColorBrush x:Key="MenuGrayBrushKey" Color="#FFC6C6C6"/>
         <SolidColorBrush x:Key="MenuBlueBrushKey" Color="#FF79C0FE"/>
+        <SolidColorBrush x:Key="MenuBrightBlueBrushKey" Color="#008EF8"/>
         <SolidColorBrush x:Key="MenuGreenBrushKey" Color="#FF8CD189"/>
         <SolidColorBrush x:Key="MenuBrightGreenBrushKey" Color="#329832"/>
         <SolidColorBrush x:Key="MenuBrownBrushKey" Color="#FFD6AB6A"/>
@@ -59,6 +60,7 @@
         <StreamGeometry x:Key="RedoGeometryKey">F1M1182.69,1926.92C1181.55,1924.36 1179.96,1921.99 1177.91,1919.94 1173.55,1915.58 1167.74,1913.17 1161.57,1913.17 1155.39,1913.17 1149.59,1915.58 1145.23,1919.94 1140.86,1924.31 1138.46,1930.11 1138.46,1936.28 1138.46,1942.46 1140.86,1948.26 1145.23,1952.62 1145.92,1953.32 1146.83,1953.66 1147.74,1953.66 1148.65,1953.66 1149.56,1953.32 1150.26,1952.62 1151.64,1951.24 1151.64,1948.99 1150.26,1947.59 1147.23,1944.57 1145.57,1940.56 1145.57,1936.28 1145.57,1932.01 1147.23,1927.99 1150.26,1924.97 1153.28,1921.94 1157.29,1920.28 1161.57,1920.28 1165.84,1920.28 1169.86,1921.94 1172.88,1924.97 1175.12,1927.21 1176.61,1930 1177.23,1933.04L1169.57,1941.62 1191.79,1941.62 1190.01,1918.71 1182.69,1926.92z</StreamGeometry>
         <StreamGeometry x:Key="PauseGeometryKey">M27.270001,0L44.310001,0 44.310001,48.643002 27.270001,48.643002z M0,0L17.040001,0 17.040001,48.643002 0,48.643002z</StreamGeometry>
         <StreamGeometry x:Key="PlayGeometryKey">F1M1188.2,1715.23L1169.93,1728.57 1151.66,1741.9 1151.66,1715.23 1151.66,1688.57 1169.93,1701.9 1188.2,1715.23z</StreamGeometry>
+        <StreamGeometry x:Key="RepeatGeometryKey">M493.851,0C694.544,-3E-06 857.768,172.665 857.768,384.799 857.768,597.101 694.544,769.768 493.851,769.768 420.04,769.768 351.212,746.292 293.801,705.975L354.588,607.478C394.63,635.547 442.393,652.048 493.851,652.048 633.115,652.048 746.486,532.287 746.486,384.799 746.486,237.649 633.115,117.718 493.851,117.718 382.891,117.718 289.461,194.269 255.689,299.912L385.304,301.613 189.114,619.726 0,296.679 139.744,298.379C176.893,127.756,321.462,-3E-06,493.851,0z</StreamGeometry>
         <StreamGeometry x:Key="StartShowGeometryKey">M6.3081183,27.792988L6.3081183,33.390034 56.519948,33.390034 56.519948,27.792988z M18.773322,8.3400164L13.83223,18.647999 5.3991074,20.448994 60.878999,20.448994 60.878999,64.000015 1.7340378,64.000015 1.7340378,20.485004 0,12.351003z M37.754014,4.2930012L32.80869,14.597016 22.237998,16.85502 27.175322,6.5470043z M57.842996,0L59.729993,8.8470041 41.214017,12.801005 46.160008,2.4960008z</StreamGeometry>
         <StreamGeometry x:Key="AbortGeometryKey">M7.4050003,7.0920001L13.927,7.0920001 13.927,14.241 7.4050003,14.241z M10.666451,2.0871906C5.9269769,2.0871906 2.0859709,5.9283267 2.0859709,10.66655 2.0859709,15.404783 5.9269769,19.24583 10.666451,19.24583 15.403384,19.24583 19.24453,15.404783 19.24453,10.66655 19.24453,5.9283267 15.403384,2.0871906 10.666451,2.0871906z M10.666451,0C16.546668,0 21.333001,4.7850928 21.333001,10.66655 21.333001,16.547968 16.546668,21.333 10.666451,21.333 4.7837429,21.333 0,16.547968 0,10.66655 0,4.7850928 4.7837429,0 10.666451,0z</StreamGeometry>
         <StreamGeometry x:Key="TrackGeometryKey">M11.25,1.3749995L11.25,8.1250001 37,8.1250001 37,1.3749995z M5.4372166,0L38.625,0 38.625,9.6250001 0,9.6250001 0,5.3106233 0.094000399,5.3129998C2.9531785,5.3130003,5.2879179,3.0676101,5.4310468,0.24400169z</StreamGeometry>
@@ -97,6 +99,27 @@
                 <Border.Style>
                     <Style TargetType="{x:Type Border}">
                         <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Width" Value="22"/>
+                        <Setter Property="Height" Value="22"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#3E3E40"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding Mode=OneTime, Source={x:Static launchPad2:UiHelper.HasTouchInput}}" Value="True">
+                                <Setter Property="Width" Value="48"/>
+                                <Setter Property="Height" Value="48"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <ContentPresenter x:Name="ContentPresenter" Margin="3"/>
+            </Border>
+        </ControlTemplate>
+
+        <ControlTemplate x:Key="TouchToggleButtonTemplate" TargetType="{x:Type ToggleButton}">
+            <Border BorderThickness="0">
+                <Border.Style>
+                    <Style TargetType="{x:Type Border}">
                         <Setter Property="Width" Value="22"/>
                         <Setter Property="Height" Value="22"/>
                         <Style.Triggers>

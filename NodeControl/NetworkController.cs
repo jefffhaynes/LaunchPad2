@@ -33,7 +33,8 @@ namespace NodeControl
             if (InitializingController != null)
                 InitializingController(null, EventArgs.Empty);
 
-            await Initialize();
+            if (!await Initialize())
+                return;
 
             if (DiscoveringNetwork != null)
                 DiscoveringNetwork(null, EventArgs.Empty);
