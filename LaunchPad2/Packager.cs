@@ -4,7 +4,6 @@ using System.IO.Packaging;
 using System.Linq;
 using System.Net.Mime;
 using System.Xml.Serialization;
-using FMOD;
 using LaunchPad2.Models;
 
 namespace LaunchPad2
@@ -13,38 +12,42 @@ namespace LaunchPad2
     {
         private const string DocumentUriPath = "Content\\Document.xml";
         static readonly XmlSerializer Serializer = new XmlSerializer(typeof(Model));
+        private static readonly object PackLock = new object();
 
         public static void Pack(string filename, Model model, string audioFile)
         {
-            Uri partUriDocument =
-                PackUriHelper.CreatePartUri(
-                    new Uri(DocumentUriPath, UriKind.Relative));
-
-            using (var package = Package.Open(filename, FileMode.Create))
+            lock (PackLock)
             {
-                PackagePart packagePartDocument =
-                    package.CreatePart(partUriDocument,
-                        MediaTypeNames.Text.Xml);
+                Uri partUriDocument =
+                    PackUriHelper.CreatePartUri(
+                        new Uri(DocumentUriPath, UriKind.Relative));
 
-                Serializer.Serialize(packagePartDocument.GetStream(), model);
-
-                if (audioFile != null)
+                using (var package = Package.Open(filename, FileMode.Create))
                 {
-                    var audioFileName = Path.GetFileName(audioFile);
-                    var audioResource = String.Format("Resources\\{0}", audioFileName);
-                    Uri partUriResource = PackUriHelper.CreatePartUri(
-                        new Uri(audioResource, UriKind.Relative));
+                    PackagePart packagePartDocument =
+                        package.CreatePart(partUriDocument,
+                            MediaTypeNames.Text.Xml);
 
-                    PackagePart packagePartResource =
-                        package.CreatePart(partUriResource,
-                            MediaTypeNames.Application.Octet);
+                    Serializer.Serialize(packagePartDocument.GetStream(), model);
 
-                    packagePartDocument.CreateRelationship(packagePartResource.Uri,
-                        TargetMode.Internal,
-                        "http://schemas.openxmlformats.org/package/2006/relationships/meta data/core-properties");
+                    if (audioFile != null)
+                    {
+                        var audioFileName = Path.GetFileName(audioFile);
+                        var audioResource = String.Format("Resources\\{0}", audioFileName);
+                        Uri partUriResource = PackUriHelper.CreatePartUri(
+                            new Uri(audioResource, UriKind.Relative));
 
-                    using (var audioStream = new FileStream(audioFile, FileMode.Open, FileAccess.Read))
-                        audioStream.CopyTo(packagePartResource.GetStream());
+                        PackagePart packagePartResource =
+                            package.CreatePart(partUriResource,
+                                MediaTypeNames.Application.Octet);
+
+                        packagePartDocument.CreateRelationship(packagePartResource.Uri,
+                            TargetMode.Internal,
+                            "http://schemas.openxmlformats.org/package/2006/relationships/meta data/core-properties");
+
+                        using (var audioStream = new FileStream(audioFile, FileMode.Open, FileAccess.Read))
+                            audioStream.CopyTo(packagePartResource.GetStream());
+                    }
                 }
             }
         }
