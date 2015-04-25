@@ -47,9 +47,9 @@
     <ApplicationIcon>LaunchPad.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BinarySerializer, Version=3.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="BinarySerializer, Version=4.0.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\BinarySerializer.3.9.0\lib\portable-net40+sl50+win\BinarySerializer.dll</HintPath>
+      <HintPath>..\packages\BinarySerializer.4.0.3\lib\portable-net45+sl50+win+wpa81+wp80\BinarySerializer.dll</HintPath>
     </Reference>
     <Reference Include="PresentationFramework.Aero2" />
     <Reference Include="System" />

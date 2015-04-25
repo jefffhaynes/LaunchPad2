@@ -646,6 +646,7 @@
                         <ComboBox.ItemsSource>
                             <x:Array Type="{x:Type system:Double}">
                                 <system:Double>.1</system:Double>
+                                <system:Double>.25</system:Double>
                                 <system:Double>.5</system:Double>
                                 <system:Double>1</system:Double>
                                 <system:Double>2</system:Double>
