@@ -23,6 +23,7 @@ namespace LaunchPad2.ViewModels
         private static readonly TimeSpan DefaultCuePosition = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan DefaultCueLength = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan CountdownLength = TimeSpan.FromSeconds(10);
+        private readonly Dictionary<PortViewModel, bool> _portStates = new Dictionary<PortViewModel, bool>();
         private string _audioFile;
         private AudioTrack _audioTrack;
         private Dictionary<EventCueViewModel, TrackViewModel> _clonedCuesAndTracks;
@@ -32,6 +33,7 @@ namespace LaunchPad2.ViewModels
         private string _file;
         private bool _isShowRunning;
         private NetworkDiscoveryState _networkDiscoveryState;
+        private bool _repeat;
         private object _selectedItem;
         private TimeSpan _selectedRegionLength;
         private TimeSpan _selectedRegionStart;
@@ -80,7 +82,8 @@ namespace LaunchPad2.ViewModels
             GroupCommand = new RelayCommand(GroupSelected);
             UngroupCommand = new RelayCommand(UngroupSelected);
 
-            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width - 32)); // 32 is for track header (yeah, total kludge)
+            ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width - 32));
+                // 32 is for track header (yeah, total kludge)
 
             DiscoverNetworkCommand = new RelayCommand(async () => await DiscoverNetwork());
 
@@ -166,8 +169,6 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        private bool _repeat;
-
         public bool Repeat
         {
             get { return _repeat; }
@@ -231,13 +232,9 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-
         public ObservableCollection<TrackViewModel> Tracks { get; set; }
-
         public ObservableCollection<DeviceViewModel> Devices { get; set; }
-
         public ObservableCollection<NodeViewModel> Nodes { get; set; }
-
         public ObservableCollection<EventCueGroupViewModel> Groups { get; set; }
 
         public IEnumerable<EventCueViewModel> AllCues
@@ -347,6 +344,822 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        public event EventHandler Stopped;
+
+        public async void SetStatus(string status)
+        {
+            Status = status;
+            await Task.Delay(TimeSpan.FromSeconds(60));
+            Status = "Ready";
+        }
+
+        private async void Play()
+        {
+            if (AudioTrack.SamplePosition == 0)
+                await Stop();
+
+            AudioTrack.IsPaused = !AudioTrack.IsPaused;
+        }
+
+        private async Task Stop()
+        {
+            if (IsShowRunning)
+            {
+                await Disarm();
+                IsShowRunning = false;
+                SetStatus("Show Aborted");
+            }
+
+            if (AudioTrack != null)
+            {
+                AudioTrack.IsPaused = true;
+                AudioTrack.Position = TimeSpan.Zero;
+            }
+
+            var handler = Stopped;
+            if (handler != null)
+                handler(this, EventArgs.Empty);
+        }
+
+        private async void StartShow()
+        {
+            SetStatus("Starting Show");
+
+            IsShowRunning = true;
+
+            _countdownCancellationTokenSource = new CancellationTokenSource();
+
+            await NetworkController.Initialize();
+
+            AudioTrack.Position = TimeSpan.Zero;
+            CountdownTime = CountdownLength;
+
+            try
+            {
+                SetStatus("Arming Network");
+                await Arm();
+                SetStatus("Network Armed");
+            }
+            catch
+            {
+                MessageBox.Show("Failed to arm network.");
+                SetStatus("Failed to Arm Network");
+                IsShowRunning = false;
+                return;
+            }
+
+            var start = DateTime.Now;
+            while (CountdownTime > TimeSpan.Zero && !_countdownCancellationTokenSource.IsCancellationRequested)
+            {
+                CountdownTime = CountdownLength - (DateTime.Now - start);
+                await Task.Delay(25);
+            }
+
+            if (!_countdownCancellationTokenSource.IsCancellationRequested)
+                AudioTrack.IsPaused = false;
+
+            SetStatus("Show Running");
+        }
+
+        private async Task Arm()
+        {
+            foreach (var node in Nodes)
+                await NetworkController.Arm(new NodeAddress(node.Address));
+        }
+
+        private async Task Disarm()
+        {
+            foreach (var node in Nodes)
+                await NetworkController.Disarm(new NodeAddress(node.Address));
+        }
+
+        private IEnumerable<TrackViewModel> GetSelectedTracks()
+        {
+            return SelectedItems == null
+                ? Enumerable.Empty<TrackViewModel>()
+                : SelectedItems.OfType<TrackViewModel>();
+        }
+
+        private IEnumerable<EventCueViewModel> GetSelectedCues()
+        {
+            var cues = SelectedItems == null
+                ? Enumerable.Empty<EventCueViewModel>()
+                : SelectedItems.OfType<EventCueViewModel>();
+
+            return cues.Union(GetSelectedTracks().SelectMany(track => track.Cues));
+        }
+
+        private void AudioTrackOnPositionChanged(object sender, EventArgs eventArgs)
+        {
+            var position = _audioTrack.Position;
+
+            // Make a copy so we don't step on anything else going on
+            var tracks = Tracks.ToList();
+
+            _portStates.Clear();
+
+            foreach (var track in tracks)
+            {
+                var trackActive = false;
+
+                // Make a copy so we don't step on anything else going on
+                var cues = track.Cues.ToList();
+
+                foreach (var cue in cues)
+                {
+                    if (cue.Intersects(position))
+                    {
+                        cue.IsActive = true;
+                        trackActive = true;
+                    }
+                    else cue.IsActive = false;
+                }
+
+                if (track.Port != null)
+                {
+                    bool portState;
+                    if (_portStates.TryGetValue(track.Port, out portState))
+                        _portStates[track.Port] = portState | trackActive;
+                    else _portStates.Add(track.Port, trackActive);
+                }
+            }
+
+            foreach (var port in _portStates)
+            {
+                port.Key.ShouldBeActive = port.Value;
+            }
+
+            foreach (var node in Nodes)
+            {
+                node.SyncPortStates();
+            }
+        }
+
+        private bool IsAudioFileLoaded()
+        {
+            return AudioTrack != null;
+        }
+
+        private void AddTrack(DeviceViewModel device = null)
+        {
+            var trackName = string.Format("Track {0}", Tracks.Count);
+            var track = new TrackViewModel {Name = trackName, Device = device};
+            var doAction = new Action(() => Tracks.Add(track));
+            var undoAction = new Action(() => Tracks.Remove(track));
+
+            UndoManager.DoAndAdd(doAction, undoAction);
+        }
+
+        private void AddCue()
+        {
+            if (AudioTrack == null)
+                return;
+
+            var position = AudioTrack.Position;
+
+            /* Put it someplace useful */
+            if (position == TimeSpan.Zero && AudioTrack.Length > DefaultCuePosition)
+                position = DefaultCuePosition;
+
+            var sampleRate = SampleRate;
+            var trackCues = GetSelectedTracks().ToDictionary(track => track,
+                track => new EventCueViewModel(sampleRate, position, DefaultCueLength));
+
+            var doAction = new Action(() =>
+            {
+                foreach (var pair in trackCues)
+                    pair.Key.AddCue(pair.Value);
+            });
+
+            var undoAction = new Action(() =>
+            {
+                foreach (var pair in trackCues)
+                    pair.Key.RemoveCue(pair.Value);
+            });
+
+            UndoManager.DoAndAdd(doAction, undoAction);
+        }
+
+        private void DeleteCue()
+        {
+            var undoBatchMemento = new UndoBatchMemento();
+            DeleteCue(undoBatchMemento);
+            UndoManager.DoAndAdd(undoBatchMemento);
+        }
+
+        private void DeleteCue(UndoBatchMemento undoBatchMemento)
+        {
+            var cues = SelectedRegionLength > TimeSpan.Zero
+                ? GetSelectedCues().Where(cue => cue.Start > SelectedRegionStart && cue.Start < SelectedRegionEnd)
+                : GetSelectedCues();
+
+            BatchDelete(cues, undoBatchMemento);
+        }
+
+        private void Delete()
+        {
+            var undoBatchMemento = new UndoBatchMemento();
+
+            IEnumerable<TrackViewModel> tracksToRemove = GetSelectedTracks().ToList();
+
+            /* Keep a copy so we can simulate removal and get a correct index for undo */
+            var shadowTracks = Tracks.ToList();
+
+            foreach (var trackToRemove in tracksToRemove)
+            {
+                var track = trackToRemove;
+                var index = shadowTracks.IndexOf(track);
+                shadowTracks.RemoveAt(index);
+
+                var doAction = new Action(() => Tracks.RemoveAt(index));
+                var undoAction = new Action(() => Tracks.Insert(index, track));
+                undoBatchMemento.Add(doAction, undoAction);
+
+                SelectedItems.Remove(trackToRemove);
+            }
+
+            BatchDelete(GetSelectedCues(), undoBatchMemento);
+
+            UndoManager.DoAndAdd(undoBatchMemento);
+        }
+
+        private void BatchDelete(IEnumerable<EventCueViewModel> cues, UndoBatchMemento undoBatchMemento)
+        {
+            var cuesToRemove = cues.ToList();
+
+            foreach (var track in Tracks)
+            {
+                var trackCues = track.Cues;
+                var matchingCues = trackCues.Intersect(cuesToRemove).ToList();
+
+                foreach (var matchingCue in matchingCues)
+                {
+                    var cue = matchingCue;
+
+                    var doAction = new Action(() => trackCues.Remove(cue));
+                    var undoAction = new Action(() => trackCues.Add(cue));
+                    undoBatchMemento.Add(doAction, undoAction);
+
+                    cuesToRemove.Remove(matchingCue);
+                }
+
+                if (cuesToRemove.Count == 0)
+                    break;
+            }
+        }
+
+        private void UpdateSampleRate()
+        {
+            if (AudioTrack == null)
+                return;
+
+            foreach (var cue in AllCues)
+                cue.SampleRate = SampleRate;
+        }
+
+        public void StartMove()
+        {
+            SetCueMoveUndo();
+
+            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift) && SelectedItems != null)
+            {
+                /* Clone selected cues and leave a copy in place */
+                var selectedCues = SelectedItems.OfType<EventCueViewModel>();
+                _clonedCuesAndTracks = selectedCues.ToDictionary(cue => cue.Clone(),
+                    cue => Tracks.Single(track => track.Cues.Contains(cue)));
+
+                foreach (var clonedCueAndTrack in _clonedCuesAndTracks)
+                    clonedCueAndTrack.Value.Cues.Add(clonedCueAndTrack.Key);
+            }
+            else _clonedCuesAndTracks = null;
+        }
+
+        public void EndMove()
+        {
+            if (_clonedCuesAndTracks == null)
+            {
+                CommitCueMoveUndo();
+            }
+            else
+            {
+                var clonedCuesAndTracks = new Dictionary<EventCueViewModel, TrackViewModel>(_clonedCuesAndTracks);
+                var doAction = new Action(() =>
+                {
+                    foreach (var clonedCueAndTrack in clonedCuesAndTracks)
+                        clonedCueAndTrack.Value.Cues.Add(clonedCueAndTrack.Key);
+                });
+
+                var undoAction = new Action(() =>
+                {
+                    foreach (var clonedCueAndTrack in clonedCuesAndTracks)
+                        clonedCueAndTrack.Value.Cues.Remove(clonedCueAndTrack.Key);
+                });
+
+                var batchUndoMemento = new UndoBatchMemento();
+                batchUndoMemento.Add(doAction, undoAction);
+
+                CommitCueMoveUndo(batchUndoMemento);
+            }
+        }
+
+        private void SetCueMoveUndo()
+        {
+            var selectedCues = AllCues.Where(cue => cue.IsSelected).ToList();
+
+            if (!selectedCues.Any())
+            {
+                _cueUndoStates = null;
+                return;
+            }
+
+            _cueUndoStates = selectedCues.Select(cue => new CueMoveInfo(cue, cue.Clone())).ToList();
+        }
+
+        private void CommitCueMoveUndo(UndoBatchMemento undoBatchMemento = null)
+        {
+            if (_cueUndoStates == null)
+                return;
+
+            var cueStates = AllCues.Where(cue => cue.IsSelected)
+                .Select(cue => new CueMoveInfo(cue, cue.Clone())).ToList();
+
+            var undoCueStates = _cueUndoStates.ToList();
+
+            /* Check for no movement */
+            var firstUndoState = undoCueStates.First();
+            if (!firstUndoState.HasChanged)
+                return;
+
+            /* Needed only for redo */
+            var doAction = new Action(() =>
+            {
+                foreach (var cueInfo in cueStates)
+                {
+                    cueInfo.Cue.Start = cueInfo.Before.Start;
+                    cueInfo.Cue.Length = cueInfo.Before.Length;
+                    cueInfo.Cue.LeadIn = cueInfo.Before.LeadIn;
+                }
+            });
+
+            var undoAction = new Action(() =>
+            {
+                foreach (var cueUndoInfo in undoCueStates)
+                {
+                    cueUndoInfo.Cue.Start = cueUndoInfo.Before.Start;
+                    cueUndoInfo.Cue.Length = cueUndoInfo.Before.Length;
+                    cueUndoInfo.Cue.LeadIn = cueUndoInfo.Before.LeadIn;
+                }
+            });
+
+            if (undoBatchMemento == null)
+                UndoManager.Add(doAction, undoAction);
+            else
+            {
+                undoBatchMemento.Add(doAction, undoAction);
+                UndoManager.Add(undoBatchMemento);
+            }
+        }
+
+        private void DoUndoableCueMove(Action cueAction)
+        {
+            SetCueMoveUndo();
+            cueAction();
+            CommitCueMoveUndo();
+        }
+
+        private void CueAlignLeft()
+        {
+            if (!GetSelectedCues().Any())
+                return;
+
+            double start = GetSelectedCues().Min(cue => cue.StartSample);
+
+            foreach (var cue in GetSelectedCues())
+                cue.StartSample = (uint) start;
+        }
+
+        private void CueAlignRight()
+        {
+            if (!GetSelectedCues().Any())
+                return;
+
+            double end = GetSelectedCues().Max(cue => cue.EndSample);
+
+            foreach (var cue in GetSelectedCues())
+                cue.EndSample = (uint) end;
+        }
+
+        private void CueAlignAll()
+        {
+            if (!GetSelectedCues().Any())
+                return;
+
+            CueAlignLeft();
+            CueMakeSameWidth();
+        }
+
+        private void CueMakeSameWidth()
+        {
+            if (!GetSelectedCues().Any())
+                return;
+
+            double length = GetSelectedCues().Max(cue => cue.SampleLength);
+
+            foreach (var cue in GetSelectedCues())
+                cue.SampleLength = (int) length;
+        }
+
+        private void CueDistributeLeft()
+        {
+            CueDistributeLeft(GetSelectedCues());
+        }
+
+        private void CueDistributeLeftReverse()
+        {
+            CueDistributeLeft(GetSelectedCues().Reverse());
+        }
+
+        private void CueDistributeLeft(IEnumerable<EventCueViewModel> cues)
+        {
+            var selectedCues = GetSelectedCues().ToList();
+
+            if (selectedCues.Count < 2)
+                return;
+
+            double min = selectedCues.Min(cue => cue.StartSample);
+            double max = selectedCues.Max(cue => cue.StartSample);
+            var range = max - min;
+            var spacing = range/(selectedCues.Count() - 1);
+
+            var i = 0;
+            foreach (var cue in cues)
+            {
+                cue.StartSample = (uint) (min + spacing*i);
+                i++;
+            }
+        }
+
+        private void CueDistributeOnBeats(object parameter)
+        {
+            var offset = Convert.ToInt32(parameter);
+            CueDistributeOnBands(offset, 1);
+        }
+
+        private void CueDistributeOnBands(int bandOffset, int bandCount)
+        {
+            var undoBatchMemento = new UndoBatchMemento();
+
+            var subbands = AudioTrack.EnergySubbands.Skip(bandOffset).Take(bandCount);
+            var subbandAverages = subbands.ZipMany(band => band.Average()).ToList();
+
+            double average;
+            var stdDev = subbandAverages.StdDev(out average);
+
+            var millisecondsPerValue = AudioTrack.Length.TotalMilliseconds/subbandAverages.Count;
+            var energyAndTime =
+                subbandAverages.Select((value, i) =>
+                    new SampleInfo<double>(TimeSpan.FromMilliseconds(i*millisecondsPerValue), value));
+
+            var energyAndTimeOrderedByEnergy =
+                energyAndTime.Where(sample => sample.Value > average + stdDev)
+                    .OrderByDescending(value => value.Value)
+                    .ToList();
+
+            var selectedTracks = GetSelectedTracks().ToList();
+
+            if (selectedTracks.Count == 0)
+            {
+                SetCueMoveUndo();
+
+                var selectedCues = GetSelectedCues().ToList();
+
+                var valueIndex = 0;
+                foreach (var cue in selectedCues)
+                {
+                    var nearestNeighborOrdered =
+                        energyAndTimeOrderedByEnergy.OrderBy(
+                            sample => Math.Abs((cue.Start - sample.Time).TotalMilliseconds)).ToList();
+
+                    do
+                    {
+                        var sample = nearestNeighborOrdered[valueIndex++];
+                        cue.Start = sample.Time;
+                    } while (
+                        selectedCues.Where(c => c != cue).Any(c => c.Intersects(cue)) &&
+                        valueIndex < energyAndTimeOrderedByEnergy.Count);
+                }
+
+                CommitCueMoveUndo(undoBatchMemento);
+            }
+            else
+            {
+                /* Wipe out and populate selected tracks */
+                foreach (var track in selectedTracks)
+                {
+                    DeleteCue(undoBatchMemento);
+
+                    var sampleDuration = TimeSpan.FromMilliseconds(500);
+
+                    var regionalEnergyAndTimeOrderedByEnergy = SelectedRegionLength > TimeSpan.Zero
+                        ? energyAndTimeOrderedByEnergy.Where(
+                            sample =>
+                                sample.Time > SelectedRegionStart && sample.Time + sampleDuration < SelectedRegionEnd)
+                        : energyAndTimeOrderedByEnergy;
+
+                    var cues =
+                        regionalEnergyAndTimeOrderedByEnergy.Select(
+                            value => new EventCueViewModel(SampleRate, value.Time, sampleDuration))
+                            .ToList();
+
+                    var trackCues = track.Cues;
+                    var doAction = new Action(() =>
+                    {
+                        foreach (var cue in cues)
+                        {
+                            if (!trackCues.Any(c => c.Intersects(cue)))
+                                trackCues.Add(cue);
+                        }
+                    });
+
+                    undoBatchMemento.Add(doAction, trackCues.Clear);
+                }
+            }
+
+            UndoManager.DoAndAdd(undoBatchMemento);
+        }
+
+        private void AddDevice()
+        {
+            var deviceName = string.Format("Device {0}", Devices.Count);
+            var device = new DeviceViewModel {Name = deviceName};
+
+            var doAction = new Action(() => Devices.Add(device));
+            var undoAction = new Action(() => Devices.Remove(device));
+
+            UndoManager.DoAndAdd(doAction, undoAction);
+        }
+
+        private void DeleteDevice()
+        {
+            var device = SelectedItem as DeviceViewModel;
+
+            if (device == null)
+                return;
+
+            var undoBatchMemento = new UndoBatchMemento();
+
+            var index = Devices.IndexOf(device);
+            var doAction = new Action(() => Devices.RemoveAt(index));
+            var undoAction = new Action(() => Devices.Insert(index, device));
+
+            undoBatchMemento.Add(doAction, undoAction);
+
+            var affectedTracks = Tracks.Where(track => track.Device == device).ToList();
+
+            foreach (var affectedTrack in affectedTracks)
+            {
+                var track = affectedTrack;
+                undoBatchMemento.Add(() => track.Device = null, () => track.Device = device);
+            }
+
+            UndoManager.DoAndAdd(undoBatchMemento);
+        }
+
+        private void ZoomExtents(double width)
+        {
+            if (_audioTrack == null)
+            {
+                Zoom = DefaultZoom;
+                return;
+            }
+
+            Zoom = width/_audioTrack.TotalSamples*100;
+        }
+
+        public void Cut()
+        {
+            Copy();
+            Delete();
+        }
+
+        public void Copy()
+        {
+            if (GetSelectedTracks().Any())
+            {
+                var tracks = GetSelectedTracks().Select(track => new TrackModel(track)).ToList();
+                Clipboard.SetData(ClipboardTracksKey, tracks);
+            }
+        }
+
+        public void Paste()
+        {
+            if (Clipboard.ContainsData(ClipboardTracksKey))
+            {
+                var tracks = (List<TrackModel>) Clipboard.GetData(ClipboardTracksKey);
+                var trackViewModels =
+                    tracks.Select(track => track.GetViewModel(Devices, Nodes)).ToList();
+
+                var doAction = new Action(() =>
+                {
+                    foreach (var track in trackViewModels)
+                    {
+                        var trackName = GetUniqueName(track.Name);
+                        track.Name = trackName;
+
+                        var insertTrack = GetSelectedTracks().LastOrDefault();
+
+                        if (insertTrack == null)
+                            Tracks.Add(track);
+                        else
+                        {
+                            var insertIndex = Tracks.IndexOf(insertTrack);
+                            Tracks.Insert(insertIndex + 1, track);
+                        }
+                    }
+
+                    UpdateSampleRate();
+                });
+
+                var undoAction = new Action(() =>
+                {
+                    foreach (var track in trackViewModels)
+                        Tracks.Remove(track);
+                });
+
+                UndoManager.DoAndAdd(doAction, undoAction);
+            }
+        }
+
+        private string GetUniqueName(string baseName)
+        {
+            var name = baseName;
+            for (var i = 0; Tracks.Select(track => track.Name).Contains(name); i++)
+            {
+                name = string.Format("{0} - Copy", baseName);
+
+                if (i != 0)
+                    name += string.Format(" {0}", i);
+            }
+
+            return name;
+        }
+
+        private void GroupSelected()
+        {
+            var selected = SelectedItems.OfType<IGroupable>();
+            var rootGroupables = selected.Select(item => item.GetRootGroupable()).Distinct().ToList();
+
+            var group = new EventCueGroupViewModel();
+            group.Children = new ObservableCollection<IGroupable>(rootGroupables);
+
+            UndoManager.DoAndAdd(() =>
+            {
+                foreach (var rootGroupable in rootGroupables)
+                    rootGroupable.Group = group;
+                Groups.Add(group);
+                group.Select();
+            }, () =>
+            {
+                group.Unselect();
+                foreach (var rootGroupable in rootGroupables)
+                    rootGroupable.Group = null;
+                Groups.Remove(group);
+            });
+        }
+
+        private void UngroupSelected()
+        {
+            var selected = SelectedItems.OfType<IGroupable>();
+            var rootGroupables = selected.Select(item => item.GetRootGroupable()).Distinct().ToList();
+
+            IEnumerable<EventCueGroupViewModel> groups = rootGroupables.OfType<EventCueGroupViewModel>().ToList();
+
+            UndoManager.DoAndAdd(() =>
+            {
+                foreach (var group in groups)
+                {
+                    group.Unselect();
+                    foreach (var child in group.Children)
+                        child.Group = null;
+                    Groups.Remove(group);
+                }
+            }, () =>
+            {
+                foreach (var group in groups)
+                {
+                    foreach (var child in group.Children)
+                        child.Group = group;
+                    Groups.Add(group);
+                    group.Select();
+                }
+            });
+        }
+
+        public async Task DiscoverNetwork()
+        {
+            foreach (var node in Nodes)
+                node.DiscoveryState = NodeDiscoveryState.Discovering;
+
+            try
+            {
+                await NetworkController.DiscoverNetworkAsync();
+                NetworkDiscoveryState = NetworkDiscoveryState.Discovered;
+            }
+            catch (TimeoutException)
+            {
+                NetworkDiscoveryState = NetworkDiscoveryState.Failed;
+            }
+            catch (InvalidOperationException)
+            {
+                NetworkDiscoveryState = NetworkDiscoveryState.Failed;
+                MessageBox.Show("No XBee controller found.");
+            }
+            catch (Exception e)
+            {
+                NetworkDiscoveryState = NetworkDiscoveryState.Failed;
+                MessageBox.Show(e.Message);
+            }
+
+            foreach (var node in Nodes)
+                if (node.DiscoveryState == NodeDiscoveryState.Discovering)
+                    node.DiscoveryState = NodeDiscoveryState.None;
+        }
+
+        private void NetworkControllerOnDiscoveringNetwork(object sender, EventArgs eventArgs)
+        {
+            NetworkDiscoveryState = NetworkDiscoveryState.Discovering;
+        }
+
+        private void NetworkControllerOnInitializingController(object sender, EventArgs eventArgs)
+        {
+            NetworkDiscoveryState = NetworkDiscoveryState.Initializing;
+        }
+
+        private void NetworkControllerOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)
+        {
+            var node = e.Node;
+
+            var existingNode = Nodes.FirstOrDefault(n => n.Address.Equals(node.Address.LongAddress));
+
+            var name = e.Name;
+            var signalStrength = e.SignalStrength.HasValue ? e.SignalStrength : SignalStrength.High;
+
+            if (existingNode == null)
+            {
+                var nodeViewModel = new NodeViewModel(name, node.Address.LongAddress, signalStrength,
+                    NodeDiscoveryState.Discovered);
+
+                Nodes.Add(nodeViewModel);
+            }
+            else
+            {
+                existingNode.Name = name;
+                existingNode.SignalStrength = signalStrength;
+                existingNode.DiscoveryState = NodeDiscoveryState.Discovered;
+            }
+        }
+
+        private void NodesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (var item in e.NewItems.Cast<NodeViewModel>())
+                    item.PropertyChanged += OnNodeViewModelOnPropertyChanged;
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (var item in e.OldItems.Cast<NodeViewModel>())
+                    item.PropertyChanged -= OnNodeViewModelOnPropertyChanged;
+            }
+        }
+
+        private async void OnNodeViewModelOnPropertyChanged(object o, PropertyChangedEventArgs args)
+        {
+            var n = (NodeViewModel) o;
+            if (args.PropertyName == "Name")
+            {
+                try
+                {
+                    await NetworkController.SetNodeName(new NodeAddress(n.Address), n.Name);
+                }
+                catch (TimeoutException)
+                {
+                }
+            }
+        }
+
+        private void AudioTrackOnStatusChanged(object sender, AudioTrackStatusEventArgs e)
+        {
+            SetStatus(e.Message);
+        }
+
+        private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
+        {
+            if (AudioTrack != null && !AudioTrack.IsPaused)
+                AudioTrack.Update();
+        }
+
         #region Commands
 
         public RelayCommand UndoCommand { get; private set; }
@@ -400,809 +1213,5 @@ namespace LaunchPad2.ViewModels
         public ICommand ZoomExtentsCommand { get; private set; }
 
         #endregion
-
-        public event EventHandler Stopped;
-
-        public async void SetStatus(string status)
-        {
-            Status = status;
-            await Task.Delay(TimeSpan.FromSeconds(60));
-            Status = "Ready";
-        }
-
-        private async void Play()
-        {
-            if (AudioTrack.SamplePosition == 0)
-                await Stop();
-
-            AudioTrack.IsPaused = !AudioTrack.IsPaused;
-        }
-
-        private async Task Stop()
-        {
-            if (IsShowRunning)
-            {
-                await Disarm();
-                IsShowRunning = false;
-                SetStatus("Show Aborted");
-            }
-
-            if (AudioTrack != null)
-            {
-                AudioTrack.IsPaused = true;
-                AudioTrack.Position = TimeSpan.Zero;
-            }
-
-            EventHandler handler = Stopped;
-            if (handler != null)
-                handler(this, EventArgs.Empty);
-        }
-
-        private async void StartShow()
-        {
-            SetStatus("Starting Show");
-
-            IsShowRunning = true;
-
-            _countdownCancellationTokenSource = new CancellationTokenSource();
-
-            await NetworkController.Initialize();
-
-            AudioTrack.Position = TimeSpan.Zero;
-            CountdownTime = CountdownLength;
-
-            try
-            {
-                SetStatus("Arming Network");
-                await Arm();
-                SetStatus("Network Armed");
-            }
-            catch
-            {
-                MessageBox.Show("Failed to arm network.");
-                SetStatus("Failed to Arm Network");
-                IsShowRunning = false;
-                return;
-            }
-
-            DateTime start = DateTime.Now;
-            while (CountdownTime > TimeSpan.Zero && !_countdownCancellationTokenSource.IsCancellationRequested)
-            {
-                CountdownTime = CountdownLength - (DateTime.Now - start);
-                await Task.Delay(25);
-            }
-
-            if (!_countdownCancellationTokenSource.IsCancellationRequested)
-                AudioTrack.IsPaused = false;
-
-            SetStatus("Show Running");
-        }
-
-        private async Task Arm()
-        {
-            foreach (NodeViewModel node in Nodes)
-                await NetworkController.Arm(new NodeAddress(node.Address));
-        }
-
-        private async Task Disarm()
-        {
-            foreach (NodeViewModel node in Nodes)
-                await NetworkController.Disarm(new NodeAddress(node.Address));
-        }
-
-        private IEnumerable<TrackViewModel> GetSelectedTracks()
-        {
-            return SelectedItems == null
-                ? Enumerable.Empty<TrackViewModel>()
-                : SelectedItems.OfType<TrackViewModel>();
-        }
-
-        private IEnumerable<EventCueViewModel> GetSelectedCues()
-        {
-            IEnumerable<EventCueViewModel> cues = SelectedItems == null
-                ? Enumerable.Empty<EventCueViewModel>()
-                : SelectedItems.OfType<EventCueViewModel>();
-
-            return cues.Union(GetSelectedTracks().SelectMany(track => track.Cues));
-        }
-
-        private void AudioTrackOnPositionChanged(object sender, EventArgs eventArgs)
-        {
-            TimeSpan position = _audioTrack.Position;
-
-            // Make a copy so we don't step on anything else going on
-            List<TrackViewModel> tracks = Tracks.ToList();
-
-            foreach (TrackViewModel track in tracks)
-            {
-                bool trackActive = false;
-
-                // Make a copy so we don't step on anything else going on
-                List<EventCueViewModel> cues = track.Cues.ToList();
-
-                foreach (EventCueViewModel cue in cues)
-                {
-                    if (cue.Intersects(position))
-                    {
-                        cue.IsActive = true;
-                        trackActive = true;
-                    }
-                    else cue.IsActive = false;
-                }
-
-                if (track.Port != null)
-                    track.Port.ShouldBeActive = trackActive;
-            }
-
-            foreach (NodeViewModel node in Nodes)
-            {
-                node.SyncPortStates();
-            }
-        }
-
-        private bool IsAudioFileLoaded()
-        {
-            return AudioTrack != null;
-        }
-
-        private void AddTrack(DeviceViewModel device = null)
-        {
-            string trackName = string.Format("Track {0}", Tracks.Count);
-            var track = new TrackViewModel {Name = trackName, Device = device};
-            var doAction = new Action(() => Tracks.Add(track));
-            var undoAction = new Action(() => Tracks.Remove(track));
-
-            UndoManager.DoAndAdd(doAction, undoAction);
-        }
-
-        private void AddCue()
-        {
-            if (AudioTrack == null)
-                return;
-
-            TimeSpan position = AudioTrack.Position;
-
-            /* Put it someplace useful */
-            if (position == TimeSpan.Zero && AudioTrack.Length > DefaultCuePosition)
-                position = DefaultCuePosition;
-
-            float sampleRate = SampleRate;
-            Dictionary<TrackViewModel, EventCueViewModel> trackCues = GetSelectedTracks().ToDictionary(track => track,
-                track => new EventCueViewModel(sampleRate, position, DefaultCueLength));
-
-            var doAction = new Action(() =>
-            {
-                foreach (var pair in trackCues)
-                    pair.Key.AddCue(pair.Value);
-            });
-
-            var undoAction = new Action(() =>
-            {
-                foreach (var pair in trackCues)
-                    pair.Key.RemoveCue(pair.Value);
-            });
-
-            UndoManager.DoAndAdd(doAction, undoAction);
-        }
-
-        private void DeleteCue()
-        {
-            var undoBatchMemento = new UndoBatchMemento();
-            DeleteCue(undoBatchMemento);
-            UndoManager.DoAndAdd(undoBatchMemento);
-        }
-
-        private void DeleteCue(UndoBatchMemento undoBatchMemento)
-        {
-            var cues = SelectedRegionLength > TimeSpan.Zero
-                ? GetSelectedCues().Where(cue => cue.Start > SelectedRegionStart && cue.Start < SelectedRegionEnd)
-                : GetSelectedCues();
-
-            BatchDelete(cues, undoBatchMemento);
-        }
-
-        private void Delete()
-        {
-            var undoBatchMemento = new UndoBatchMemento();
-
-            IEnumerable<TrackViewModel> tracksToRemove = GetSelectedTracks().ToList();
-
-            /* Keep a copy so we can simulate removal and get a correct index for undo */
-            List<TrackViewModel> shadowTracks = Tracks.ToList();
-
-            foreach (TrackViewModel trackToRemove in tracksToRemove)
-            {
-                TrackViewModel track = trackToRemove;
-                int index = shadowTracks.IndexOf(track);
-                shadowTracks.RemoveAt(index);
-
-                var doAction = new Action(() => Tracks.RemoveAt(index));
-                var undoAction = new Action(() => Tracks.Insert(index, track));
-                undoBatchMemento.Add(doAction, undoAction);
-
-                SelectedItems.Remove(trackToRemove);
-            }
-
-            BatchDelete(GetSelectedCues(), undoBatchMemento);
-
-            UndoManager.DoAndAdd(undoBatchMemento);
-        }
-
-        private void BatchDelete(IEnumerable<EventCueViewModel> cues, UndoBatchMemento undoBatchMemento)
-        {
-            List<EventCueViewModel> cuesToRemove = cues.ToList();
-
-            foreach (TrackViewModel track in Tracks)
-            {
-                ObservableCollection<EventCueViewModel> trackCues = track.Cues;
-                List<EventCueViewModel> matchingCues = trackCues.Intersect(cuesToRemove).ToList();
-
-                foreach (EventCueViewModel matchingCue in matchingCues)
-                {
-                    EventCueViewModel cue = matchingCue;
-
-                    var doAction = new Action(() => trackCues.Remove(cue));
-                    var undoAction = new Action(() => trackCues.Add(cue));
-                    undoBatchMemento.Add(doAction, undoAction);
-
-                    cuesToRemove.Remove(matchingCue);
-                }
-
-                if (cuesToRemove.Count == 0)
-                    break;
-            }
-        }
-
-        private void UpdateSampleRate()
-        {
-            if (AudioTrack == null)
-                return;
-
-            foreach (EventCueViewModel cue in AllCues)
-                cue.SampleRate = SampleRate;
-        }
-
-        public void StartMove()
-        {
-            SetCueMoveUndo();
-
-            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift) && SelectedItems != null)
-            {
-                /* Clone selected cues and leave a copy in place */
-                IEnumerable<EventCueViewModel> selectedCues = SelectedItems.OfType<EventCueViewModel>();
-                _clonedCuesAndTracks = selectedCues.ToDictionary(cue => cue.Clone(),
-                    cue => Tracks.Single(track => track.Cues.Contains(cue)));
-
-                foreach (var clonedCueAndTrack in _clonedCuesAndTracks)
-                    clonedCueAndTrack.Value.Cues.Add(clonedCueAndTrack.Key);
-            }
-            else _clonedCuesAndTracks = null;
-        }
-
-        public void EndMove()
-        {
-            if (_clonedCuesAndTracks == null)
-            {
-                CommitCueMoveUndo();
-            }
-            else
-            {
-                var clonedCuesAndTracks = new Dictionary<EventCueViewModel, TrackViewModel>(_clonedCuesAndTracks);
-                var doAction = new Action(() =>
-                {
-                    foreach (var clonedCueAndTrack in clonedCuesAndTracks)
-                        clonedCueAndTrack.Value.Cues.Add(clonedCueAndTrack.Key);
-                });
-
-                var undoAction = new Action(() =>
-                {
-                    foreach (var clonedCueAndTrack in clonedCuesAndTracks)
-                        clonedCueAndTrack.Value.Cues.Remove(clonedCueAndTrack.Key);
-                });
-
-                var batchUndoMemento = new UndoBatchMemento();
-                batchUndoMemento.Add(doAction, undoAction);
-
-                CommitCueMoveUndo(batchUndoMemento);
-            }
-        }
-
-        private void SetCueMoveUndo()
-        {
-            List<EventCueViewModel> selectedCues = AllCues.Where(cue => cue.IsSelected).ToList();
-
-            if (!selectedCues.Any())
-            {
-                _cueUndoStates = null;
-                return;
-            }
-
-            _cueUndoStates = selectedCues.Select(cue => new CueMoveInfo(cue, cue.Clone())).ToList();
-        }
-
-        private void CommitCueMoveUndo(UndoBatchMemento undoBatchMemento = null)
-        {
-            if (_cueUndoStates == null)
-                return;
-
-            List<CueMoveInfo> cueStates = AllCues.Where(cue => cue.IsSelected)
-                .Select(cue => new CueMoveInfo(cue, cue.Clone())).ToList();
-
-            List<CueMoveInfo> undoCueStates = _cueUndoStates.ToList();
-
-            /* Check for no movement */
-            CueMoveInfo firstUndoState = undoCueStates.First();
-            if (!firstUndoState.HasChanged)
-                return;
-
-            /* Needed only for redo */
-            var doAction = new Action(() =>
-            {
-                foreach (CueMoveInfo cueInfo in cueStates)
-                {
-                    cueInfo.Cue.Start = cueInfo.Before.Start;
-                    cueInfo.Cue.Length = cueInfo.Before.Length;
-                    cueInfo.Cue.LeadIn = cueInfo.Before.LeadIn;
-                }
-            });
-
-            var undoAction = new Action(() =>
-            {
-                foreach (CueMoveInfo cueUndoInfo in undoCueStates)
-                {
-                    cueUndoInfo.Cue.Start = cueUndoInfo.Before.Start;
-                    cueUndoInfo.Cue.Length = cueUndoInfo.Before.Length;
-                    cueUndoInfo.Cue.LeadIn = cueUndoInfo.Before.LeadIn;
-                }
-            });
-
-            if (undoBatchMemento == null)
-                UndoManager.Add(doAction, undoAction);
-            else
-            {
-                undoBatchMemento.Add(doAction, undoAction);
-                UndoManager.Add(undoBatchMemento);
-            }
-        }
-
-        private void DoUndoableCueMove(Action cueAction)
-        {
-            SetCueMoveUndo();
-            cueAction();
-            CommitCueMoveUndo();
-        }
-
-        private void CueAlignLeft()
-        {
-            if (!GetSelectedCues().Any())
-                return;
-
-            double start = GetSelectedCues().Min(cue => cue.StartSample);
-
-            foreach (EventCueViewModel cue in GetSelectedCues())
-                cue.StartSample = (uint) start;
-        }
-
-        private void CueAlignRight()
-        {
-            if (!GetSelectedCues().Any())
-                return;
-
-            double end = GetSelectedCues().Max(cue => cue.EndSample);
-
-            foreach (EventCueViewModel cue in GetSelectedCues())
-                cue.EndSample = (uint) end;
-        }
-
-        private void CueAlignAll()
-        {
-            if (!GetSelectedCues().Any())
-                return;
-
-            CueAlignLeft();
-            CueMakeSameWidth();
-        }
-
-        private void CueMakeSameWidth()
-        {
-            if (!GetSelectedCues().Any())
-                return;
-
-            double length = GetSelectedCues().Max(cue => cue.SampleLength);
-
-            foreach (EventCueViewModel cue in GetSelectedCues())
-                cue.SampleLength = (int) length;
-        }
-
-        private void CueDistributeLeft()
-        {
-            CueDistributeLeft(GetSelectedCues());
-        }
-
-        private void CueDistributeLeftReverse()
-        {
-            CueDistributeLeft(GetSelectedCues().Reverse());
-        }
-
-        private void CueDistributeLeft(IEnumerable<EventCueViewModel> cues)
-        {
-            List<EventCueViewModel> selectedCues = GetSelectedCues().ToList();
-
-            if (selectedCues.Count < 2)
-                return;
-
-            double min = selectedCues.Min(cue => cue.StartSample);
-            double max = selectedCues.Max(cue => cue.StartSample);
-            double range = max - min;
-            double spacing = range/(selectedCues.Count() - 1);
-
-            int i = 0;
-            foreach (EventCueViewModel cue in cues)
-            {
-                cue.StartSample = (uint) (min + spacing*i);
-                i++;
-            }
-        }
-
-        private void CueDistributeOnBeats(object parameter)
-        {
-            int offset = Convert.ToInt32(parameter);
-            CueDistributeOnBands(offset, 1);
-        }
-
-        private void CueDistributeOnBands(int bandOffset, int bandCount)
-        {
-            var undoBatchMemento = new UndoBatchMemento();
-
-            IEnumerable<double[]> subbands = AudioTrack.EnergySubbands.Skip(bandOffset).Take(bandCount);
-            List<double> subbandAverages = subbands.ZipMany(band => band.Average()).ToList();
-
-            double average;
-            double stdDev = subbandAverages.StdDev(out average);
-
-            double millisecondsPerValue = AudioTrack.Length.TotalMilliseconds/subbandAverages.Count;
-            IEnumerable<SampleInfo<double>> energyAndTime =
-                subbandAverages.Select((value, i) =>
-                    new SampleInfo<double>(TimeSpan.FromMilliseconds(i*millisecondsPerValue), value));
-
-            List<SampleInfo<double>> energyAndTimeOrderedByEnergy =
-                energyAndTime.Where(sample => sample.Value > average + stdDev)
-                    .OrderByDescending(value => value.Value)
-                    .ToList();
-
-            List<TrackViewModel> selectedTracks = GetSelectedTracks().ToList();
-
-            if (selectedTracks.Count == 0)
-            {
-                SetCueMoveUndo();
-
-                List<EventCueViewModel> selectedCues = GetSelectedCues().ToList();
-
-                int valueIndex = 0;
-                foreach (EventCueViewModel cue in selectedCues)
-                {
-                    List<SampleInfo<double>> nearestNeighborOrdered =
-                        energyAndTimeOrderedByEnergy.OrderBy(
-                            sample => Math.Abs((cue.Start - sample.Time).TotalMilliseconds)).ToList();
-
-                    do
-                    {
-                        SampleInfo<double> sample = nearestNeighborOrdered[valueIndex++];
-                        cue.Start = sample.Time;
-                    } while (
-                        selectedCues.Where(c => c != cue).Any(c => c.Intersects(cue)) &&
-                        valueIndex < energyAndTimeOrderedByEnergy.Count);
-                }
-
-                CommitCueMoveUndo(undoBatchMemento);
-            }
-            else
-            {
-                /* Wipe out and populate selected tracks */
-                foreach (TrackViewModel track in selectedTracks)
-                {
-                    DeleteCue(undoBatchMemento);
-
-                    var sampleDuration = TimeSpan.FromMilliseconds(500);
-
-                    var regionalEnergyAndTimeOrderedByEnergy = SelectedRegionLength > TimeSpan.Zero
-                        ? energyAndTimeOrderedByEnergy.Where(
-                            sample => sample.Time > SelectedRegionStart && sample.Time + sampleDuration < SelectedRegionEnd)
-                        : energyAndTimeOrderedByEnergy;
-
-                    List<EventCueViewModel> cues =
-                        regionalEnergyAndTimeOrderedByEnergy.Select(
-                            value => new EventCueViewModel(SampleRate, value.Time, sampleDuration))
-                            .ToList();
-
-                    ObservableCollection<EventCueViewModel> trackCues = track.Cues;
-                    var doAction = new Action(() =>
-                    {
-                        foreach (EventCueViewModel cue in cues)
-                        {
-                            if (!trackCues.Any(c => c.Intersects(cue)))
-                                trackCues.Add(cue);
-                        }
-                    });
-
-                    undoBatchMemento.Add(doAction, trackCues.Clear);
-                }
-            }
-
-            UndoManager.DoAndAdd(undoBatchMemento);
-        }
-
-        private void AddDevice()
-        {
-            string deviceName = string.Format("Device {0}", Devices.Count);
-            var device = new DeviceViewModel {Name = deviceName};
-
-            var doAction = new Action(() => Devices.Add(device));
-            var undoAction = new Action(() => Devices.Remove(device));
-
-            UndoManager.DoAndAdd(doAction, undoAction);
-        }
-
-        private void DeleteDevice()
-        {
-            var device = SelectedItem as DeviceViewModel;
-
-            if (device == null)
-                return;
-
-            var undoBatchMemento = new UndoBatchMemento();
-
-            int index = Devices.IndexOf(device);
-            var doAction = new Action(() => Devices.RemoveAt(index));
-            var undoAction = new Action(() => Devices.Insert(index, device));
-
-            undoBatchMemento.Add(doAction, undoAction);
-
-            List<TrackViewModel> affectedTracks = Tracks.Where(track => track.Device == device).ToList();
-
-            foreach (TrackViewModel affectedTrack in affectedTracks)
-            {
-                TrackViewModel track = affectedTrack;
-                undoBatchMemento.Add(() => track.Device = null, () => track.Device = device);
-            }
-
-            UndoManager.DoAndAdd(undoBatchMemento);
-        }
-
-        private void ZoomExtents(double width)
-        {
-            if (_audioTrack == null)
-            {
-                Zoom = DefaultZoom;
-                return;
-            }
-
-            Zoom = width/_audioTrack.TotalSamples*100;
-        }
-
-        public void Cut()
-        {
-            Copy();
-            Delete();
-        }
-
-        public void Copy()
-        {
-            if (GetSelectedTracks().Any())
-            {
-                List<TrackModel> tracks = GetSelectedTracks().Select(track => new TrackModel(track)).ToList();
-                Clipboard.SetData(ClipboardTracksKey, tracks);
-            }
-        }
-
-        public void Paste()
-        {
-            if (Clipboard.ContainsData(ClipboardTracksKey))
-            {
-                var tracks = (List<TrackModel>) Clipboard.GetData(ClipboardTracksKey);
-                List<TrackViewModel> trackViewModels =
-                    tracks.Select(track => track.GetViewModel(Devices, Nodes)).ToList();
-
-                var doAction = new Action(() =>
-                {
-                    foreach (TrackViewModel track in trackViewModels)
-                    {
-                        string trackName = GetUniqueName(track.Name);
-                        track.Name = trackName;
-
-                        TrackViewModel insertTrack = GetSelectedTracks().LastOrDefault();
-
-                        if (insertTrack == null)
-                            Tracks.Add(track);
-                        else
-                        {
-                            int insertIndex = Tracks.IndexOf(insertTrack);
-                            Tracks.Insert(insertIndex + 1, track);
-                        }
-                    }
-
-                    UpdateSampleRate();
-                });
-
-                var undoAction = new Action(() =>
-                {
-                    foreach (TrackViewModel track in trackViewModels)
-                        Tracks.Remove(track);
-                });
-
-                UndoManager.DoAndAdd(doAction, undoAction);
-            }
-        }
-
-        private string GetUniqueName(string baseName)
-        {
-            string name = baseName;
-            for (int i = 0; Tracks.Select(track => track.Name).Contains(name); i++)
-            {
-                name = string.Format("{0} - Copy", baseName);
-
-                if (i != 0)
-                    name += string.Format(" {0}", i);
-            }
-
-            return name;
-        }
-
-        private void GroupSelected()
-        {
-            IEnumerable<IGroupable> selected = SelectedItems.OfType<IGroupable>();
-            List<IGroupable> rootGroupables = selected.Select(item => item.GetRootGroupable()).Distinct().ToList();
-
-            var group = new EventCueGroupViewModel();
-            group.Children = new ObservableCollection<IGroupable>(rootGroupables);
-
-            UndoManager.DoAndAdd(() =>
-            {
-                foreach (IGroupable rootGroupable in rootGroupables)
-                    rootGroupable.Group = group;
-                Groups.Add(group);
-                group.Select();
-            }, () =>
-            {
-                group.Unselect();
-                foreach (IGroupable rootGroupable in rootGroupables)
-                    rootGroupable.Group = null;
-                Groups.Remove(group);
-            });
-        }
-
-        private void UngroupSelected()
-        {
-            IEnumerable<IGroupable> selected = SelectedItems.OfType<IGroupable>();
-            List<IGroupable> rootGroupables = selected.Select(item => item.GetRootGroupable()).Distinct().ToList();
-
-            IEnumerable<EventCueGroupViewModel> groups = rootGroupables.OfType<EventCueGroupViewModel>().ToList();
-
-            UndoManager.DoAndAdd(() =>
-            {
-                foreach (EventCueGroupViewModel group in groups)
-                {
-                    group.Unselect();
-                    foreach (IGroupable child in group.Children)
-                        child.Group = null;
-                    Groups.Remove(group);
-                }
-            }, () =>
-            {
-                foreach (EventCueGroupViewModel group in groups)
-                {
-                    foreach (IGroupable child in group.Children)
-                        child.Group = group;
-                    Groups.Add(group);
-                    group.Select();
-                }
-            });
-        }
-
-        public async Task DiscoverNetwork()
-        {
-            foreach (NodeViewModel node in Nodes)
-                node.DiscoveryState = NodeDiscoveryState.Discovering;
-
-            try
-            {
-                await NetworkController.DiscoverNetworkAsync();
-                NetworkDiscoveryState = NetworkDiscoveryState.Discovered;
-            }
-            catch (TimeoutException)
-            {
-                NetworkDiscoveryState = NetworkDiscoveryState.Failed;
-            }
-            catch (InvalidOperationException)
-            {
-                NetworkDiscoveryState = NetworkDiscoveryState.Failed;
-                MessageBox.Show("No XBee controller found.");
-            }
-            catch (Exception e)
-            {
-                NetworkDiscoveryState = NetworkDiscoveryState.Failed;
-                MessageBox.Show(e.Message);
-            }
-
-            foreach (NodeViewModel node in Nodes)
-                if (node.DiscoveryState == NodeDiscoveryState.Discovering)
-                    node.DiscoveryState = NodeDiscoveryState.None;
-        }
-
-        private void NetworkControllerOnDiscoveringNetwork(object sender, EventArgs eventArgs)
-        {
-            NetworkDiscoveryState = NetworkDiscoveryState.Discovering;
-        }
-
-        private void NetworkControllerOnInitializingController(object sender, EventArgs eventArgs)
-        {
-            NetworkDiscoveryState = NetworkDiscoveryState.Initializing;
-        }
-
-        private void NetworkControllerOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)
-        {
-            XBeeNode node = e.Node;
-
-            NodeViewModel existingNode = Nodes.FirstOrDefault(n => n.Address.Equals(node.Address.LongAddress));
-
-            string name = e.Name;
-            SignalStrength? signalStrength = e.SignalStrength.HasValue ? e.SignalStrength : SignalStrength.High;
-
-            if (existingNode == null)
-            {
-                var nodeViewModel = new NodeViewModel(name, node.Address.LongAddress, signalStrength,
-                    NodeDiscoveryState.Discovered);
-
-                Nodes.Add(nodeViewModel);
-            }
-            else
-            {
-                existingNode.Name = name;
-                existingNode.SignalStrength = signalStrength;
-                existingNode.DiscoveryState = NodeDiscoveryState.Discovered;
-            }
-        }
-
-        private void NodesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-            {
-                foreach (NodeViewModel item in e.NewItems.Cast<NodeViewModel>())
-                    item.PropertyChanged += OnNodeViewModelOnPropertyChanged;
-            }
-
-            if (e.OldItems != null)
-            {
-                foreach (NodeViewModel item in e.OldItems.Cast<NodeViewModel>())
-                    item.PropertyChanged -= OnNodeViewModelOnPropertyChanged;
-            }
-        }
-
-
-        private async void OnNodeViewModelOnPropertyChanged(object o, PropertyChangedEventArgs args)
-        {
-            var n = (NodeViewModel) o;
-            if (args.PropertyName == "Name")
-            {
-                try
-                {
-                    await NetworkController.SetNodeName(new NodeAddress(n.Address), n.Name);
-                }
-                catch (TimeoutException)
-                {
-                }
-            }
-        }
-
-        private void AudioTrackOnStatusChanged(object sender, AudioTrackStatusEventArgs e)
-        {
-            SetStatus(e.Message);
-        }
-
-        private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
-        {
-            if (AudioTrack != null && !AudioTrack.IsPaused)
-                AudioTrack.Update();
-        }
     }
 }
