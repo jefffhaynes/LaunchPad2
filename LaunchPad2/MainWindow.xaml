@@ -375,6 +375,7 @@
         <Grid Row="2" Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid Grid.Row="0" Grid.Column="0">
@@ -665,9 +666,41 @@
                 </StackPanel>
             </Grid>
 
+            <ScrollViewer Name="TimelineScrollViewer" Grid.Column="0"
+                          VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Hidden" 
+                          ScrollChanged="OnScrollChanged" Focusable="False" Grid.Row="1">
+                <Border BorderThickness="0,1,0,1" BorderBrush="{StaticResource GridSplitterBackgroundBrush}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="32"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Rectangle Width="32" VerticalAlignment="Stretch" Fill="{StaticResource MenuDisabledBrushKey}"/>
+                        <controls:CueTimeline AudioTrack="{Binding AudioTrack}" Height="32" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" 
+                                                  TimeScale="{Binding Zoom}" ClipToBounds="True"
+                                                  Width="{Binding ElementName=WaveformControl, Path=ActualWidth}" 
+                                                  Foreground="{StaticResource MenuDisabledBrushKey}" 
+                                                  Background="{StaticResource PanelBackgroundBrushKey}"
+                                                  RegionStart="{Binding SelectedRegionStart}"
+                                                  RegionLength="{Binding SelectedRegionLength}">
+                            <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="1"
+                                           Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
+                                           Style="{DynamicResource SelectedCueIndicatorStyle}"/>
+
+                            <controls:RegionCueControl Sample="{Binding SelectedRegionStartSample, Converter={StaticResource SampleDecimationConverter}}" 
+                                                          SampleLength="{Binding SelectedRegionSampleLength, Converter={StaticResource SampleDecimationConverter}}" 
+                                                          SampleRate="{Binding SampleRate}"
+                                                          BorderBrush="{StaticResource StatusBarBrushKey}" BorderThickness="2,0"
+                                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#B368217A"
+                                                          AutoscrollDistance="40" Height="32" SnapToInterval="0:0:0.1" Style="{DynamicResource RegionCueStyle}"/>
+                        </controls:CueTimeline>
+                    </Grid>
+                </Border>
+            </ScrollViewer>
+            
             <ScrollViewer Name="TrackScrollViewer" Grid.Column="0"
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" 
-                          ScrollChanged="OnScrollChanged" Focusable="False" Grid.Row="1">
+                          ScrollChanged="OnScrollChanged" Focusable="False" Grid.Row="2">
                 <Grid>
 
                     <Grid.RowDefinitions>
@@ -675,33 +708,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border BorderThickness="0,1,0,1" BorderBrush="{StaticResource GridSplitterBackgroundBrush}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="32"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Rectangle Width="32" VerticalAlignment="Stretch" Fill="{StaticResource MenuDisabledBrushKey}"/>
-                            <controls:CueTimeline AudioTrack="{Binding AudioTrack}" Height="32" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" 
-                                                  TimeScale="{Binding Zoom}" ClipToBounds="True"
-                                                  Width="{Binding ElementName=WaveformControl, Path=ActualWidth}" 
-                                                  Foreground="{StaticResource MenuDisabledBrushKey}" 
-                                                  Background="{StaticResource PanelBackgroundBrushKey}"
-                                                  RegionStart="{Binding SelectedRegionStart}"
-                                                  RegionLength="{Binding SelectedRegionLength}">
-                                <Rectangle Height="{Binding ElementName=TracksControl, Path=ActualHeight}" Canvas.ZIndex="1"
-                                           Canvas.Left="{Binding ElementName=SelectionCanvas, Path=SelectedCue.Offset, Mode=TwoWay}" 
-                                           Style="{DynamicResource SelectedCueIndicatorStyle}"/>
-
-                                <controls:RegionCueControl Sample="{Binding SelectedRegionStartSample, Converter={StaticResource SampleDecimationConverter}}" 
-                                                          SampleLength="{Binding SelectedRegionSampleLength, Converter={StaticResource SampleDecimationConverter}}" 
-                                                          SampleRate="{Binding SampleRate}"
-                                                          BorderBrush="{StaticResource StatusBarBrushKey}" BorderThickness="2,0"
-                                                          TimeScale="{Binding ElementName=ZoomSlider, Path=Value}" Background="#B368217A"
-                                                          AutoscrollDistance="40" Height="32" SnapToInterval="0:0:0.1" Style="{DynamicResource RegionCueStyle}"/>
-                            </controls:CueTimeline>
-                        </Grid>
-                    </Border>
+                   
 
 
                     <controls:SelectionCanvas x:Name="SelectionCanvas" Focusable="True" Grid.Row="1" Grid.Column="0"

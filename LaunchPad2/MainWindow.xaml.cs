@@ -124,6 +124,7 @@ namespace LaunchPad2
             ScrollViewer scrollViewer = Equals(sender, AudioScrollViewer) ? TrackScrollViewer : AudioScrollViewer;
 
             scrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
+            TimelineScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
 
             /* Try to keep scroll position on zoom */
             if (Math.Abs(e.ExtentWidthChange) > double.Epsilon)
@@ -134,6 +135,7 @@ namespace LaunchPad2
                 {
                     double changeRatio = e.ExtentWidth/originalExtent;
                     scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset*changeRatio);
+                    TimelineScrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * changeRatio);
                 }
             }
         }
