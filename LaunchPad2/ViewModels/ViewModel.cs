@@ -383,13 +383,18 @@ namespace LaunchPad2.ViewModels
 
         private async void StartShow()
         {
-            SetStatus("Starting Show");
-
             IsShowRunning = true;
 
-            _countdownCancellationTokenSource = new CancellationTokenSource();
+            if (!await NetworkController.Initialize())
+            {
+                MessageBox.Show("No network controller found.");
+                IsShowRunning = false;
+                return;
+            }
 
-            await NetworkController.Initialize();
+            SetStatus("Starting Show");
+
+            _countdownCancellationTokenSource = new CancellationTokenSource();
 
             AudioTrack.Position = TimeSpan.Zero;
             CountdownTime = CountdownLength;
@@ -400,9 +405,10 @@ namespace LaunchPad2.ViewModels
                 await Arm();
                 SetStatus("Network Armed");
             }
-            catch
+            catch (Exception e)
             {
-                MessageBox.Show("Failed to arm network.");
+                var message = string.Format("Failed to arm network. {0}", e.Message);
+                MessageBox.Show(message);
                 SetStatus("Failed to Arm Network");
                 IsShowRunning = false;
                 return;
