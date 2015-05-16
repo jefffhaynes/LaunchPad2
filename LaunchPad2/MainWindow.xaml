@@ -134,10 +134,28 @@
 
             <Button Grid.Column="0" Click="LoadButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" 
                     ToolTip="Open Project" Template="{StaticResource TouchButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsWorking}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
                 <Path Data="{DynamicResource LoadGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBrownBrushKey}"/>
             </Button>
             <Button Click="SaveButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="2"
                      Template="{StaticResource TouchButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsWorking}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
                 <Button.ToolTip>
                     <ToolTip Content="{Binding File, Converter={StaticResource FileTitleConverter}}" ContentStringFormat="Save {0} (Ctrl+S)"/>
                 </Button.ToolTip>
@@ -145,10 +163,28 @@
             </Button>
             <Button Click="SaveAsButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="3"
                     ToolTip="Save As" Template="{StaticResource TouchButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsWorking}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
                 <Path Data="{DynamicResource SaveAsGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" />
             </Button>
             <Button Click="LoadAudioButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" Grid.Column="1"
                     ToolTip="Open Audio File" Template="{StaticResource TouchButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsWorking}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
                 <Path Data="{DynamicResource LoadAudioGeometryKey}" Stretch="Uniform" Fill="{DynamicResource MenuBlueBrushKey}" />
             </Button>
 

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Threading;
 
 namespace FMOD
@@ -20,19 +21,22 @@ namespace FMOD
         private readonly ReaderWriterLockSlim _samplesCacheLock = new ReaderWriterLockSlim();
         private readonly ReaderWriterLockSlim _spectralSamplesCacheLock = new ReaderWriterLockSlim();
         private CHANNEL_CALLBACK _channelCallback;
-        private TemporaryFile _energySubbandCacheTempFile;
         private int _numChannels;
         private Channel _playbackChannel;
         private Sound _playbackSound;
-        private TemporaryFile _sampleCacheTempFile;
         private float _sampleRate;
         private int _soundBits;
         private SOUND_FORMAT _soundFormat = SOUND_FORMAT.NONE;
         private SOUND_TYPE _soundType = SOUND_TYPE.UNKNOWN;
-        private TemporaryFile _spectralCacheTempFile;
         private FmodSystem _system;
         private Channel _viewChannel;
         private Sound _viewSound;
+        private string _thumbprint;
+
+        static AudioTrack()
+        {
+            CleanupCache();
+        }
 
         public AudioTrack(string file)
         {
@@ -181,15 +185,15 @@ namespace FMOD
         {
             get
             {
-                if (_sampleCacheTempFile == null)
-                    CacheSamples();
+                CacheSamples();
+
+                var sampleCacheFile = GetCacheFile("samples");
 
                 _samplesCacheLock.EnterReadLock();
 
                 try
                 {
-                    Debug.Assert(_sampleCacheTempFile != null, "_sampleCacheTempFile != null");
-                    using (var stream = new FileStream(_sampleCacheTempFile.Path, FileMode.Open, FileAccess.Read))
+                    using (var stream = new FileStream(sampleCacheFile, FileMode.Open, FileAccess.Read))
                     using (var reader = new BinaryReader(stream))
                     {
                         var sampleCount = stream.Length/(sizeof (float)*2);
@@ -212,15 +216,15 @@ namespace FMOD
         {
             get
             {
-                if (_spectralCacheTempFile == null)
-                    CacheSpectralSamples();
+                CacheSpectralSamples();
+
+                var spectalCacheFile = GetCacheFile("spectral");
 
                 _spectralSamplesCacheLock.EnterReadLock();
 
                 try
                 {
-                    Debug.Assert(_spectralCacheTempFile != null, "_spectralCacheTempFile != null");
-                    using (var stream = new FileStream(_spectralCacheTempFile.Path, FileMode.Open, FileAccess.Read))
+                    using (var stream = new FileStream(spectalCacheFile, FileMode.Open, FileAccess.Read))
                     using (var reader = new BinaryReader(stream))
                     {
                         var frameCount = stream.Length/(FftWindowSize*sizeof (double));
@@ -244,16 +248,15 @@ namespace FMOD
         {
             get
             {
-                if (_energySubbandCacheTempFile == null)
-                    CacheEnergySubbands();
+                CacheEnergySubbands();
+
+                var energySubbandCache = GetCacheFile("energy");
 
                 _energySubbandCacheLock.EnterReadLock();
 
                 try
                 {
-                    Debug.Assert(_energySubbandCacheTempFile != null, "_energySubbandCacheTempFile != null");
-                    using (var stream = new FileStream(_energySubbandCacheTempFile.Path, FileMode.Open, FileAccess.Read)
-                        )
+                    using (var stream = new FileStream(energySubbandCache, FileMode.Open, FileAccess.Read))
                     using (var reader = new BinaryReader(stream))
                     {
                         var length = (int) stream.Length/(SubbandCount*sizeof (double));
@@ -294,15 +297,6 @@ namespace FMOD
                 result = _system.release();
                 ThrowOnBadResult(result);
             }
-
-            if (_sampleCacheTempFile != null)
-                _sampleCacheTempFile.Dispose();
-
-            if (_spectralCacheTempFile != null)
-                _spectralCacheTempFile.Dispose();
-
-            if (_energySubbandCacheTempFile != null)
-                _energySubbandCacheTempFile.Dispose();
         }
 
         #endregion
@@ -337,13 +331,16 @@ namespace FMOD
 
             _samplesCacheLock.EnterWriteLock();
 
-            if (_sampleCacheTempFile != null)
-                return;
-
             try
             {
-                _sampleCacheTempFile = new TemporaryFile();
-                using (var stream = new FileStream(_sampleCacheTempFile.Path, FileMode.Create, FileAccess.Write))
+                var sampleCacheFile = GetCacheFile("samples");
+
+                if (File.Exists(sampleCacheFile))
+                    return;
+
+                var sampleCacheTempFile = string.Format("{0}.temp", sampleCacheFile);
+
+                using (var stream = new FileStream(sampleCacheTempFile, FileMode.Create, FileAccess.Write))
                 using (var writer = new BinaryWriter(stream))
                 {
                     foreach (var sample in ReadSamples())
@@ -352,6 +349,8 @@ namespace FMOD
                         writer.Write(sample.Right);
                     }
                 }
+
+                File.Move(sampleCacheTempFile, sampleCacheFile);
             }
             finally
             {
@@ -437,9 +436,13 @@ namespace FMOD
 
             try
             {
-                _spectralCacheTempFile = new TemporaryFile();
+                var spectralCacheFile = GetCacheFile("spectral");
+                if (File.Exists(spectralCacheFile))
+                    return;
 
-                using (var stream = new FileStream(_spectralCacheTempFile.Path, FileMode.Create, FileAccess.Write))
+                var spectralCacheTempFile = spectralCacheFile + ".temp";
+
+                using (var stream = new FileStream(spectralCacheTempFile, FileMode.Create, FileAccess.Write))
                 {
                     using (var writer = new BinaryWriter(stream))
                     {
@@ -450,6 +453,8 @@ namespace FMOD
                         }
                     }
                 }
+
+                File.Move(spectralCacheTempFile, spectralCacheFile);
             }
             finally
             {
@@ -465,9 +470,13 @@ namespace FMOD
 
             try
             {
-                _energySubbandCacheTempFile = new TemporaryFile();
+                var energySubbandCacheFile = GetCacheFile("energy");
+                if (File.Exists(energySubbandCacheFile))
+                    return;
 
-                using (var stream = new FileStream(_energySubbandCacheTempFile.Path, FileMode.Create, FileAccess.Write))
+                var energySubbandCacheTempFile = string.Format("{0}.temp", energySubbandCacheFile);
+
+                using (var stream = new FileStream(energySubbandCacheTempFile, FileMode.Create, FileAccess.Write))
                 {
                     using (var writer = new BinaryWriter(stream))
                     {
@@ -479,6 +488,8 @@ namespace FMOD
                         }
                     }
                 }
+
+                File.Move(energySubbandCacheTempFile, energySubbandCacheFile);
             }
             finally
             {
@@ -618,7 +629,16 @@ namespace FMOD
 
             _viewSound.getDefaults(ref _sampleRate, ref volume, ref pan, ref priority);
 
+            _thumbprint = GetThumbprint();
+
             OnPropertyChanged("SampleRate");
+        }
+
+        private string GetThumbprint()
+        {
+            var sha = new SHA1Managed();
+            using (var stream = new FileStream(_file, FileMode.Open, FileAccess.Read))
+                return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "");
         }
 
         public double ToSamples(TimeSpan time)
@@ -630,6 +650,39 @@ namespace FMOD
         public TimeSpan ToTime(double samples)
         {
             return TimeSpan.FromMilliseconds(samples*1000/(SampleRate));
+        }
+
+        private static string GetCachePath()
+        {
+            var directory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var appDirectory = Path.Combine(directory, Assembly.GetEntryAssembly().GetName().Name);
+            return Path.Combine(appDirectory, "cache");
+        }
+
+        private string GetCacheFile(string key)
+        {
+            var cacheDirectory = GetCachePath();
+            var projectPath = Path.Combine(cacheDirectory, _thumbprint);
+
+            if (!Directory.Exists(projectPath))
+                Directory.CreateDirectory(projectPath);
+
+            var file = Path.Combine(projectPath, key);
+
+            return file;
+        }
+
+        private static void CleanupCache()
+        {
+            var cacheDirectory = GetCachePath();
+            var files = Directory.EnumerateFiles(cacheDirectory, "*", SearchOption.AllDirectories);
+
+            foreach (var file in files)
+            {
+                var lastAccessed = File.GetLastAccessTime(file);
+                if(DateTime.Now - lastAccessed > TimeSpan.FromDays(30))
+                    File.Delete(file);
+            }
         }
 
         private static void ThrowOnBadResult(RESULT result)

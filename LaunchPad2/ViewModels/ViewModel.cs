@@ -39,6 +39,7 @@ namespace LaunchPad2.ViewModels
         private TimeSpan _selectedRegionStart;
         private string _status;
         private double _zoom;
+        private bool _isWorking;
 
         public ViewModel()
         {
@@ -116,6 +117,19 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        public bool IsWorking
+        {
+            get { return _isWorking; }
+            set
+            {
+                if (_isWorking != value)
+                {
+                    _isWorking = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public string File
         {
             get { return _file; }
@@ -152,6 +166,8 @@ namespace LaunchPad2.ViewModels
                     _isShowRunning = value;
                     OnPropertyChanged();
                 }
+
+                IsWorking = value;
             }
         }
 
