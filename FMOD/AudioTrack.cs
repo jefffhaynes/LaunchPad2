@@ -24,14 +24,15 @@ namespace FMOD
         private int _numChannels;
         private Channel _playbackChannel;
         private Sound _playbackSound;
+        private bool _repeat;
         private float _sampleRate;
         private int _soundBits;
         private SOUND_FORMAT _soundFormat = SOUND_FORMAT.NONE;
         private SOUND_TYPE _soundType = SOUND_TYPE.UNKNOWN;
         private FmodSystem _system;
+        private string _thumbprint;
         private Channel _viewChannel;
         private Sound _viewSound;
-        private string _thumbprint;
 
         static AudioTrack()
         {
@@ -53,8 +54,8 @@ namespace FMOD
                 if (_playbackChannel == null)
                     return false;
 
-                var paused = false;
-                var result = _playbackChannel.getPaused(ref paused);
+                bool paused = false;
+                RESULT result = _playbackChannel.getPaused(ref paused);
                 ThrowOnBadResult(result);
                 return paused;
             }
@@ -63,14 +64,12 @@ namespace FMOD
             {
                 if (value != IsPaused)
                 {
-                    var result = _playbackChannel.setPaused(value);
+                    RESULT result = _playbackChannel.setPaused(value);
                     ThrowOnBadResult(result);
                     OnPropertyChanged("IsPaused");
                 }
             }
         }
-
-        private bool _repeat;
 
         public bool Repeat
         {
@@ -90,7 +89,7 @@ namespace FMOD
             get
             {
                 uint ms = 0;
-                var result = _playbackChannel.getPosition(ref ms, TIMEUNIT.MS);
+                RESULT result = _playbackChannel.getPosition(ref ms, TIMEUNIT.MS);
                 if (result != RESULT.ERR_INVALID_HANDLE)
                     ThrowOnBadResult(result);
                 return TimeSpan.FromMilliseconds(ms);
@@ -103,7 +102,7 @@ namespace FMOD
                 if (value < TimeSpan.Zero)
                     throw new ArgumentOutOfRangeException("value", "Cannot be negative");
 
-                var result = _playbackChannel.setPosition((uint) value.TotalMilliseconds, TIMEUNIT.MS);
+                RESULT result = _playbackChannel.setPosition((uint) value.TotalMilliseconds, TIMEUNIT.MS);
                 ThrowOnBadResult(result);
                 OnPropertyChanged("Position");
                 OnPropertyChanged("SamplePosition");
@@ -118,7 +117,7 @@ namespace FMOD
             get
             {
                 uint pcm = 0;
-                var result = _playbackChannel.getPosition(ref pcm, TIMEUNIT.PCM);
+                RESULT result = _playbackChannel.getPosition(ref pcm, TIMEUNIT.PCM);
 
                 if (result != RESULT.ERR_INVALID_HANDLE)
                     ThrowOnBadResult(result);
@@ -128,7 +127,7 @@ namespace FMOD
 
             set
             {
-                var result = _playbackChannel.setPosition(
+                RESULT result = _playbackChannel.setPosition(
                     value > TotalSamples ? TotalSamples - 1 : value,
                     TIMEUNIT.PCM);
 
@@ -139,6 +138,7 @@ namespace FMOD
         }
 
         public TimeSpan Length { get; private set; }
+
         public uint TotalSamples { get; private set; }
 
         public int Bits
@@ -151,7 +151,7 @@ namespace FMOD
             get
             {
                 float vol = 0;
-                var result = _playbackChannel.getVolume(ref vol);
+                RESULT result = _playbackChannel.getVolume(ref vol);
                 ThrowOnBadResult(result);
                 return vol;
             }
@@ -163,7 +163,7 @@ namespace FMOD
 
                 if (Math.Abs(value - Volume) > float.Epsilon)
                 {
-                    var result = _playbackChannel.setVolume(value);
+                    RESULT result = _playbackChannel.setVolume(value);
                     ThrowOnBadResult(result);
                     OnPropertyChanged("Volume");
                 }
@@ -187,7 +187,7 @@ namespace FMOD
             {
                 CacheSamples();
 
-                var sampleCacheFile = GetCacheFile("samples");
+                string sampleCacheFile = GetCacheFile("samples");
 
                 _samplesCacheLock.EnterReadLock();
 
@@ -196,11 +196,11 @@ namespace FMOD
                     using (var stream = new FileStream(sampleCacheFile, FileMode.Open, FileAccess.Read))
                     using (var reader = new BinaryReader(stream))
                     {
-                        var sampleCount = stream.Length/(sizeof (float)*2);
-                        for (var i = 0; i < sampleCount; i++)
+                        long sampleCount = stream.Length/(sizeof (float)*2);
+                        for (int i = 0; i < sampleCount; i++)
                         {
-                            var left = reader.ReadSingle();
-                            var right = reader.ReadSingle();
+                            float left = reader.ReadSingle();
+                            float right = reader.ReadSingle();
                             yield return new StereoSample(left, right);
                         }
                     }
@@ -218,7 +218,7 @@ namespace FMOD
             {
                 CacheSpectralSamples();
 
-                var spectalCacheFile = GetCacheFile("spectral");
+                string spectalCacheFile = GetCacheFile("spectral");
 
                 _spectralSamplesCacheLock.EnterReadLock();
 
@@ -227,8 +227,8 @@ namespace FMOD
                     using (var stream = new FileStream(spectalCacheFile, FileMode.Open, FileAccess.Read))
                     using (var reader = new BinaryReader(stream))
                     {
-                        var frameCount = stream.Length/(FftWindowSize*sizeof (double));
-                        for (var i = 0; i < frameCount; i++)
+                        long frameCount = stream.Length/(FftWindowSize*sizeof (double));
+                        for (int i = 0; i < frameCount; i++)
                         {
                             yield return Enumerable.Range(0, FftWindowSize)
                                 .Select(bands => reader.ReadDouble()).ToArray();
@@ -250,7 +250,7 @@ namespace FMOD
             {
                 CacheEnergySubbands();
 
-                var energySubbandCache = GetCacheFile("energy");
+                string energySubbandCache = GetCacheFile("energy");
 
                 _energySubbandCacheLock.EnterReadLock();
 
@@ -259,10 +259,10 @@ namespace FMOD
                     using (var stream = new FileStream(energySubbandCache, FileMode.Open, FileAccess.Read))
                     using (var reader = new BinaryReader(stream))
                     {
-                        var length = (int) stream.Length/(SubbandCount*sizeof (double));
-                        for (var i = 0; i < SubbandCount; i++)
+                        int length = (int) stream.Length/(SubbandCount*sizeof (double));
+                        for (int i = 0; i < SubbandCount; i++)
                         {
-                            var data = Enumerable.Range(0, length)
+                            double[] data = Enumerable.Range(0, length)
                                 .Select(bands => reader.ReadDouble()).ToArray();
 
                             Array.Resize(ref data, data.Length + EnergySubbandWindowSize);
@@ -277,29 +277,6 @@ namespace FMOD
                 }
             }
         }
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            RESULT result;
-
-            if (_playbackSound != null)
-            {
-                result = _playbackSound.release();
-                ThrowOnBadResult(result);
-            }
-
-            if (_system != null)
-            {
-                result = _system.close();
-                ThrowOnBadResult(result);
-                result = _system.release();
-                ThrowOnBadResult(result);
-            }
-        }
-
-        #endregion
 
         #region INotifyPropertyChanged Members
 
@@ -325,244 +302,9 @@ namespace FMOD
 
         public event EventHandler PositionChanged;
 
-        private void CacheSamples()
-        {
-            OnStatusChanged("Loading audio");
-
-            _samplesCacheLock.EnterWriteLock();
-
-            try
-            {
-                var sampleCacheFile = GetCacheFile("samples");
-
-                if (File.Exists(sampleCacheFile))
-                    return;
-
-                var sampleCacheTempFile = string.Format("{0}.temp", sampleCacheFile);
-
-                using (var stream = new FileStream(sampleCacheTempFile, FileMode.Create, FileAccess.Write))
-                using (var writer = new BinaryWriter(stream))
-                {
-                    foreach (var sample in ReadSamples())
-                    {
-                        writer.Write(sample.Left);
-                        writer.Write(sample.Right);
-                    }
-                }
-
-                File.Move(sampleCacheTempFile, sampleCacheFile);
-            }
-            finally
-            {
-                _samplesCacheLock.ExitWriteLock();
-            }
-
-            OnStatusChanged("Audio loaded");
-        }
-
-        private IEnumerable<StereoSample> ReadSamples()
-        {
-            const int blockLength = 4096;
-            const float singleMaxValue = 0.01f;
-            const float int16MaxValue = Int16.MaxValue;
-
-            var sampleSize = Bits/8*ChannelCount;
-
-            uint read = 0;
-            var block = new byte[blockLength];
-
-            _viewSound.seekData(0);
-
-            var blockPtr = Marshal.AllocHGlobal(blockLength);
-            try
-            {
-                RESULT result;
-                do
-                {
-                    result = _viewSound.readData(blockPtr, blockLength, ref read);
-
-                    if (result != RESULT.ERR_FILE_EOF)
-                        ThrowOnBadResult(result);
-
-                    Marshal.Copy(blockPtr, block, 0, (int) read);
-
-                    switch (ChannelCount)
-                    {
-                        case 1:
-                            switch (Bits)
-                            {
-                                case 16:
-                                    for (var i = 0; i < read; i += sampleSize)
-                                        yield return
-                                            new StereoSample(BitConverter.ToInt16(block, i)/int16MaxValue);
-                                    break;
-                                case 32:
-                                    for (var i = 0; i < read; i += sampleSize)
-                                        yield return
-                                            new StereoSample(BitConverter.ToSingle(block, i)/singleMaxValue);
-                                    break;
-                            }
-                            break;
-                        case 2:
-                            switch (Bits)
-                            {
-                                case 16:
-                                    for (var i = 0; i < read; i += sampleSize)
-                                        yield return
-                                            new StereoSample(
-                                                BitConverter.ToInt16(block, i)/int16MaxValue,
-                                                BitConverter.ToInt16(block, i + 2)/int16MaxValue);
-                                    break;
-                                case 32:
-                                    for (var i = 0; i < read; i += sampleSize)
-                                        yield return new StereoSample(
-                                            BitConverter.ToSingle(block, i)/singleMaxValue,
-                                            BitConverter.ToSingle(block, i + 4)/singleMaxValue);
-                                    break;
-                            }
-                            break;
-                    }
-                } while (result != RESULT.ERR_FILE_EOF);
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(blockPtr);
-            }
-        }
-
-        private void CacheSpectralSamples()
-        {
-            _spectralSamplesCacheLock.EnterWriteLock();
-
-            try
-            {
-                var spectralCacheFile = GetCacheFile("spectral");
-                if (File.Exists(spectralCacheFile))
-                    return;
-
-                var spectralCacheTempFile = spectralCacheFile + ".temp";
-
-                using (var stream = new FileStream(spectralCacheTempFile, FileMode.Create, FileAccess.Write))
-                {
-                    using (var writer = new BinaryWriter(stream))
-                    {
-                        foreach (var sample in GetFrames(Samples))
-                        {
-                            foreach (var value in sample)
-                                writer.Write(value);
-                        }
-                    }
-                }
-
-                File.Move(spectralCacheTempFile, spectralCacheFile);
-            }
-            finally
-            {
-                _spectralSamplesCacheLock.ExitWriteLock();
-            }
-        }
-
-        private void CacheEnergySubbands()
-        {
-            OnStatusChanged("Detecting beats");
-
-            _energySubbandCacheLock.EnterWriteLock();
-
-            try
-            {
-                var energySubbandCacheFile = GetCacheFile("energy");
-                if (File.Exists(energySubbandCacheFile))
-                    return;
-
-                var energySubbandCacheTempFile = string.Format("{0}.temp", energySubbandCacheFile);
-
-                using (var stream = new FileStream(energySubbandCacheTempFile, FileMode.Create, FileAccess.Write))
-                {
-                    using (var writer = new BinaryWriter(stream))
-                    {
-                        var energySubbands = ReadEnergySubbands();
-                        foreach (var sample in energySubbands)
-                        {
-                            foreach (var value in sample)
-                                writer.Write(value);
-                        }
-                    }
-                }
-
-                File.Move(energySubbandCacheTempFile, energySubbandCacheFile);
-            }
-            finally
-            {
-                _energySubbandCacheLock.ExitWriteLock();
-            }
-
-            OnStatusChanged("Beats detected");
-        }
-
-        private IEnumerable<IEnumerable<double>> ReadEnergySubbands()
-        {
-            var frameSubbandEnergies = SpectralSamples
-                .Select(GetSubbandEnergies);
-
-            var subbandEnergyFrameWindows =
-                frameSubbandEnergies.ZipMany(
-                    frameSubbandEnergy => frameSubbandEnergy.Window(EnergySubbandWindowSize));
-
-            var locallyComparedSubbandEnergy = subbandEnergyFrameWindows.Select(
-                subbandEnergyWindowFrames =>
-                    subbandEnergyWindowFrames.Select(subbandEnergyWindowFrame =>
-                    {
-                        var subbandEnergyWindowFrameData = subbandEnergyWindowFrame.ToArray();
-                        var average = subbandEnergyWindowFrameData.Average();
-                        var first = subbandEnergyWindowFrameData.First();
-                        return first - average;
-                    }));
-
-            return locallyComparedSubbandEnergy;
-        }
-
-        private static IEnumerable<double[]> GetFrames(IEnumerable<StereoSample> samples)
-        {
-            var frames = samples.Batch(FftWindowSize);
-
-            var zeroData = Enumerable.Repeat(0.0, FftWindowSize).ToArray();
-
-            var spectralFrames = frames.Select(frame =>
-            {
-                var data = frame.ToArray();
-                Array.Resize(ref data, FftWindowSize);
-
-                var averageData = data.Select(sample => (double) (sample.Left + sample.Right)/2);
-
-                var complexData = averageData.Interleave(zeroData).ToArray();
-
-                Fft.RealFFT(complexData, true);
-
-                var realSpectralData = complexData.TakeEvery(2);
-                var imaginarySpectralData = complexData.Skip(1).TakeEvery(2);
-
-                var spectralMagData = realSpectralData.Zip(imaginarySpectralData,
-                    (r, i) => Math.Sqrt(r*r + i*i));
-
-                return spectralMagData.ToArray();
-            });
-
-            return spectralFrames;
-        }
-
-        private static IEnumerable<double> GetSubbandEnergies(double[] window)
-        {
-            var subbandLength = window.Length/SubbandCount;
-            var subbands = window.Batch(subbandLength);
-            var subbandEnergies = subbands.Select(subband => subband.Sum());
-
-            var scalar = (double) SubbandCount/window.Length;
-            return subbandEnergies.Select(subbandEnergy => subbandEnergy*scalar);
-        }
-
         private void Load()
         {
-            var result = Factory.System_Create(ref _system);
+            RESULT result = Factory.System_Create(ref _system);
             ThrowOnBadResult(result);
 
             result = _system.init(2, INITFLAGS.NORMAL, (IntPtr) null);
@@ -577,8 +319,8 @@ namespace FMOD
 
             result = _system.createStream(_file, MODE._2D | MODE.HARDWARE | MODE.CREATESTREAM | MODE.ACCURATETIME,
                 ref _playbackSound);
-
             ThrowOnBadResult(result);
+
             result = _system.playSound(CHANNELINDEX.FREE, _playbackSound, true, ref _playbackChannel);
             ThrowOnBadResult(result);
 
@@ -620,30 +362,267 @@ namespace FMOD
 
         private void Analyze()
         {
-            var result = _viewSound.getFormat(ref _soundType, ref _soundFormat, ref _numChannels, ref _soundBits);
+            RESULT result = _viewSound.getFormat(ref _soundType, ref _soundFormat, ref _numChannels, ref _soundBits);
             ThrowOnBadResult(result);
 
             float volume = 0;
             float pan = 0;
-            var priority = 0;
+            int priority = 0;
 
             _viewSound.getDefaults(ref _sampleRate, ref volume, ref pan, ref priority);
+            OnPropertyChanged("SampleRate");
 
             _thumbprint = GetThumbprint();
-
-            OnPropertyChanged("SampleRate");
         }
 
         private string GetThumbprint()
         {
-            var sha = new SHA1Managed();
+            using (var sha = new SHA1Managed())
             using (var stream = new FileStream(_file, FileMode.Open, FileAccess.Read))
+            {
                 return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "");
+            }
+        }
+
+
+        private void CacheSamples()
+        {
+            OnStatusChanged("Loading audio");
+
+            _samplesCacheLock.EnterWriteLock();
+
+            try
+            {
+                string sampleCacheFile = GetCacheFile("samples");
+
+                if (File.Exists(sampleCacheFile))
+                    return;
+
+                string sampleCacheTempFile = string.Format("{0}.temp", sampleCacheFile);
+
+                using (var stream = new FileStream(sampleCacheTempFile, FileMode.Create, FileAccess.Write))
+                using (var writer = new BinaryWriter(stream))
+                {
+                    foreach (StereoSample sample in ReadSamples())
+                    {
+                        writer.Write(sample.Left);
+                        writer.Write(sample.Right);
+                    }
+                }
+
+                File.Move(sampleCacheTempFile, sampleCacheFile);
+            }
+            finally
+            {
+                _samplesCacheLock.ExitWriteLock();
+            }
+
+            OnStatusChanged("Audio loaded");
+        }
+
+        private IEnumerable<StereoSample> ReadSamples()
+        {
+            const int blockLength = 4096;
+            const float singleMaxValue = 0.01f;
+            const float int16MaxValue = Int16.MaxValue;
+
+            int sampleSize = Bits/8*ChannelCount;
+
+            uint read = 0;
+            var block = new byte[blockLength];
+
+            _viewSound.seekData(0);
+
+            IntPtr blockPtr = Marshal.AllocHGlobal(blockLength);
+            try
+            {
+                RESULT result;
+                do
+                {
+                    result = _viewSound.readData(blockPtr, blockLength, ref read);
+
+                    if (result != RESULT.ERR_FILE_EOF)
+                        ThrowOnBadResult(result);
+
+                    Marshal.Copy(blockPtr, block, 0, (int) read);
+
+                    switch (ChannelCount)
+                    {
+                        case 1:
+                            switch (Bits)
+                            {
+                                case 16:
+                                    for (int i = 0; i < read; i += sampleSize)
+                                        yield return
+                                            new StereoSample(BitConverter.ToInt16(block, i)/int16MaxValue);
+                                    break;
+                                case 32:
+                                    for (int i = 0; i < read; i += sampleSize)
+                                        yield return
+                                            new StereoSample(BitConverter.ToSingle(block, i)/singleMaxValue);
+                                    break;
+                            }
+                            break;
+                        case 2:
+                            switch (Bits)
+                            {
+                                case 16:
+                                    for (int i = 0; i < read; i += sampleSize)
+                                        yield return
+                                            new StereoSample(
+                                                BitConverter.ToInt16(block, i)/int16MaxValue,
+                                                BitConverter.ToInt16(block, i + 2)/int16MaxValue);
+                                    break;
+                                case 32:
+                                    for (int i = 0; i < read; i += sampleSize)
+                                        yield return new StereoSample(
+                                            BitConverter.ToSingle(block, i)/singleMaxValue,
+                                            BitConverter.ToSingle(block, i + 4)/singleMaxValue);
+                                    break;
+                            }
+                            break;
+                    }
+                } while (result != RESULT.ERR_FILE_EOF);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(blockPtr);
+            }
+        }
+
+        private void CacheSpectralSamples()
+        {
+            _spectralSamplesCacheLock.EnterWriteLock();
+
+            try
+            {
+                string spectralCacheFile = GetCacheFile("spectral");
+                if (File.Exists(spectralCacheFile))
+                    return;
+
+                string spectralCacheTempFile = spectralCacheFile + ".temp";
+
+                using (var stream = new FileStream(spectralCacheTempFile, FileMode.Create, FileAccess.Write))
+                {
+                    using (var writer = new BinaryWriter(stream))
+                    {
+                        foreach (var sample in GetFrames(Samples))
+                        {
+                            foreach (double value in sample)
+                                writer.Write(value);
+                        }
+                    }
+                }
+
+                File.Move(spectralCacheTempFile, spectralCacheFile);
+            }
+            finally
+            {
+                _spectralSamplesCacheLock.ExitWriteLock();
+            }
+        }
+
+        private void CacheEnergySubbands()
+        {
+            OnStatusChanged("Detecting beats");
+
+            _energySubbandCacheLock.EnterWriteLock();
+
+            try
+            {
+                string energySubbandCacheFile = GetCacheFile("energy");
+                if (File.Exists(energySubbandCacheFile))
+                    return;
+
+                string energySubbandCacheTempFile = string.Format("{0}.temp", energySubbandCacheFile);
+
+                using (var stream = new FileStream(energySubbandCacheTempFile, FileMode.Create, FileAccess.Write))
+                {
+                    using (var writer = new BinaryWriter(stream))
+                    {
+                        IEnumerable<IEnumerable<double>> energySubbands = ReadEnergySubbands();
+                        foreach (var sample in energySubbands)
+                        {
+                            foreach (double value in sample)
+                                writer.Write(value);
+                        }
+                    }
+                }
+
+                File.Move(energySubbandCacheTempFile, energySubbandCacheFile);
+            }
+            finally
+            {
+                _energySubbandCacheLock.ExitWriteLock();
+            }
+
+            OnStatusChanged("Beats detected");
+        }
+
+        private IEnumerable<IEnumerable<double>> ReadEnergySubbands()
+        {
+            IEnumerable<IEnumerable<double>> frameSubbandEnergies = SpectralSamples
+                .Select(GetSubbandEnergies);
+
+            IEnumerable<IEnumerable<IEnumerable<double>>> subbandEnergyFrameWindows =
+                frameSubbandEnergies.ZipMany(
+                    frameSubbandEnergy => frameSubbandEnergy.Window(EnergySubbandWindowSize));
+
+            IEnumerable<IEnumerable<double>> locallyComparedSubbandEnergy = subbandEnergyFrameWindows.Select(
+                subbandEnergyWindowFrames =>
+                    subbandEnergyWindowFrames.Select(subbandEnergyWindowFrame =>
+                    {
+                        double[] subbandEnergyWindowFrameData = subbandEnergyWindowFrame.ToArray();
+                        double average = subbandEnergyWindowFrameData.Average();
+                        double first = subbandEnergyWindowFrameData.First();
+                        return first - average;
+                    }));
+
+            return locallyComparedSubbandEnergy;
+        }
+
+        private static IEnumerable<double[]> GetFrames(IEnumerable<StereoSample> samples)
+        {
+            IEnumerable<IEnumerable<StereoSample>> frames = samples.Batch(FftWindowSize);
+
+            double[] zeroData = Enumerable.Repeat(0.0, FftWindowSize).ToArray();
+
+            IEnumerable<double[]> spectralFrames = frames.Select(frame =>
+            {
+                StereoSample[] data = frame.ToArray();
+                Array.Resize(ref data, FftWindowSize);
+
+                IEnumerable<double> averageData = data.Select(sample => (double) (sample.Left + sample.Right)/2);
+
+                double[] complexData = averageData.Interleave(zeroData).ToArray();
+
+                Fft.RealFFT(complexData, true);
+
+                IEnumerable<double> realSpectralData = complexData.TakeEvery(2);
+                IEnumerable<double> imaginarySpectralData = complexData.Skip(1).TakeEvery(2);
+
+                IEnumerable<double> spectralMagData = realSpectralData.Zip(imaginarySpectralData,
+                    (r, i) => Math.Sqrt(r*r + i*i));
+
+                return spectralMagData.ToArray();
+            });
+
+            return spectralFrames;
+        }
+
+        private static IEnumerable<double> GetSubbandEnergies(double[] window)
+        {
+            int subbandLength = window.Length/SubbandCount;
+            IEnumerable<IEnumerable<double>> subbands = window.Batch(subbandLength);
+            IEnumerable<double> subbandEnergies = subbands.Select(subband => subband.Sum());
+
+            double scalar = (double) SubbandCount/window.Length;
+            return subbandEnergies.Select(subbandEnergy => subbandEnergy*scalar);
         }
 
         public double ToSamples(TimeSpan time)
         {
-            var totalSeconds = time.TotalMilliseconds/1000;
+            double totalSeconds = time.TotalMilliseconds/1000;
             return totalSeconds*SampleRate;
         }
 
@@ -654,33 +633,33 @@ namespace FMOD
 
         private static string GetCachePath()
         {
-            var directory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var appDirectory = Path.Combine(directory, Assembly.GetEntryAssembly().GetName().Name);
+            string directory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string appDirectory = Path.Combine(directory, Assembly.GetEntryAssembly().GetName().Name);
             return Path.Combine(appDirectory, "cache");
         }
 
         private string GetCacheFile(string key)
         {
-            var cacheDirectory = GetCachePath();
-            var projectPath = Path.Combine(cacheDirectory, _thumbprint);
+            string cacheDirectory = GetCachePath();
+            string projectPath = Path.Combine(cacheDirectory, _thumbprint);
 
             if (!Directory.Exists(projectPath))
                 Directory.CreateDirectory(projectPath);
 
-            var file = Path.Combine(projectPath, key);
+            string file = Path.Combine(projectPath, key);
 
             return file;
         }
 
         private static void CleanupCache()
         {
-            var cacheDirectory = GetCachePath();
-            var files = Directory.EnumerateFiles(cacheDirectory, "*", SearchOption.AllDirectories);
+            string cacheDirectory = GetCachePath();
+            IEnumerable<string> files = Directory.EnumerateFiles(cacheDirectory, "*", SearchOption.AllDirectories);
 
-            foreach (var file in files)
+            foreach (string file in files)
             {
-                var lastAccessed = File.GetLastAccessTime(file);
-                if(DateTime.Now - lastAccessed > TimeSpan.FromDays(30))
+                DateTime lastAccessed = File.GetLastAccessTime(file);
+                if (DateTime.Now - lastAccessed > TimeSpan.FromDays(30))
                     File.Delete(file);
             }
         }
@@ -701,9 +680,44 @@ namespace FMOD
 
         private void OnStatusChanged(string message)
         {
-            var handler = StatusChanged;
+            EventHandler<AudioTrackStatusEventArgs> handler = StatusChanged;
             if (handler != null)
                 handler(this, new AudioTrackStatusEventArgs(message));
         }
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            RESULT result;
+
+            if (_playbackChannel != null)
+            {
+                _playbackChannel.setCallback(null);
+                _playbackChannel.stop();
+            }
+
+            if (_viewSound != null)
+            {
+                result = _viewSound.release();
+                ThrowOnBadResult(result);
+            }
+
+            if (_playbackSound != null)
+            {
+                result = _playbackSound.release();
+                ThrowOnBadResult(result);
+            }
+
+            if (_system != null)
+            {
+                result = _system.close();
+                ThrowOnBadResult(result);
+                result = _system.release();
+                ThrowOnBadResult(result);
+            }
+        }
+
+        #endregion
     }
 }

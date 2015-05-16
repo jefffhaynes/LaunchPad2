@@ -16,7 +16,7 @@ using XBee;
 
 namespace LaunchPad2.ViewModels
 {
-    public class ViewModel : ViewModelBase
+    public class ViewModel : ViewModelBase, IDisposable
     {
         private const double DefaultZoom = 0.1;
         private const string ClipboardTracksKey = "Tracks";
@@ -1235,5 +1235,11 @@ namespace LaunchPad2.ViewModels
         public ICommand ZoomExtentsCommand { get; private set; }
 
         #endregion
+
+        public void Dispose()
+        {
+            if(AudioTrack != null)
+                AudioTrack.Dispose();
+        }
     }
 }
