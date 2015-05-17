@@ -363,17 +363,25 @@ namespace LaunchPad2.ViewModels
 
         private async Task Stop()
         {
-            if (IsShowRunning)
-            {
-                await Disarm();
-                IsShowRunning = false;
-                SetStatus("Show Aborted");
-            }
-
             if (AudioTrack != null)
             {
                 AudioTrack.IsPaused = true;
                 AudioTrack.Position = TimeSpan.Zero;
+            }
+
+            if (IsShowRunning)
+            {
+                try
+                {
+                    await Disarm();
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Warning: failed to disarm show.  Firing nodes may still be armed.");
+                }
+
+                IsShowRunning = false;
+                SetStatus("Show Aborted");
             }
 
             var handler = Stopped;
