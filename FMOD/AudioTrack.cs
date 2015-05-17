@@ -654,6 +654,10 @@ namespace FMOD
         private static void CleanupCache()
         {
             string cacheDirectory = GetCachePath();
+
+            if (!Directory.Exists(cacheDirectory))
+                Directory.CreateDirectory(cacheDirectory);
+
             IEnumerable<string> files = Directory.EnumerateFiles(cacheDirectory, "*", SearchOption.AllDirectories);
 
             foreach (string file in files)
