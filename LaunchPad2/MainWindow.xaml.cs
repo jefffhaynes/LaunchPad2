@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,104 +19,154 @@ namespace LaunchPad2
         private TemporaryFile _temporaryAudioFile;
         private ViewModel _viewModel = new ViewModel();
         private bool _audioFileChanged;
+        private readonly SemaphoreSlim _saveLock = new SemaphoreSlim(1);
 
         public MainWindow()
         {
             InitializeComponent();
             DataContext = _viewModel;
             _viewModel.Stopped += (sender, args) => AudioScrollViewer.ScrollToHorizontalOffset(0);
-            Closing += (sender, args) => SerialPortService.CleanUp();
+
+            Closing += (sender, args) =>
+            {
+                _viewModel.Dispose();
+
+                if(_temporaryAudioFile != null)
+                    _temporaryAudioFile.Dispose();
+
+                SerialPortService.CleanUp();
+            };
         }
 
         private void LoadAudioButtonOnClick(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog
-            {
-                Filter = "Audio Files|*.mp3;*.wav",
-                Multiselect = false
-            };
+            _viewModel.IsWorking = true;
 
-            bool? result = dialog.ShowDialog();
-            if (result != null && result.Value)
+            try
             {
-                _viewModel.AudioFile = dialog.FileName;
+                var dialog = new OpenFileDialog
+                {
+                    Filter = "Audio Files|*.mp3;*.wav",
+                    Multiselect = false
+                };
+
+                bool? result = dialog.ShowDialog();
+                if (result != null && result.Value)
+                {
+                    _viewModel.AudioFile = dialog.FileName;
+                }
+
+                _audioFileChanged = true;
             }
-
-            _audioFileChanged = true;
+            finally
+            {
+                _viewModel.IsWorking = false;
+            }
         }
 
         private async void SaveButtonOnClick(object sender, RoutedEventArgs e)
         {
-            if(_viewModel.File == null || !File.Exists(_viewModel.File))
-                SaveAsButtonOnClick(sender, e);
-            else
+            try
             {
-                _viewModel.SetStatus("Saving...");
-                var model = new Model(_viewModel);
+                _viewModel.IsWorking = true;
 
-                await Task.Run(() =>
+                await _saveLock.WaitAsync();
+
+                if (_viewModel.File == null || !File.Exists(_viewModel.File))
+                    SaveAsButtonOnClick(sender, e);
+                else
                 {
-                    if (_audioFileChanged)
-                        Packager.Pack(_viewModel.File, model, _viewModel.AudioFile);
-                    else Packager.Update(_viewModel.File, model);
-                });
+                    _viewModel.SetStatus("Saving...");
+                    var model = new Model(_viewModel);
 
-                _viewModel.SetStatus("Saved");
+                    await Task.Run(() =>
+                    {
+                        if (_audioFileChanged)
+                            Packager.Pack(_viewModel.File, model, _viewModel.AudioFile);
+                        else Packager.Update(_viewModel.File, model);
+                    });
+
+                    _viewModel.SetStatus("Saved");
+                }
+            }
+            finally
+            {
+                _saveLock.Release();
+
+                _viewModel.IsWorking = false;
             }
         }
 
         private async void SaveAsButtonOnClick(object sender, RoutedEventArgs e)
         {
-            var dialog = new SaveFileDialog
-            {
-                FileName = _viewModel.File,
-                Filter = "LaunchPad Files|*.lpx"
-            };
+            _viewModel.IsWorking = true;
 
-            bool? result = dialog.ShowDialog();
-            if (result != null && result.Value)
+            try
             {
-                _viewModel.SetStatus("Saving...");
-                var model = new Model(_viewModel);
-                await Task.Run(() => Packager.Pack(dialog.FileName, model, _viewModel.AudioFile));
+                var dialog = new SaveFileDialog
+                {
+                    FileName = _viewModel.File,
+                    Filter = "LaunchPad Files|*.lpx"
+                };
 
-                _viewModel.File = dialog.FileName;
-                _viewModel.SetStatus("Saved");
+                bool? result = dialog.ShowDialog();
+                if (result != null && result.Value)
+                {
+                    _viewModel.SetStatus("Saving...");
+                    var model = new Model(_viewModel);
+                    await Task.Run(() => Packager.Pack(dialog.FileName, model, _viewModel.AudioFile));
+
+                    _viewModel.File = dialog.FileName;
+                    _viewModel.SetStatus("Saved");
+                }
+            }
+            finally
+            {
+                _viewModel.IsWorking = false;
             }
         }
 
         private async void LoadButtonOnClick(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog
+            _viewModel.IsWorking = true;
+
+            try
             {
-                Filter = "LaunchPad Files|*.lpx",
-                Multiselect = false
-            };
+                var dialog = new OpenFileDialog
+                {
+                    Filter = "LaunchPad Files|*.lpx",
+                    Multiselect = false
+                };
 
-            bool? result = dialog.ShowDialog();
-            if (result != null && result.Value)
+                bool? result = dialog.ShowDialog();
+                if (result != null && result.Value)
+                {
+                    _viewModel.SetStatus("Loading...");
+
+                    string filename = dialog.FileName;
+
+                    Model model = null;
+                    TemporaryFile temporaryAudioFile = null;
+
+                    await Task.Run(() => model = Packager.Unpack(filename, out temporaryAudioFile));
+
+                    _viewModel = model.GetViewModel();
+                    DataContext = _viewModel;
+
+                    if (temporaryAudioFile != null)
+                        _viewModel.AudioFile = temporaryAudioFile.Path;
+
+                    _temporaryAudioFile = temporaryAudioFile;
+                    _viewModel.File = dialog.FileName;
+
+                    _viewModel.Stopped += (s, args) => AudioScrollViewer.ScrollToHorizontalOffset(0);
+
+                    _viewModel.SetStatus("Loaded");
+                }
+            }
+            finally
             {
-                _viewModel.SetStatus("Loading...");
-
-                string filename = dialog.FileName;
-
-                Model model = null;
-                TemporaryFile temporaryAudioFile = null;
-                
-                await Task.Run(() => model = Packager.Unpack(filename, out temporaryAudioFile));
-
-                _viewModel = model.GetViewModel();
-                DataContext = _viewModel;
-
-                if (temporaryAudioFile != null)
-                    _viewModel.AudioFile = temporaryAudioFile.Path;
-
-                _temporaryAudioFile = temporaryAudioFile;
-                _viewModel.File = dialog.FileName;
-
-                _viewModel.Stopped += (s, args) => AudioScrollViewer.ScrollToHorizontalOffset(0);
-
-                _viewModel.SetStatus("Loaded");
+                _viewModel.IsWorking = false;
             }
         }
 

@@ -16,7 +16,7 @@ using XBee;
 
 namespace LaunchPad2.ViewModels
 {
-    public class ViewModel : ViewModelBase
+    public class ViewModel : ViewModelBase, IDisposable
     {
         private const double DefaultZoom = 0.1;
         private const string ClipboardTracksKey = "Tracks";
@@ -39,6 +39,7 @@ namespace LaunchPad2.ViewModels
         private TimeSpan _selectedRegionStart;
         private string _status;
         private double _zoom;
+        private bool _isWorking;
 
         public ViewModel()
         {
@@ -116,6 +117,19 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        public bool IsWorking
+        {
+            get { return _isWorking; }
+            set
+            {
+                if (_isWorking != value)
+                {
+                    _isWorking = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public string File
         {
             get { return _file; }
@@ -152,6 +166,8 @@ namespace LaunchPad2.ViewModels
                     _isShowRunning = value;
                     OnPropertyChanged();
                 }
+
+                IsWorking = value;
             }
         }
 
@@ -1227,5 +1243,11 @@ namespace LaunchPad2.ViewModels
         public ICommand ZoomExtentsCommand { get; private set; }
 
         #endregion
+
+        public void Dispose()
+        {
+            if(AudioTrack != null)
+                AudioTrack.Dispose();
+        }
     }
 }
