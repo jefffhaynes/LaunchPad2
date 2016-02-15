@@ -318,10 +318,7 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        public TimeSpan SelectedRegionEnd
-        {
-            get { return SelectedRegionStart + SelectedRegionLength; }
-        }
+        public TimeSpan SelectedRegionEnd => SelectedRegionStart + SelectedRegionLength;
 
         public uint SelectedRegionStartSample
         {
@@ -401,8 +398,7 @@ namespace LaunchPad2.ViewModels
             }
 
             var handler = Stopped;
-            if (handler != null)
-                handler(this, EventArgs.Empty);
+            handler?.Invoke(this, EventArgs.Empty);
         }
 
         private async void StartShow()
@@ -431,7 +427,7 @@ namespace LaunchPad2.ViewModels
             }
             catch (Exception e)
             {
-                var message = string.Format("Failed to arm network. {0}", e.Message);
+                var message = $"Failed to arm network. {e.Message}";
                 MessageBox.Show(message);
                 SetStatus("Failed to Arm Network");
                 IsShowRunning = false;
@@ -465,16 +461,12 @@ namespace LaunchPad2.ViewModels
 
         private IEnumerable<TrackViewModel> GetSelectedTracks()
         {
-            return SelectedItems == null
-                ? Enumerable.Empty<TrackViewModel>()
-                : SelectedItems.OfType<TrackViewModel>();
+            return SelectedItems?.OfType<TrackViewModel>() ?? Enumerable.Empty<TrackViewModel>();
         }
 
         private IEnumerable<EventCueViewModel> GetSelectedCues()
         {
-            var cues = SelectedItems == null
-                ? Enumerable.Empty<EventCueViewModel>()
-                : SelectedItems.OfType<EventCueViewModel>();
+            var cues = SelectedItems?.OfType<EventCueViewModel>() ?? Enumerable.Empty<EventCueViewModel>();
 
             return cues.Union(GetSelectedTracks().SelectMany(track => track.Cues));
         }
@@ -532,7 +524,7 @@ namespace LaunchPad2.ViewModels
 
         private void AddTrack(DeviceViewModel device = null)
         {
-            var trackName = string.Format("Track {0}", Tracks.Count);
+            var trackName = $"Track {Tracks.Count}";
             var track = new TrackViewModel {Name = trackName, Device = device};
             var doAction = new Action(() => Tracks.Add(track));
             var undoAction = new Action(() => Tracks.Remove(track));
@@ -819,7 +811,7 @@ namespace LaunchPad2.ViewModels
             double min = selectedCues.Min(cue => cue.StartSample);
             double max = selectedCues.Max(cue => cue.StartSample);
             var range = max - min;
-            var spacing = range/(selectedCues.Count() - 1);
+            var spacing = range/(selectedCues.Count - 1);
 
             var i = 0;
             foreach (var cue in cues)
@@ -920,7 +912,7 @@ namespace LaunchPad2.ViewModels
 
         private void AddDevice()
         {
-            var deviceName = string.Format("Device {0}", Devices.Count);
+            var deviceName = $"Device {Devices.Count}";
             var device = new DeviceViewModel {Name = deviceName};
 
             var doAction = new Action(() => Devices.Add(device));
@@ -1025,10 +1017,10 @@ namespace LaunchPad2.ViewModels
             var name = baseName;
             for (var i = 0; Tracks.Select(track => track.Name).Contains(name); i++)
             {
-                name = string.Format("{0} - Copy", baseName);
+                name = $"{baseName} - Copy";
 
                 if (i != 0)
-                    name += string.Format(" {0}", i);
+                    name += $" {i}";
             }
 
             return name;
@@ -1196,17 +1188,17 @@ namespace LaunchPad2.ViewModels
 
         public RelayCommand RedoCommand { get; private set; }
 
-        public RelayCommand PlayCommand { get; private set; }
+        public RelayCommand PlayCommand { get; }
 
         public RelayCommand StopCommand { get; private set; }
 
-        public RelayCommand StartShowCommand { get; private set; }
+        public RelayCommand StartShowCommand { get; }
 
         public RelayCommand AbortShowCommand { get; private set; }
 
         public RelayCommand PositionCommand { get; private set; }
 
-        public RelayCommand AddTrackCommand { get; private set; }
+        public RelayCommand AddTrackCommand { get; }
 
         public ICommand AddCueCommand { get; private set; }
 
@@ -1246,8 +1238,7 @@ namespace LaunchPad2.ViewModels
 
         public void Dispose()
         {
-            if(AudioTrack != null)
-                AudioTrack.Dispose();
+            AudioTrack?.Dispose();
         }
     }
 }
