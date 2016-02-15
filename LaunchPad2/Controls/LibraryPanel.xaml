@@ -4,8 +4,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModels="clr-namespace:LaunchPad2.ViewModels"
+             xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
              mc:Ignorable="d" Background="#252526"
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignData ViewModel}">
+    <UserControl.Resources>
+        <CollectionViewSource x:Key="DeviceCollectionViewSource" Source="{Binding Devices}">
+            <CollectionViewSource.SortDescriptions>
+                <componentModel:SortDescription PropertyName="Name"/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -113,7 +121,8 @@
  
         <Border Grid.Row="2" BorderBrush="{DynamicResource PanelHorizontalLineBrushKey}" BorderThickness="0,1,0,0"/>
 
-        <ListView Name="DeviceListView" Grid.Row="3" ItemsSource="{Binding Devices}" Background="{DynamicResource PanelBackgroundBrushKey}" BorderThickness="0"
+        <ListView Name="DeviceListView" Grid.Row="3" ItemsSource="{Binding Source={StaticResource DeviceCollectionViewSource}}"
+                  Background="{DynamicResource PanelBackgroundBrushKey}" BorderThickness="0"
                  SelectedItem="{Binding SelectedItem}" SelectionMode="Single" >
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type viewModels:DeviceViewModel}">
