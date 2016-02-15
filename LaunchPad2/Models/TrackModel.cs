@@ -109,7 +109,7 @@ namespace LaunchPad2.Models
                 Cues = new ObservableCollection<EventCueViewModel>(Cues.Select(cue => cue.GetViewModel())),
                 Device = deviceSource.SingleOrDefault(device => device.Id == DeviceId),
                 Node = node,
-                Port = node == null ? null : node.Ports.SingleOrDefault(port => port.Port == Port),
+                Port = node?.Ports.SingleOrDefault(port => port.Port == Port),
                 Notes = Notes
             };
         }

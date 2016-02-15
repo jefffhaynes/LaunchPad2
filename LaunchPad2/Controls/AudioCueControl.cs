@@ -29,10 +29,7 @@ namespace LaunchPad2.Controls
             set { SetValue(StrokeThicknessProperty, value); }
         }
 
-        protected override bool HasGrips
-        {
-            get { return false; }
-        }
+        protected override bool HasGrips => false;
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {

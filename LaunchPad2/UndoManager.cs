@@ -13,15 +13,9 @@ namespace LaunchPad2
 
         private static readonly object UndoLock = new object();
 
-        public static bool CanUndo
-        {
-            get { return _current != null; }
-        }
+        public static bool CanUndo => _current != null;
 
-        public static bool CanRedo
-        {
-            get { return UndoMementos.First != UndoMementos.Last; }
-        }
+        public static bool CanRedo => UndoMementos.First != UndoMementos.Last;
 
         public static event EventHandler CanUndoChanged;
 
@@ -100,11 +94,8 @@ namespace LaunchPad2
 
         private static void OnUndoRedoChanged()
         {
-            if (CanUndoChanged != null)
-                CanUndoChanged(null, EventArgs.Empty);
-
-            if (CanRedoChanged != null)
-                CanRedoChanged(null, EventArgs.Empty);
+            CanUndoChanged?.Invoke(null, EventArgs.Empty);
+            CanRedoChanged?.Invoke(null, EventArgs.Empty);
         }
     }
 }

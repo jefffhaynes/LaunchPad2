@@ -9,11 +9,8 @@ namespace LaunchPad2.ViewModels
             Brush = brush;
         }
 
-        public Brush Brush { get; private set; }
+        public Brush Brush { get; }
 
-        public string Key
-        {
-            get { return Brush.ToString(); }
-        }
+        public string Key => Brush.ToString();
     }
 }

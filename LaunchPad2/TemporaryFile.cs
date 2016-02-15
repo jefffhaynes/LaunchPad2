@@ -13,7 +13,7 @@ namespace LaunchPad2
 
         public TemporaryFile(string path)
         {
-            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException("path");
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             _path = path;
         }
 

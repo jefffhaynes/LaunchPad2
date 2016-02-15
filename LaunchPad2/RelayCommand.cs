@@ -49,10 +49,7 @@ namespace LaunchPad2
         /// <value>
         ///     <c>true</c> if this instance can execute; otherwise, <c>false</c>.
         /// </value>
-        public bool CanExecute
-        {
-            get { return _canExecute(); }
-        }
+        public bool CanExecute => _canExecute();
 
         public void UpdateCanExecute()
         {
@@ -100,8 +97,7 @@ namespace LaunchPad2
             Action<object> theParameterizedAction = ParameterizedAction;
             if (theAction != null)
                 theAction();
-            else if (theParameterizedAction != null)
-                theParameterizedAction(param);
+            else theParameterizedAction?.Invoke(param);
         }
     }
 }

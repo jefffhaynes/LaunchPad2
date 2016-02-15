@@ -28,10 +28,7 @@ namespace LaunchPad2.Converters
 
             var simpleSamples = value as IEnumerable<double>;
 
-            if (simpleSamples != null)
-                return simpleSamples.TakeEvery(decimationInterval);
-
-            return null;
+            return simpleSamples?.TakeEvery(decimationInterval);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

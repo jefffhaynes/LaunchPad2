@@ -33,7 +33,7 @@ namespace LaunchPad2
                     if (audioFile != null)
                     {
                         var audioFileName = Path.GetFileName(audioFile);
-                        var audioResource = String.Format("Resources\\{0}", audioFileName);
+                        var audioResource = $"Resources\\{audioFileName}";
                         Uri partUriResource = PackUriHelper.CreatePartUri(
                             new Uri(audioResource, UriKind.Relative));
 

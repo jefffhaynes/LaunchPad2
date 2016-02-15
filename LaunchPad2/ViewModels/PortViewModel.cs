@@ -13,12 +13,9 @@ namespace LaunchPad2.ViewModels
             Port = port;
         }
 
-        public string Name
-        {
-            get { return Port.GetEnumDescription(); }
-        }
+        public string Name => Port.GetEnumDescription();
 
-        public Ports Port { get; private set; }
+        public Ports Port { get; }
 
         /// <summary>
         /// Used to indicate that this port should be active, but hasn't necessarily been synced with the remote device yet.
@@ -46,8 +43,7 @@ namespace LaunchPad2.ViewModels
                 {
                     ShouldBeActive = value;
 
-                    if (StateChanged != null)
-                        StateChanged(this, EventArgs.Empty);
+                    StateChanged?.Invoke(this, EventArgs.Empty);
 
                     OnPropertyChanged();
                     OnPropertyChanged("IsKnownActive");
@@ -70,10 +66,7 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        public bool IsDirty
-        {
-            get { return ShouldBeActive != IsActive; }
-        }
+        public bool IsDirty => ShouldBeActive != IsActive;
 
         public event EventHandler StateChanged;
     }

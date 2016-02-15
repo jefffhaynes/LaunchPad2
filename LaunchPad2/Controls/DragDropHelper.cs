@@ -45,10 +45,7 @@ namespace LaunchPad2.Controls
 
         // singleton
 
-        private static DragDropHelper Instance
-        {
-            get { return _instance ?? (_instance = new DragDropHelper()); }
-        }
+        private static DragDropHelper Instance => _instance ?? (_instance = new DragDropHelper());
 
         public static bool GetIsDragSource(DependencyObject obj)
         {

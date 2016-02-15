@@ -77,7 +77,7 @@ namespace LaunchPad2.ViewModels
                         OnPropertyChanged();
                     });
 
-                    Brush originalColor = _brush != null ? _brush.Clone() : null;
+                    Brush originalColor = _brush?.Clone();
                     var undoAction = new Action(() =>
                     {
                         _brush = originalColor;
@@ -246,7 +246,7 @@ namespace LaunchPad2.ViewModels
                 Node = Node,
                 Port = Port,
                 Brush = Brush,
-                Name = string.Format("{0} - Copy", Name)
+                Name = $"{Name} - Copy"
             };
         }
     }

@@ -35,7 +35,7 @@ namespace LaunchPad2
         public static IEnumerable<IEnumerable<TSource>> BatchSimilar<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
         {
             if(source == null)
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
 
             using (IEnumerator<TSource> enumerator = source.GetEnumerator())
             {

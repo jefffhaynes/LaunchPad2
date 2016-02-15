@@ -21,10 +21,10 @@ namespace LaunchPad2
         public void Add(Action doAction, Action undoAction)
         {
             if(doAction == null)
-                throw new ArgumentNullException("doAction");
+                throw new ArgumentNullException(nameof(doAction));
 
             if(undoAction == null)
-                throw new ArgumentNullException("undoAction");
+                throw new ArgumentNullException(nameof(undoAction));
 
             _doBatch.Add(doAction);
             _undoBatch.Add(undoAction);

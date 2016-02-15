@@ -28,10 +28,7 @@ namespace LaunchPad2.Controls
             _adornerLayer.Add(this);
         }
 
-        protected override int VisualChildrenCount
-        {
-            get { return 1; }
-        }
+        protected override int VisualChildrenCount => 1;
 
         public void SetPosition(double left, double top)
         {
@@ -39,10 +36,7 @@ namespace LaunchPad2.Controls
             // near the mouse cursor when dragging.
             _left = left - 1;
             _top = top + 13;
-            if (_adornerLayer != null)
-            {
-                _adornerLayer.Update(AdornedElement);
-            }
+            _adornerLayer?.Update(AdornedElement);
         }
 
         protected override Size MeasureOverride(Size constraint)
