@@ -97,15 +97,15 @@ namespace FMOD
         }
         public static IEnumerable<TSource> TakeEvery<TSource>(this IEnumerable<TSource> source, int step)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (step <= 0) throw new ArgumentOutOfRangeException("step");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (step <= 0) throw new ArgumentOutOfRangeException(nameof(step));
             return source.Where((e, i) => i % step == 0);
         }
 
         public static IEnumerable<IEnumerable<TSource>> Window<TSource>(this IEnumerable<TSource> source, int size)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (size <= 0) throw new ArgumentOutOfRangeException("size");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size));
 
             return WindowedImpl(source, size);
         }
