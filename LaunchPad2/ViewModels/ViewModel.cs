@@ -67,6 +67,7 @@ namespace LaunchPad2.ViewModels
             AddCueCommand = new RelayCommand(AddCue);
             DeleteCueCommand = new RelayCommand(DeleteCue);
             DeleteCommand = new RelayCommand(Delete);
+            CalculateBeatsCommand = new RelayCommand(CalculateBeats, IsAudioFileLoaded);
             CueAlignLeftCommand = new RelayCommand(() => DoUndoableCueMove(CueAlignLeft));
             CueAlignRightCommand = new RelayCommand(() => DoUndoableCueMove(CueAlignRight));
             CueAlignAllCommand = new RelayCommand(() => DoUndoableCueMove(CueAlignAll));
@@ -221,6 +222,8 @@ namespace LaunchPad2.ViewModels
                     PlayCommand.UpdateCanExecute();
                     StartShowCommand.UpdateCanExecute();
                     AddTrackCommand.UpdateCanExecute();
+                    CalculateBeatsCommand.UpdateCanExecute();
+
                     UpdateSampleRate();
 
                     if (_audioTrack != null)
@@ -750,6 +753,11 @@ namespace LaunchPad2.ViewModels
             CommitCueMoveUndo();
         }
 
+        private void CalculateBeats()
+        {
+            AudioTrack?.CalculateEnergySubbands();
+        }
+
         private void CueAlignLeft()
         {
             if (!GetSelectedCues().Any())
@@ -1217,6 +1225,8 @@ namespace LaunchPad2.ViewModels
         public ICommand DeleteCueCommand { get; private set; }
 
         public ICommand DeleteCommand { get; private set; }
+
+        public RelayCommand CalculateBeatsCommand { get; }
 
         public ICommand CueAlignLeftCommand { get; private set; }
 

@@ -98,17 +98,16 @@ namespace FMOD
             set
             {
                 if (value > Length)
-                    throw new ArgumentOutOfRangeException("value", "Must be less than the sound length");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Must be less than the sound length");
                 if (value < TimeSpan.Zero)
-                    throw new ArgumentOutOfRangeException("value", "Cannot be negative");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Cannot be negative");
 
                 RESULT result = _playbackChannel.setPosition((uint) value.TotalMilliseconds, TIMEUNIT.MS);
                 ThrowOnBadResult(result);
                 OnPropertyChanged("Position");
                 OnPropertyChanged("SamplePosition");
 
-                if (PositionChanged != null)
-                    PositionChanged(this, EventArgs.Empty);
+                PositionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -141,10 +140,7 @@ namespace FMOD
 
         public uint TotalSamples { get; private set; }
 
-        public int Bits
-        {
-            get { return _soundBits; }
-        }
+        public int Bits => _soundBits;
 
         public float Volume
         {
@@ -159,7 +155,7 @@ namespace FMOD
             set
             {
                 if (value > 1.0f || value < 0.0f)
-                    throw new ArgumentOutOfRangeException("value", "Must be between 0.0 and 1.0");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Must be between 0.0 and 1.0");
 
                 if (Math.Abs(value - Volume) > float.Epsilon)
                 {
@@ -170,10 +166,7 @@ namespace FMOD
             }
         }
 
-        public int ChannelCount
-        {
-            get { return _numChannels; }
-        }
+        public int ChannelCount => _numChannels;
 
         public float SampleRate
         {
@@ -242,38 +235,63 @@ namespace FMOD
             }
         }
 
-        public int EnergySubbandWindowSize { get; private set; }
+        public int EnergySubbandWindowSize { get; }
+
+        private bool _energyBandsAvailable;
+
+        public void CalculateEnergySubbands()
+        {
+            EnergyBandsAvailable = true;
+        }
+
+        public bool EnergyBandsAvailable
+        {
+            get { return _energyBandsAvailable; }
+            set
+            {
+                if (_energyBandsAvailable != value)
+                {
+                    _energyBandsAvailable = value;
+                    OnPropertyChanged("EnergySubbands");
+                }
+            }
+        }
 
         public IEnumerable<double[]> EnergySubbands
         {
             get
             {
-                CacheEnergySubbands();
-
-                string energySubbandCache = GetCacheFile("energy");
-
-                _energySubbandCacheLock.EnterReadLock();
-
-                try
+                if (EnergyBandsAvailable)
                 {
-                    using (var stream = new FileStream(energySubbandCache, FileMode.Open, FileAccess.Read))
-                    using (var reader = new BinaryReader(stream))
+                    CacheEnergySubbands();
+
+                    string energySubbandCache = GetCacheFile("energy");
+
+                    _energySubbandCacheLock.EnterReadLock();
+
+                    try
                     {
-                        int length = (int) stream.Length/(SubbandCount*sizeof (double));
-                        for (int i = 0; i < SubbandCount; i++)
+                        using (var stream = new FileStream(energySubbandCache, FileMode.Open, FileAccess.Read))
+                        using (var reader = new BinaryReader(stream))
                         {
-                            double[] data = Enumerable.Range(0, length)
-                                .Select(bands => reader.ReadDouble()).ToArray();
+                            int length = (int) stream.Length/(SubbandCount*sizeof (double));
+                            for (int i = 0; i < SubbandCount; i++)
+                            {
+                                double[] data = Enumerable.Range(0, length)
+                                    .Select(bands => reader.ReadDouble()).ToArray();
 
-                            Array.Resize(ref data, data.Length + EnergySubbandWindowSize);
+                                Array.Resize(ref data, data.Length + EnergySubbandWindowSize);
 
-                            yield return data;
+                                yield return data;
+                            }
                         }
                     }
-                }
-                finally
-                {
-                    _energySubbandCacheLock.ExitReadLock();
+                    finally
+                    {
+                        _energySubbandCacheLock.ExitReadLock();
+                    }
+
+                    OnPropertyChanged("EnergyBandsAvailable");
                 }
             }
         }
@@ -296,8 +314,7 @@ namespace FMOD
             OnPropertyChanged("Position");
             OnPropertyChanged("SamplePosition");
 
-            if (PositionChanged != null)
-                PositionChanged(this, EventArgs.Empty);
+            PositionChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler PositionChanged;
@@ -398,7 +415,7 @@ namespace FMOD
                 if (File.Exists(sampleCacheFile))
                     return;
 
-                string sampleCacheTempFile = string.Format("{0}.temp", sampleCacheFile);
+                string sampleCacheTempFile = $"{sampleCacheFile}.temp";
 
                 using (var stream = new FileStream(sampleCacheTempFile, FileMode.Create, FileAccess.Write))
                 using (var writer = new BinaryWriter(stream))
@@ -534,7 +551,7 @@ namespace FMOD
                 if (File.Exists(energySubbandCacheFile))
                     return;
 
-                string energySubbandCacheTempFile = string.Format("{0}.temp", energySubbandCacheFile);
+                string energySubbandCacheTempFile = $"{energySubbandCacheFile}.temp";
 
                 using (var stream = new FileStream(energySubbandCacheTempFile, FileMode.Create, FileAccess.Write))
                 {
@@ -678,15 +695,13 @@ namespace FMOD
 
         protected void OnPropertyChanged(string property)
         {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(property));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
         private void OnStatusChanged(string message)
         {
             EventHandler<AudioTrackStatusEventArgs> handler = StatusChanged;
-            if (handler != null)
-                handler(this, new AudioTrackStatusEventArgs(message));
+            handler?.Invoke(this, new AudioTrackStatusEventArgs(message));
         }
 
         #region IDisposable Members

@@ -12,6 +12,8 @@ namespace Waveform
 {
     public partial class BeatDetector : UserControl
     {
+        private const int SubbandCount = 32;
+
         public static readonly DependencyProperty EnergySubbandsProperty = DependencyProperty.Register(
             "EnergySubbands", typeof (IEnumerable<IEnumerable<double>>), typeof (BeatDetector),
             new PropertyMetadata(default(IEnumerable<IEnumerable<double>>), EnergySubbandsChangedCallback));
@@ -84,7 +86,7 @@ namespace Waveform
             if (subbands == null)
                 return;
 
-            List<IEnumerable<double>> subbandList = subbands.Take(32).ToList();
+            List<IEnumerable<double>> subbandList = subbands.Take(SubbandCount).ToList();
 
             subbandList.Reverse();
 
