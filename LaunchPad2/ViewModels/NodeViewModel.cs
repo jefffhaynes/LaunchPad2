@@ -13,6 +13,7 @@ namespace LaunchPad2.ViewModels
         private string _name;
         private NodeDiscoveryState _nodeDiscoveryState;
         private string _notes;
+        private bool _discovering;
 
         public NodeViewModel(string name, LongAddress address,
             SignalStrength? signalStrength = XBee.SignalStrength.Low, 
@@ -65,6 +66,19 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        public bool Discovering
+        {
+            get { return _discovering; }
+            set
+            {
+                if (_discovering != value)
+                {
+                    _discovering = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public NodeDiscoveryState DiscoveryState
         {
             get { return _nodeDiscoveryState; }
@@ -91,7 +105,7 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        public ReadOnlyCollection<PortViewModel> Ports { get; private set; }
+        public ReadOnlyCollection<PortViewModel> Ports { get; }
 
         public string Notes
         {

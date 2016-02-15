@@ -3,7 +3,6 @@
     public enum NodeDiscoveryState
     {
         None,
-        Discovering,
         Discovered
     }
 }

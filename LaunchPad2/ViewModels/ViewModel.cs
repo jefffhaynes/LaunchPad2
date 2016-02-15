@@ -87,6 +87,7 @@ namespace LaunchPad2.ViewModels
                 // 32 is for track header (yeah, total kludge)
 
             DiscoverNetworkCommand = new RelayCommand(async () => await DiscoverNetwork());
+            NetworkDiscoveryResetCommand = new RelayCommand(ResetNetworkDiscovery);
 
             Tracks = new ObservableCollection<TrackViewModel>();
             Devices = new ObservableCollection<DeviceViewModel>();
@@ -1080,7 +1081,7 @@ namespace LaunchPad2.ViewModels
         public async Task DiscoverNetwork()
         {
             foreach (var node in Nodes)
-                node.DiscoveryState = NodeDiscoveryState.Discovering;
+                node.Discovering = true;
 
             try
             {
@@ -1101,10 +1102,21 @@ namespace LaunchPad2.ViewModels
                 NetworkDiscoveryState = NetworkDiscoveryState.Failed;
                 MessageBox.Show(e.Message);
             }
+            finally
+            {
+                foreach (var node in Nodes)
+                    node.Discovering = false;
+            }
+        }
 
-            foreach (var node in Nodes)
-                if (node.DiscoveryState == NodeDiscoveryState.Discovering)
+        public void ResetNetworkDiscovery()
+        {
+            if (MessageBox.Show("Reset network discovery?", "LaunchPad", MessageBoxButton.OKCancel) ==
+                MessageBoxResult.OK)
+            {
+                foreach (var node in Nodes)
                     node.DiscoveryState = NodeDiscoveryState.None;
+            }
         }
 
         private void NetworkControllerOnDiscoveringNetwork(object sender, EventArgs eventArgs)
@@ -1227,6 +1239,8 @@ namespace LaunchPad2.ViewModels
         public ICommand AddTrackFromDeviceCommand { get; private set; }
 
         public ICommand DiscoverNetworkCommand { get; private set; }
+
+        public ICommand NetworkDiscoveryResetCommand { get; private set; }
 
         public ICommand GroupCommand { get; private set; }
 

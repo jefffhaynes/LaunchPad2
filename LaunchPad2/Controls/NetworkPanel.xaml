@@ -4,9 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModels="clr-namespace:LaunchPad2.ViewModels"
+             xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d:DesignData ViewModel}">
     <UserControl.Resources>
+        <CollectionViewSource x:Key="NetworkCollectionViewSource" Source="{Binding Nodes}">
+            <CollectionViewSource.SortDescriptions>
+                <componentModel:SortDescription PropertyName="Name"/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
         <Canvas x:Key="RadarCanvasKey" Height="24" Width="24">
             <Ellipse Width="24" Height="24" StrokeThickness="1" Fill="#3F329832"/>
             <Line X1="12" X2="12" Y1="12" Y2="0" StrokeThickness="1" Stroke="{DynamicResource MenuBrightGreenBrushKey}">
@@ -50,6 +56,7 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
@@ -100,11 +107,49 @@
                     </ContentPresenter.Style>
                 </ContentPresenter>
             </Button>
+
+            <Button Grid.Column="1" Command="{Binding NetworkDiscoveryResetCommand}" ToolTip="Reset Network Discovery" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding NetworkDiscoveryState}" Value="Discovering">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <ContentPresenter>
+                    <ContentPresenter.Style >
+                        <Style TargetType="ContentPresenter">
+                            <Setter Property="Content">
+                                <Setter.Value>
+                                    <Viewbox Stretch="Uniform" Width="24" Height="24">
+                                        <Path Margin="6" Data="{DynamicResource NetworkResetGeometryKey}">
+                                            <Path.Style>
+                                                <Style TargetType="Path">
+                                                    <Setter Property="Fill" Value="{DynamicResource MenuBlueBrushKey}"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter Property="Fill" Value="{DynamicResource MenuDisabledBrushKey}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Path.Style>
+                                        </Path>
+                                    </Viewbox>
+                                </Setter.Value>
+                            </Setter>
+                        
+                        </Style>
+                    </ContentPresenter.Style>
+                </ContentPresenter>
+            </Button>
         </Grid>
 
         <Border Grid.Row="2" BorderBrush="{DynamicResource PanelHorizontalLineBrushKey}" BorderThickness="0,1,0,0"/>
 
-        <ListView Grid.Row="3" Background="{DynamicResource PanelBackgroundBrushKey}" BorderThickness="0" ItemsSource="{Binding Nodes}"
+        <ListView Grid.Row="3" Background="{DynamicResource PanelBackgroundBrushKey}" BorderThickness="0" 
+                  ItemsSource="{Binding Source={StaticResource NetworkCollectionViewSource}}"
                  SelectedItem="{Binding SelectedItem}" SelectionMode="Single">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type viewModels:NodeViewModel}">
@@ -126,10 +171,10 @@
                                         <DataTrigger Binding="{Binding SignalStrength}" Value="High">
                                             <Setter Property="Fill" Value="{DynamicResource MenuBrightGreenBrushKey}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding DiscoveryState}" Value="None">
+                                        <DataTrigger Binding="{Binding Discovering}" Value="False">
                                             <Setter Property="Fill" Value="{DynamicResource MenuGrayBrushKey}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding DiscoveryState}" Value="Discovering">
+                                        <DataTrigger Binding="{Binding Discovering}" Value="True">
                                             <Setter Property="Fill">
                                                 <Setter.Value>
                                                     <VisualBrush Stretch="None" Visual="{DynamicResource RadarCanvasKey}" />
