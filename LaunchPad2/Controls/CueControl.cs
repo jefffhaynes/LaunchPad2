@@ -68,11 +68,11 @@ namespace LaunchPad2.Controls
 
         private void OnLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            OnLeftButtonDownProtected(sender, e);
+            OnLeftButtonDownOverride(sender, e);
             e.Handled = true;
         }
 
-        protected virtual void OnLeftButtonDownProtected(object sender, MouseButtonEventArgs e)
+        protected virtual void OnLeftButtonDownOverride(object sender, MouseButtonEventArgs e)
         {
             Keyboard.Focus(this);
 

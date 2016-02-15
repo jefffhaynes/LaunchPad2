@@ -89,21 +89,19 @@ namespace LaunchPad2.Controls
             set { SetValue(GripBrushProperty, value); }
         }
 
-        protected override bool HasGrips
-        {
-            get { return true; }
-        }
+        protected override bool HasGrips => true;
 
-        protected override void OnLeftButtonDownProtected(object sender, MouseButtonEventArgs e)
+        protected override void OnLeftButtonDownOverride(object sender, MouseButtonEventArgs e)
         {
-            if (!IsSelected)
+            if (!IsSelected || Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
                 var routedEventArgs = new RoutedEventArgs(SelectionCanvas.CueSelectedEvent);
                 RaiseEvent(routedEventArgs);
             }
+
             e.Handled = true;
 
-            base.OnLeftButtonDownProtected(sender, e);
+            base.OnLeftButtonDownOverride(sender, e);
         }
 
         protected override Size ArrangeOverride(Size arrangeBounds)

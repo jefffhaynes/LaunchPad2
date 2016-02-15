@@ -150,15 +150,9 @@ namespace LaunchPad2.Controls
             set { SetValue(AutoscrollDistanceProperty, value); }
         }
 
-        private IEnumerable<EventCueControl> Cues
-        {
-            get { return FindVisualChildren<EventCueControl>(); }
-        }
+        private IEnumerable<EventCueControl> Cues => FindVisualChildren<EventCueControl>();
 
-        private IEnumerable<TrackHeaderControl> Tracks
-        {
-            get { return FindVisualChildren<TrackHeaderControl>(); }
-        }
+        private IEnumerable<TrackHeaderControl> Tracks => FindVisualChildren<TrackHeaderControl>();
 
         private IEnumerable<EventCueControl> GetSelectedCues()
         {
@@ -260,7 +254,7 @@ namespace LaunchPad2.Controls
                             {
                                 if (cue.Key.CanResize)
                                 {
-                                    cue.Key.SetValue(CueControl.SampleLengthProperty, (int) cue.Value);
+                                    cue.Key.SetValue(CueControlBase.SampleLengthProperty, (int) cue.Value);
                                 }
                             }
                         }
@@ -269,7 +263,7 @@ namespace LaunchPad2.Controls
                         if (updatedCuePositions != null)
                         {
                             foreach (var updatedCuePosition in updatedCuePositions)
-                                updatedCuePosition.Key.SetValue(CueControl.SampleProperty,
+                                updatedCuePosition.Key.SetValue(CueControlBase.SampleProperty,
                                     (uint) updatedCuePosition.Value);
                         }
                         break;
@@ -280,7 +274,7 @@ namespace LaunchPad2.Controls
                             {
                                 if (cue.Key.CanResize)
                                 {
-                                    cue.Key.SetValue(CueControl.SampleLengthProperty, (int) cue.Value);
+                                    cue.Key.SetValue(CueControlBase.SampleLengthProperty, (int) cue.Value);
                                 }
                             }
                         }
@@ -290,7 +284,7 @@ namespace LaunchPad2.Controls
                             {
                                 if (cue.Key.CanResize)
                                 {
-                                    cue.Key.SetValue(CueControl.SampleProperty,
+                                    cue.Key.SetValue(CueControlBase.SampleProperty,
                                         (uint) cue.Value);
                                 }
                             }
@@ -464,16 +458,24 @@ namespace LaunchPad2.Controls
 
         private void SelectionCanvasCueSelected(object sender, RoutedEventArgs e)
         {
+            // whatever we're doing, we're dealing with cues now so clear any track selections
             foreach (TrackHeaderControl track in Tracks)
                 track.IsSelected = false;
 
             var selectedCue = (EventCueControl) e.OriginalSource;
 
-            if (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl))
-                ClearCueSelection();
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                selectedCue.IsSelected = !selectedCue.IsSelected;
+            }
+            else
+            {
+                foreach (EventCueControl eventCue in Cues)
+                    eventCue.IsSelected = ReferenceEquals(eventCue, selectedCue);
 
-            selectedCue.IsSelected = true;
-            SelectedCue = selectedCue;
+                SelectedCue = selectedCue;
+            }
+
             SetCueSelection();
         }
 
@@ -486,10 +488,16 @@ namespace LaunchPad2.Controls
 
             var selectedTrack = (TrackHeaderControl) e.OriginalSource;
 
-            if (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl))
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                selectedTrack.IsSelected = !selectedTrack.IsSelected;
+            }
+            else
+            {
                 ClearTrackSelection();
+                selectedTrack.IsSelected = true;
+            }
 
-            selectedTrack.IsSelected = true;
             SelectedTracks = GetSelectedTracks().Select(track => track.DataContext).ToList();
             SelectedItems = SelectedTracks;
 
@@ -498,8 +506,8 @@ namespace LaunchPad2.Controls
 
         private void SelectionCanvasKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Delete && DeleteCommand != null)
-                DeleteCommand.Execute(null);
+            if (e.Key == Key.Delete)
+                DeleteCommand?.Execute(null);
 
             if (e.Key == Key.Space)
                 AddCueCommand.Execute(null);
@@ -516,14 +524,7 @@ namespace LaunchPad2.Controls
             SelectedItem = SelectedItems.Count == 1 ? SelectedItems[0] : null;
             SelectedTracks = null;
         }
-
-        private void ClearCueSelection()
-        {
-            foreach (EventCueControl eventCue in Cues)
-                eventCue.IsSelected = false;
-            SelectedCue = null;
-        }
-
+        
         private void ClearTrackSelection()
         {
             foreach (TrackHeaderControl track in Tracks)
