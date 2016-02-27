@@ -458,9 +458,8 @@ namespace LaunchPad2.ViewModels
                     await NetworkController.Arm(new NodeAddress(node.Address));
                     node.IsArmed = true;
                 }
-                catch(AtCommandException e)
+                catch(Exception)
                 {
-
                 }
             }
         }
@@ -474,7 +473,7 @@ namespace LaunchPad2.ViewModels
                     await NetworkController.Disarm(new NodeAddress(node.Address));
                     node.IsArmed = false;
                 }
-                catch (AtCommandException)
+                catch (Exception)
                 {
                 }
             }
