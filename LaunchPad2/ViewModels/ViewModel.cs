@@ -370,7 +370,7 @@ namespace LaunchPad2.ViewModels
         public async void SetStatus(string status)
         {
             Status = status;
-            await Task.Delay(TimeSpan.FromSeconds(60));
+            await Task.Delay(TimeSpan.FromSeconds(3));
             Status = "Ready";
         }
 
@@ -411,29 +411,28 @@ namespace LaunchPad2.ViewModels
 
         private async void StartShow()
         {
-            IsShowRunning = true;
-
             if (!await NetworkController.Initialize())
             {
                 MessageBox.Show("No network controller found.");
-                IsShowRunning = false;
+                return;
+            }
+
+            if(!IsNetworkFullyArmed)
+            {
+                MessageBox.Show("The network must be fully armed to proceed");
+                SetStatus("Failed to Arm Network");
                 return;
             }
 
             SetStatus("Starting Show");
+
+            IsShowRunning = true;
 
             _countdownCancellationTokenSource = new CancellationTokenSource();
 
             AudioTrack.Position = TimeSpan.Zero;
             CountdownTime = CountdownLength;
 
-            if(!IsNetworkFullyArmed)
-            {
-                MessageBox.Show("The network must be fully armed to proceed");
-                SetStatus("Failed to Arm Network");
-                IsShowRunning = false;
-                return;
-            }
 
             var start = DateTime.Now;
             while (CountdownTime > TimeSpan.Zero && !_countdownCancellationTokenSource.IsCancellationRequested)
