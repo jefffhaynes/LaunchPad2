@@ -14,6 +14,7 @@ namespace LaunchPad2.ViewModels
         private NodeDiscoveryState _nodeDiscoveryState;
         private string _notes;
         private bool _discovering;
+        private bool _isArmed;
 
         public NodeViewModel(string name, LongAddress address,
             SignalStrength? signalStrength = XBee.SignalStrength.Low, 
@@ -91,6 +92,20 @@ namespace LaunchPad2.ViewModels
                 }
             }
         }
+
+        public bool IsArmed
+        {
+            get { return _isArmed; }
+            set
+            {
+                if(_isArmed != value)
+                {
+                    _isArmed = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
 
         public SignalStrength? SignalStrength
         {

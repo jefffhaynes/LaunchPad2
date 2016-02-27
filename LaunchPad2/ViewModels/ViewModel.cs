@@ -13,6 +13,7 @@ using FMOD;
 using LaunchPad2.Models;
 using NodeControl;
 using XBee;
+using XBee.Frames;
 
 namespace LaunchPad2.ViewModels
 {
@@ -89,6 +90,9 @@ namespace LaunchPad2.ViewModels
 
             DiscoverNetworkCommand = new RelayCommand(async () => await DiscoverNetwork());
             NetworkDiscoveryResetCommand = new RelayCommand(ResetNetworkDiscovery);
+            DeleteNodeCommand = new RelayCommand(DeleteNode);
+            ArmNetworkCommand = new RelayCommand(async () => await Arm());
+            DisarmNetworkCommand = new RelayCommand(async () => await Disarm());
 
             Tracks = new ObservableCollection<TrackViewModel>();
             Devices = new ObservableCollection<DeviceViewModel>();
@@ -423,16 +427,9 @@ namespace LaunchPad2.ViewModels
             AudioTrack.Position = TimeSpan.Zero;
             CountdownTime = CountdownLength;
 
-            try
+            if(!IsNetworkFullyArmed)
             {
-                SetStatus("Arming Network");
-                await Arm();
-                SetStatus("Network Armed");
-            }
-            catch (Exception e)
-            {
-                var message = $"Failed to arm network. {e.Message}";
-                MessageBox.Show(message);
+                MessageBox.Show("The network must be fully armed to proceed");
                 SetStatus("Failed to Arm Network");
                 IsShowRunning = false;
                 return;
@@ -451,16 +448,37 @@ namespace LaunchPad2.ViewModels
             SetStatus("Show Running");
         }
 
-        private async Task Arm()
+        private bool IsNetworkFullyArmed => Nodes.All(node => node.IsArmed);
+
+        public async Task Arm()
         {
             foreach (var node in Nodes)
-                await NetworkController.Arm(new NodeAddress(node.Address));
+            {
+                try
+                {
+                    await NetworkController.Arm(new NodeAddress(node.Address));
+                    node.IsArmed = true;
+                }
+                catch(AtCommandException e)
+                {
+
+                }
+            }
         }
 
-        private async Task Disarm()
+        public async Task Disarm()
         {
             foreach (var node in Nodes)
-                await NetworkController.Disarm(new NodeAddress(node.Address));
+            {
+                try
+                {
+                    await NetworkController.Disarm(new NodeAddress(node.Address));
+                    node.IsArmed = false;
+                }
+                catch (AtCommandException)
+                {
+                }
+            }
         }
 
         private IEnumerable<TrackViewModel> GetSelectedTracks()
@@ -1127,6 +1145,16 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        private void DeleteNode()
+        {
+            var node = SelectedItem as NodeViewModel;
+
+            if(node != null)
+            {
+                Nodes.Remove(node);
+            }
+        }
+
         private void NetworkControllerOnDiscoveringNetwork(object sender, EventArgs eventArgs)
         {
             NetworkDiscoveryState = NetworkDiscoveryState.Discovering;
@@ -1251,6 +1279,12 @@ namespace LaunchPad2.ViewModels
         public ICommand DiscoverNetworkCommand { get; private set; }
 
         public ICommand NetworkDiscoveryResetCommand { get; private set; }
+
+        public ICommand DeleteNodeCommand { get; private set; }
+
+        public ICommand ArmNetworkCommand { get; private set; }
+
+        public ICommand DisarmNetworkCommand { get; private set; }
 
         public ICommand GroupCommand { get; private set; }
 
