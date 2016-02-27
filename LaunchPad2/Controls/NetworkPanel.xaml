@@ -64,7 +64,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button Command="{Binding DiscoverNetworkCommand}" ToolTip="Discover Network" Background="Transparent" BorderThickness="0" Margin="3,0,0,0" Template="{DynamicResource ButtonTemplate}">
+            <Button Command="{Binding DiscoverNetworkCommand}" ToolTip="Discover Network" Background="Transparent" BorderThickness="0" Margin="3,0,3,3" Template="{DynamicResource ButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Style.Triggers>
@@ -79,7 +79,7 @@
                         <Style TargetType="ContentPresenter">
                             <Setter Property="Content">
                                 <Setter.Value>
-                                    <Viewbox Stretch="Uniform" Width="24" Height="24">
+                                    <Viewbox Stretch="Uniform" Width="18" Height="16">
                                         <Path Data="{DynamicResource DiscoverNetworkGeometryKey}">
                                             <Path.Style>
                                                 <Style TargetType="Path">
@@ -112,7 +112,7 @@
                 </ContentPresenter>
             </Button>
 
-            <Button Grid.Column="1" Command="{Binding NetworkDiscoveryResetCommand}" ToolTip="Reset Network Discovery" Background="Transparent" BorderThickness="0" Template="{DynamicResource ButtonTemplate}">
+            <Button Grid.Column="1" Command="{Binding NetworkDiscoveryResetCommand}" ToolTip="Reset Network Discovery" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Style.Triggers>
@@ -122,8 +122,8 @@
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
-                <Viewbox Stretch="Uniform" Width="24" Height="24">
-                    <Path Margin="6" Data="{DynamicResource NetworkResetGeometryKey}">
+                <Viewbox Stretch="Uniform" Width="16" Height="16">
+                    <Path Data="{DynamicResource NetworkResetGeometryKey}">
                         <Path.Style>
                             <Style TargetType="Path">
                                 <Setter Property="Fill" Value="{DynamicResource MenuBlueBrushKey}"/>
@@ -138,7 +138,7 @@
                 </Viewbox>
             </Button>
 
-            <Button Grid.Column="2" Command="{Binding NetworkDiscoveryResetCommand}" ToolTip="Delete Node" Background="Transparent" BorderThickness="0" Template="{DynamicResource ButtonTemplate}">
+            <Button Grid.Column="2" Command="{Binding NetworkDiscoveryResetCommand}" ToolTip="Delete Node" Background="Transparent" Margin="0,0,3,3" BorderThickness="0" Template="{DynamicResource ButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Style.Triggers>
@@ -148,8 +148,8 @@
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
-                <Viewbox Stretch="Uniform" Width="24" Height="24">
-                    <Path Margin="6" Data="{DynamicResource DeleteGeometryKey}">
+                <Viewbox Stretch="Uniform" Width="16" Height="16">
+                    <Path Data="{DynamicResource DeleteGeometryKey}">
                         <Path.Style>
                             <Style TargetType="Path">
                                 <Setter Property="Fill" Value="{DynamicResource MenuRedBrushKey}"/>
@@ -167,15 +167,15 @@
 
             <controls:MenuSeparator Grid.Column="3"/>
 
-            <Button Grid.Column="4" Command="{Binding ArmNetworkCommand}" ToolTip="Arm Network" Background="Transparent" BorderThickness="0" Template="{DynamicResource ButtonTemplate}">
-                <Viewbox Stretch="Uniform" Width="24" Height="24">
-                    <Path Margin="4" Fill="{StaticResource MenuRedBrushKey}"  Data="{StaticResource ArmNetworkGeometryKey}"/>
+            <Button Grid.Column="4" Command="{Binding ArmNetworkCommand}" ToolTip="Arm Network" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
+                <Viewbox Stretch="Uniform" Width="16" Height="16">
+                    <Path Fill="{StaticResource MenuRedBrushKey}"  Data="{StaticResource ArmNetworkGeometryKey}"/>
                 </Viewbox>
             </Button>
 
-            <Button Grid.Column="5" Command="{Binding DisarmNetworkCommand}" ToolTip="Disarm Network" Background="Transparent" BorderThickness="0" Template="{DynamicResource ButtonTemplate}">
-                <Viewbox Stretch="Uniform" Width="24" Height="24">
-                    <Path Margin="4" Fill="{StaticResource MenuGreenBrushKey}"  Data="{StaticResource ArmNetworkGeometryKey}"/>
+            <Button Grid.Column="5" Command="{Binding DisarmNetworkCommand}" ToolTip="Disarm Network" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
+                <Viewbox Stretch="Uniform" Width="16" Height="16">
+                    <Path Fill="{StaticResource MenuGreenBrushKey}"  Data="{StaticResource ArmNetworkGeometryKey}"/>
                 </Viewbox>
             </Button>
             
