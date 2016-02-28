@@ -89,7 +89,7 @@ namespace LaunchPad2.ViewModels
                 // 32 is for track header (yeah, total kludge)
 
             DiscoverNetworkCommand = new RelayCommand(async () => await DiscoverNetwork());
-            NetworkDiscoveryResetCommand = new RelayCommand(ResetNetworkDiscovery);
+            NetworkDiscoveryResetCommand = new RelayCommand(async () => await ResetNetworkDiscovery());
             DeleteNodeCommand = new RelayCommand(DeleteNode);
             ArmNetworkCommand = new RelayCommand(async () => await Arm());
             DisarmNetworkCommand = new RelayCommand(async () => await Disarm());
@@ -1133,11 +1133,12 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        public void ResetNetworkDiscovery()
+        public async Task ResetNetworkDiscovery()
         {
             if (MessageBox.Show("Reset network discovery?", "LaunchPad", MessageBoxButton.OKCancel) ==
                 MessageBoxResult.OK)
             {
+                await Disarm();
                 foreach (var node in Nodes)
                     node.DiscoveryState = NodeDiscoveryState.None;
             }

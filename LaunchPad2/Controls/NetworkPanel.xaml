@@ -14,9 +14,9 @@
                 <componentModel:SortDescription PropertyName="Name"/>
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
-        <Canvas x:Key="RadarCanvasKey" Height="24" Width="24">
-            <Ellipse Width="24" Height="24" StrokeThickness="1" Fill="#3F329832"/>
-            <Line X1="12" X2="12" Y1="12" Y2="0" StrokeThickness="1" Stroke="{DynamicResource MenuBrightGreenBrushKey}">
+        <Canvas x:Key="RadarCanvasKey" Height="16" Width="16">
+            <Ellipse Width="16" Height="16" StrokeThickness="1" Fill="#3F329832"/>
+            <Line X1="8" X2="8" Y1="8" Y2="0" StrokeThickness="1" Stroke="{DynamicResource MenuBrightGreenBrushKey}">
                 <Line.Style>
                     <Style TargetType="{x:Type Line}">
                         <Style.Triggers>
@@ -40,7 +40,7 @@
                     </Style>
                 </Line.Style>
                 <Line.RenderTransform>
-                    <RotateTransform CenterX="12" CenterY="12"/>
+                    <RotateTransform CenterX="8" CenterY="8"/>
                 </Line.RenderTransform>
             </Line>
         </Canvas>
@@ -57,6 +57,7 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -137,8 +138,10 @@
                     </Path>
                 </Viewbox>
             </Button>
+            
+            <controls:MenuSeparator Grid.Column="2"/>
 
-            <Button Grid.Column="2" Command="{Binding DeleteNodeCommand}" ToolTip="Delete Node" Background="Transparent" Margin="0,0,3,3" BorderThickness="0" Template="{DynamicResource ButtonTemplate}">
+            <Button Grid.Column="3" Command="{Binding DeleteNodeCommand}" ToolTip="Delete Node" Background="Transparent" Margin="0,0,0,3" BorderThickness="0" Template="{DynamicResource ButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Style.Triggers>
@@ -149,13 +152,13 @@
                     </Style>
                 </Button.Style>
                 <Viewbox Stretch="Uniform" Width="16" Height="16">
-                    <Path Data="{DynamicResource DeleteGeometryKey}">
+                    <Path Data="{StaticResource DeleteGeometryKey}">
                         <Path.Style>
                             <Style TargetType="Path">
-                                <Setter Property="Fill" Value="{DynamicResource MenuRedBrushKey}"/>
+                                <Setter Property="Fill" Value="{StaticResource MenuRedBrushKey}"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsEnabled" Value="False">
-                                        <Setter Property="Fill" Value="{DynamicResource MenuDisabledBrushKey}"/>
+                                        <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
@@ -164,21 +167,20 @@
                 </Viewbox>
             </Button>
 
+            <controls:MenuSeparator Grid.Column="4"/>
 
-            <controls:MenuSeparator Grid.Column="3"/>
-
-            <Button Grid.Column="4" Command="{Binding ArmNetworkCommand}" ToolTip="Arm Network" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
+            <Button Grid.Column="5" Command="{Binding ArmNetworkCommand}" ToolTip="Arm Network" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
                 <Viewbox Stretch="Uniform" Width="16" Height="16">
                     <Path Fill="{StaticResource MenuRedBrushKey}"  Data="{StaticResource ArmNetworkGeometryKey}"/>
                 </Viewbox>
             </Button>
 
-            <Button Grid.Column="5" Command="{Binding DisarmNetworkCommand}" ToolTip="Disarm Network" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
+            <Button Grid.Column="6" Command="{Binding DisarmNetworkCommand}" ToolTip="Disarm Network" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
                 <Viewbox Stretch="Uniform" Width="16" Height="16">
                     <Path Fill="{StaticResource MenuGreenBrushKey}"  Data="{StaticResource ArmNetworkGeometryKey}"/>
                 </Viewbox>
             </Button>
-            
+
         </Grid>
 
         <Border Grid.Row="2" BorderBrush="{DynamicResource PanelHorizontalLineBrushKey}" BorderThickness="0,1,0,0"/>
@@ -206,21 +208,39 @@
                                         <DataTrigger Binding="{Binding SignalStrength}" Value="High">
                                             <Setter Property="Fill" Value="{DynamicResource MenuBrightGreenBrushKey}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding Discovering}" Value="False">
+                                        <DataTrigger Binding="{Binding DiscoveryState}" Value="None">
                                             <Setter Property="Fill" Value="{DynamicResource MenuGrayBrushKey}"/>
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding Discovering}" Value="True">
+                                        <!--<DataTrigger Binding="{Binding Discovering}" Value="True">
                                             <Setter Property="Fill">
                                                 <Setter.Value>
                                                     <VisualBrush Stretch="None" Visual="{DynamicResource RadarCanvasKey}" />
                                                 </Setter.Value>
                                             </Setter>
-                                        </DataTrigger>
+                                        </DataTrigger>-->
                                     </Style.Triggers>
                                 </Style>
                             </Rectangle.Style>
                         </Rectangle>
-                        <TextBlock Grid.Column="1" Margin="6" VerticalAlignment="Center" Foreground="{DynamicResource MenuTextBrushKey}" Text="{Binding Name}"/>
+                        <Grid Grid.Column="1" VerticalAlignment="Center">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Margin="6,0" Foreground="{StaticResource MenuTextBrushKey}" Text="{Binding Name}"/>
+                            <TextBlock Grid.Row="1" Margin="6,0" Foreground="{StaticResource MenuRedBrushKey}" Text="ARMED" >
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsArmed}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
