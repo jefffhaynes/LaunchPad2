@@ -297,7 +297,7 @@
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="Command" Value="{Binding StartShowCommand}"/>
-                        <Setter Property="ToolTip" Value="Arm and Start Show"/>
+                        <Setter Property="ToolTip" Value="Start Show"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsShowRunning}" Value="True">
                                 <Setter Property="Command" Value="{Binding AbortShowCommand}"/>

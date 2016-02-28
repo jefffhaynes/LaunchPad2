@@ -252,6 +252,7 @@ namespace FMOD
                 if (_energyBandsAvailable != value)
                 {
                     _energyBandsAvailable = value;
+                    OnPropertyChanged("EnergyBandsAvailable");
                     OnPropertyChanged("EnergySubbands");
                 }
             }

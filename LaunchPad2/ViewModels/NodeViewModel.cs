@@ -9,19 +9,21 @@ namespace LaunchPad2.ViewModels
     public class NodeViewModel : ViewModelBase
     {
         private LongAddress _address;
-        private SignalStrength? _signalStrength;
+        private bool _discovering;
+        private bool _isArmed;
+        private bool _isEnabled;
         private string _name;
         private NodeDiscoveryState _nodeDiscoveryState;
         private string _notes;
-        private bool _discovering;
-        private bool _isArmed;
+        private SignalStrength? _signalStrength;
 
         public NodeViewModel(string name, LongAddress address,
-            SignalStrength? signalStrength = XBee.SignalStrength.Low, 
+            SignalStrength? signalStrength = XBee.SignalStrength.Low,
             NodeDiscoveryState discoveryState = NodeDiscoveryState.None)
         {
             Name = name;
             Address = address;
+            IsEnabled = true;
             SignalStrength = signalStrength;
             DiscoveryState = discoveryState;
 
@@ -37,7 +39,7 @@ namespace LaunchPad2.ViewModels
                 new PortViewModel(NodeControl.Ports.Port7)
             });
 
-            foreach (PortViewModel port in Ports)
+            foreach (var port in Ports)
                 port.StateChanged += PortOnStateChanged;
         }
 
@@ -49,6 +51,19 @@ namespace LaunchPad2.ViewModels
                 if (_name != value)
                 {
                     _name = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool IsEnabled
+        {
+            get { return _isEnabled; }
+            set
+            {
+                if (_isEnabled != value)
+                {
+                    _isEnabled = value;
                     OnPropertyChanged();
                 }
             }
@@ -98,14 +113,13 @@ namespace LaunchPad2.ViewModels
             get { return _isArmed; }
             set
             {
-                if(_isArmed != value)
+                if (_isArmed != value)
                 {
                     _isArmed = value;
                     OnPropertyChanged();
                 }
             }
         }
-
 
         public SignalStrength? SignalStrength
         {
@@ -150,12 +164,12 @@ namespace LaunchPad2.ViewModels
             if (!IsDirty)
                 return;
 
-            Ports[] portsToActivate = Ports.Where(port => port.ShouldBeActive).Select(port => port.Port).ToArray();
-            Ports portState = !portsToActivate.Any()
+            var portsToActivate = Ports.Where(port => port.ShouldBeActive).Select(port => port.Port).ToArray();
+            var portState = !portsToActivate.Any()
                 ? NodeControl.Ports.None
                 : portsToActivate.Aggregate((ports, port) => ports | port);
 
-            foreach (PortViewModel port in Ports)
+            foreach (var port in Ports)
                 port.IsKnownActive = port.ShouldBeActive;
 
             try

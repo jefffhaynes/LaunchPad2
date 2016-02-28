@@ -132,6 +132,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
@@ -140,9 +141,11 @@
                 <TextBox Grid.Row="0" Grid.Column="1" Margin="6" Text="{Binding Name}" 
                          Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}"/>
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Ports" Margin="6,0,6,6" 
+                <CheckBox Grid.Row="1" Grid.Column="1" Content="Enabled" Margin="6,0,6,6" IsChecked="{Binding IsEnabled}" Foreground="{DynamicResource MenuTextBrushKey}"/>
+                
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Ports" Margin="6,0,6,6" 
                            Foreground="{DynamicResource MenuTextBrushKey}"/>
-                <ItemsControl Grid.Row="1" Grid.Column="1" Margin="6,0,6,6" ItemsSource="{Binding Ports}">
+                <ItemsControl Grid.Row="2" Grid.Column="1" Margin="6,0,6,6" ItemsSource="{Binding Ports}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="viewModels:PortViewModel">
 
@@ -175,9 +178,9 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Notes" Margin="6,0,6,6" 
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Notes" Margin="6,0,6,6" 
                            Foreground="{DynamicResource MenuTextBrushKey}"/>
-                <TextBox Grid.Row="2" Grid.Column="1" Margin="6,0,6,6" Text="{Binding Notes}" AcceptsReturn="True"
+                <TextBox Grid.Row="3" Grid.Column="1" Margin="6,0,6,6" Text="{Binding Notes}" AcceptsReturn="True"
                          Foreground="{DynamicResource MenuTextBrushKey}" BorderBrush="{DynamicResource PanelControlBorderBrushKey}" Background="{DynamicResource PanelControlBackgroundBrushKey}" TextWrapping="Wrap"/>
 
             </Grid>

@@ -259,6 +259,7 @@ namespace LaunchPad2.ViewModels
         public ObservableCollection<TrackViewModel> Tracks { get; set; }
         public ObservableCollection<DeviceViewModel> Devices { get; set; }
         public ObservableCollection<NodeViewModel> Nodes { get; set; }
+        public IEnumerable<NodeViewModel> EnabledNodes => Nodes.Where(node => node.IsEnabled);
         public ObservableCollection<EventCueGroupViewModel> Groups { get; set; }
 
         public IEnumerable<EventCueViewModel> AllCues
@@ -288,6 +289,8 @@ namespace LaunchPad2.ViewModels
             {
                 if (_selectedItem != value)
                 {
+                    _selectedItem = null;
+                    OnPropertyChanged();
                     _selectedItem = value;
                     OnPropertyChanged();
                 }
@@ -447,11 +450,11 @@ namespace LaunchPad2.ViewModels
             SetStatus("Show Running");
         }
 
-        private bool IsNetworkFullyArmed => Nodes.All(node => node.IsArmed);
+        private bool IsNetworkFullyArmed => EnabledNodes.All(node => node.IsArmed);
 
         public async Task Arm()
         {
-            foreach (var node in Nodes)
+            foreach (var node in EnabledNodes)
             {
                 try
                 {
@@ -466,7 +469,7 @@ namespace LaunchPad2.ViewModels
 
         public async Task Disarm()
         {
-            foreach (var node in Nodes)
+            foreach (var node in EnabledNodes)
             {
                 try
                 {
@@ -531,7 +534,7 @@ namespace LaunchPad2.ViewModels
                 port.Key.ShouldBeActive = port.Value;
             }
 
-            foreach (var node in Nodes)
+            foreach (var node in EnabledNodes)
             {
                 node.SyncPortStates();
             }
@@ -1148,10 +1151,26 @@ namespace LaunchPad2.ViewModels
         {
             var node = SelectedItem as NodeViewModel;
 
-            if(node != null)
+            if (node == null)
+                return;
+            
+            var undoBatchMemento = new UndoBatchMemento();
+
+            var index = Nodes.IndexOf(node);
+            var doAction = new Action(() => Nodes.RemoveAt(index));
+            var undoAction = new Action(() => Nodes.Insert(index, node));
+
+            undoBatchMemento.Add(doAction, undoAction);
+
+            var affectedTracks = Tracks.Where(track => track.Node == node).ToList();
+
+            foreach (var affectedTrack in affectedTracks)
             {
-                Nodes.Remove(node);
+                var track = affectedTrack;
+                undoBatchMemento.Add(() => track.Node = null, () => track.Node = node);
             }
+
+            UndoManager.DoAndAdd(undoBatchMemento);
         }
 
         private void NetworkControllerOnDiscoveringNetwork(object sender, EventArgs eventArgs)

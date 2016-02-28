@@ -14,12 +14,17 @@ namespace LaunchPad2.Models
         {
             Name = viewModel.Name;
             Address = viewModel.Address.Value;
+            IsEnabled = viewModel.IsEnabled;
             Notes = viewModel.Notes;
         }
 
         public NodeViewModel GetViewModel()
         {
-            return new NodeViewModel(Name, new LongAddress(Address)) {Notes = Notes};
+            return new NodeViewModel(Name, new LongAddress(Address))
+            {
+                IsEnabled = IsEnabled,
+                Notes = Notes
+            };
         }
 
         [XmlAttribute]
@@ -27,6 +32,9 @@ namespace LaunchPad2.Models
 
         [XmlAttribute]
         public ulong Address { get; set; }
+
+        [XmlAttribute]
+        public bool IsEnabled { get; set; }
 
         [XmlAttribute]
         public string Notes { get; set; }

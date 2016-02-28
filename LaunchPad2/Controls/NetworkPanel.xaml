@@ -177,7 +177,7 @@
 
             <Button Grid.Column="6" Command="{Binding DisarmNetworkCommand}" ToolTip="Disarm Network" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
                 <Viewbox Stretch="Uniform" Width="16" Height="16">
-                    <Path Fill="{StaticResource MenuGreenBrushKey}"  Data="{StaticResource ArmNetworkGeometryKey}"/>
+                    <Path Fill="{StaticResource MenuGreenBrushKey}"  Data="{DynamicResource HandGeometryKey}"/>
                 </Viewbox>
             </Button>
 
@@ -200,16 +200,19 @@
                                 <Style TargetType="Rectangle">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding SignalStrength}" Value="Low">
-                                            <Setter Property="Fill" Value="{DynamicResource MenuRedBrushKey}"/>
+                                            <Setter Property="Fill" Value="{StaticResource MenuRedBrushKey}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding SignalStrength}" Value="Medium">
-                                            <Setter Property="Fill" Value="{DynamicResource MenuYellowBrushKey}"/>
+                                            <Setter Property="Fill" Value="{StaticResource MenuYellowBrushKey}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding SignalStrength}" Value="High">
-                                            <Setter Property="Fill" Value="{DynamicResource MenuBrightGreenBrushKey}"/>
+                                            <Setter Property="Fill" Value="{StaticResource MenuBrightGreenBrushKey}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding DiscoveryState}" Value="None">
-                                            <Setter Property="Fill" Value="{DynamicResource MenuGrayBrushKey}"/>
+                                            <Setter Property="Fill" Value="{StaticResource MenuGrayBrushKey}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                                            <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
                                         </DataTrigger>
                                         <!--<DataTrigger Binding="{Binding Discovering}" Value="True">
                                             <Setter Property="Fill">
