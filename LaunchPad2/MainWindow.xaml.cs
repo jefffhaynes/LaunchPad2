@@ -31,8 +31,7 @@ namespace LaunchPad2
             {
                 _viewModel.Dispose();
 
-                if(_temporaryAudioFile != null)
-                    _temporaryAudioFile.Dispose();
+                _temporaryAudioFile?.Dispose();
 
                 SerialPortService.CleanUp();
             };

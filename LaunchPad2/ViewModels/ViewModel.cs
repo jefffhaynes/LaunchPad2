@@ -13,7 +13,6 @@ using FMOD;
 using LaunchPad2.Models;
 using NodeControl;
 using XBee;
-using XBee.Frames;
 
 namespace LaunchPad2.ViewModels
 {
@@ -32,7 +31,9 @@ namespace LaunchPad2.ViewModels
         private TimeSpan _countdownTime;
         private List<CueMoveInfo> _cueUndoStates;
         private string _file;
+        private bool _isNetworkArming;
         private bool _isShowRunning;
+        private bool _isWorking;
         private NetworkDiscoveryState _networkDiscoveryState;
         private bool _repeat;
         private object _selectedItem;
@@ -40,7 +41,6 @@ namespace LaunchPad2.ViewModels
         private TimeSpan _selectedRegionStart;
         private string _status;
         private double _zoom;
-        private bool _isWorking;
 
         public ViewModel()
         {
@@ -86,7 +86,7 @@ namespace LaunchPad2.ViewModels
             UngroupCommand = new RelayCommand(UngroupSelected);
 
             ZoomExtentsCommand = new RelayCommand(width => ZoomExtents((double) width - 32));
-                // 32 is for track header (yeah, total kludge)
+            // 32 is for track header (yeah, total kludge)
 
             DiscoverNetworkCommand = new RelayCommand(async () => await DiscoverNetwork());
             NetworkDiscoveryResetCommand = new RelayCommand(async () => await ResetNetworkDiscovery());
@@ -368,6 +368,28 @@ namespace LaunchPad2.ViewModels
             }
         }
 
+        public bool IsNetworkArming
+        {
+            get { return _isNetworkArming; }
+            set
+            {
+                if (_isNetworkArming != value)
+                {
+                    _isNetworkArming = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private bool IsNetworkFullyArmed => EnabledNodes.All(node => node.IsArmed);
+
+        public bool IsNetworkDisarmed => EnabledNodes.All(node => !node.IsArmed);
+
+        public void Dispose()
+        {
+            AudioTrack?.Dispose();
+        }
+
         public event EventHandler Stopped;
 
         public async void SetStatus(string status)
@@ -379,6 +401,12 @@ namespace LaunchPad2.ViewModels
 
         private async void Play()
         {
+            if (!IsNetworkDisarmed)
+            {
+                MessageBox.Show("Please disarm the system before playing.");
+                return;
+            }
+
             if (AudioTrack.SamplePosition == 0)
                 await Stop();
 
@@ -395,15 +423,7 @@ namespace LaunchPad2.ViewModels
 
             if (IsShowRunning)
             {
-                try
-                {
-                    await Disarm();
-                }
-                catch (Exception)
-                {
-                    MessageBox.Show("Warning: failed to disarm show.  Firing nodes may still be armed.");
-                }
-
+                await Disarm();
                 IsShowRunning = false;
                 SetStatus("Show Aborted");
             }
@@ -420,7 +440,7 @@ namespace LaunchPad2.ViewModels
                 return;
             }
 
-            if(!IsNetworkFullyArmed)
+            if (!IsNetworkFullyArmed)
             {
                 MessageBox.Show("The network must be fully armed to proceed");
                 SetStatus("Failed to Arm Network");
@@ -450,35 +470,55 @@ namespace LaunchPad2.ViewModels
             SetStatus("Show Running");
         }
 
-        private bool IsNetworkFullyArmed => EnabledNodes.All(node => node.IsArmed);
-
         public async Task Arm()
         {
-            foreach (var node in EnabledNodes)
+            IsNetworkArming = true;
+
+            try
             {
-                try
-                {
-                    await NetworkController.Arm(new NodeAddress(node.Address));
-                    node.IsArmed = true;
-                }
-                catch(Exception)
-                {
-                }
+                await Task.WhenAll(EnabledNodes.Select(Arm));
+            }
+            finally
+            {
+                IsNetworkArming = false;
+            }
+        }
+
+        private static async Task Arm(NodeViewModel node)
+        {
+            try
+            {
+                await NetworkController.Arm(new NodeAddress(node.Address));
+                node.IsArmed = true;
+            }
+            catch (TimeoutException)
+            {
             }
         }
 
         public async Task Disarm()
         {
-            foreach (var node in EnabledNodes)
+            IsNetworkArming = true;
+
+            try
             {
-                try
-                {
-                    await NetworkController.Disarm(new NodeAddress(node.Address));
-                    node.IsArmed = false;
-                }
-                catch (Exception)
-                {
-                }
+                await Task.WhenAll(EnabledNodes.Select(Disarm));
+            }
+            finally
+            {
+                IsNetworkArming = false;
+            }
+        }
+
+        private static async Task Disarm(NodeViewModel node)
+        {
+            try
+            {
+                await NetworkController.Disarm(new NodeAddress(node.Address));
+                node.IsArmed = false;
+            }
+            catch (TimeoutException)
+            {
             }
         }
 
@@ -496,6 +536,8 @@ namespace LaunchPad2.ViewModels
 
         private void AudioTrackOnPositionChanged(object sender, EventArgs eventArgs)
         {
+            // This is the business end of the whole thing.
+
             var position = _audioTrack.Position;
 
             // Make a copy so we don't step on anything else going on
@@ -1153,7 +1195,7 @@ namespace LaunchPad2.ViewModels
 
             if (node == null)
                 return;
-            
+
             var undoBatchMemento = new UndoBatchMemento();
 
             var index = Nodes.IndexOf(node);
@@ -1311,10 +1353,5 @@ namespace LaunchPad2.ViewModels
         public ICommand ZoomExtentsCommand { get; private set; }
 
         #endregion
-
-        public void Dispose()
-        {
-            AudioTrack?.Dispose();
-        }
     }
 }

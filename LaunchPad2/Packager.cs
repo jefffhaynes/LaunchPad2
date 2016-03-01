@@ -28,7 +28,7 @@ namespace LaunchPad2
                         package.CreatePart(partUriDocument,
                             MediaTypeNames.Text.Xml);
 
-                    Serializer.Serialize(packagePartDocument.GetStream(), model);
+                    Serializer.Serialize(packagePartDocument.GetStream(FileMode.Create, FileAccess.Write), model);
 
                     if (audioFile != null)
                     {
@@ -61,7 +61,7 @@ namespace LaunchPad2
             using (var package = Package.Open(filename, FileMode.Open))
             {
                 PackagePart packagePartDocument = package.GetPart(partUriDocument);
-                Serializer.Serialize(packagePartDocument.GetStream(), model);
+                Serializer.Serialize(packagePartDocument.GetStream(FileMode.Create, FileAccess.Write), model);
             }
         }
 

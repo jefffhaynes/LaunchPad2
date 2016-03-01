@@ -170,14 +170,54 @@
             <controls:MenuSeparator Grid.Column="4"/>
 
             <Button Grid.Column="5" Command="{Binding ArmNetworkCommand}" ToolTip="Arm Network" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsNetworkArming}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
                 <Viewbox Stretch="Uniform" Width="16" Height="16">
-                    <Path Fill="{StaticResource MenuRedBrushKey}"  Data="{StaticResource ArmNetworkGeometryKey}"/>
+                    <Path Data="{StaticResource ArmNetworkGeometryKey}">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Fill" Value="{StaticResource MenuRedBrushKey}"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
                 </Viewbox>
             </Button>
 
             <Button Grid.Column="6" Command="{Binding DisarmNetworkCommand}" ToolTip="Disarm Network" Background="Transparent" BorderThickness="0" Margin="0,0,3,3" Template="{DynamicResource ButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsNetworkArming}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
                 <Viewbox Stretch="Uniform" Width="16" Height="16">
-                    <Path Fill="{StaticResource MenuGreenBrushKey}"  Data="{DynamicResource HandGeometryKey}"/>
+                    <Path Data="{DynamicResource HandGeometryKey}">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Fill" Value="{StaticResource MenuGreenBrushKey}"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Fill" Value="{StaticResource MenuDisabledBrushKey}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
                 </Viewbox>
             </Button>
 
