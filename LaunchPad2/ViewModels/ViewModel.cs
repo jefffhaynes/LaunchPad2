@@ -107,6 +107,11 @@ namespace LaunchPad2.ViewModels
             Zoom = DefaultZoom;
 
             CompositionTarget.Rendering += CompositionTargetOnRendering;
+
+
+
+
+            Nodes.Add(new NodeViewModel("test", LongAddress.Broadcast));
         }
 
         public string Status
@@ -434,10 +439,13 @@ namespace LaunchPad2.ViewModels
 
         private async void StartShow()
         {
-            if (!await NetworkController.Initialize())
+            try
+            {
+                await NetworkController.Initialize();
+            }
+            catch(InvalidOperationException)
             {
                 MessageBox.Show("No network controller found.");
-                return;
             }
 
             if (!IsNetworkFullyArmed)
@@ -454,9 +462,10 @@ namespace LaunchPad2.ViewModels
             _countdownCancellationTokenSource = new CancellationTokenSource();
 
             AudioTrack.Position = TimeSpan.Zero;
+
+
             CountdownTime = CountdownLength;
-
-
+            
             var start = DateTime.Now;
             while (CountdownTime > TimeSpan.Zero && !_countdownCancellationTokenSource.IsCancellationRequested)
             {
@@ -491,6 +500,9 @@ namespace LaunchPad2.ViewModels
                 await NetworkController.Arm(new NodeAddress(node.Address));
                 node.IsArmed = true;
             }
+            catch(InvalidOperationException)
+            {
+            }
             catch (TimeoutException)
             {
             }
@@ -516,6 +528,9 @@ namespace LaunchPad2.ViewModels
             {
                 await NetworkController.Disarm(new NodeAddress(node.Address));
                 node.IsArmed = false;
+            }
+            catch (InvalidOperationException)
+            {
             }
             catch (TimeoutException)
             {

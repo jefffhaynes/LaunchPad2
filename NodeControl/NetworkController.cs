@@ -33,8 +33,7 @@ namespace NodeControl
             if (InitializingController != null)
                 InitializingController(null, EventArgs.Empty);
 
-            if (!await Initialize())
-                return;
+            await Initialize();
 
             if (DiscoveringNetwork != null)
                 DiscoveringNetwork(null, EventArgs.Empty);
@@ -42,28 +41,28 @@ namespace NodeControl
             await _xBee.DiscoverNetwork(TimeSpan.FromSeconds(10));
         }
 
-        public static async Task<bool> Initialize()
+        public static async Task Initialize()
         {
             if (_isInitialized)
-                return true;
+                return;
 
             await InitializeSemaphore.WaitAsync();
 
             try
             {
                 if (_isInitialized)
-                    return true;
+                    return;
 
                 // Don't bother checking if nothing has changed
                 if (!_portChange)
-                    return false;
+                    throw new InvalidOperationException("No controller found.");
 
                 _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
 
                 _portChange = false;
 
                 if (_xBee == null)
-                    return false;
+                    throw new InvalidOperationException("No controller found.");
 
 #if TRACE
                 _xBee.FrameMemberDeserializing += XBeeOnFrameMemberDeserializing;
@@ -77,8 +76,6 @@ namespace NodeControl
             {
                 InitializeSemaphore.Release();
             }
-
-            return true;
         }
 
 #if TRACE
@@ -98,8 +95,7 @@ namespace NodeControl
 
         public static async void SetActivePorts(NodeAddress address, Ports ports)
         {
-            if (!await Initialize())
-                return;
+            await Initialize();
 
             XBeeNode node = await _xBee.GetRemoteAsync(address);
 
@@ -132,18 +128,21 @@ namespace NodeControl
 
         public static async Task Arm(NodeAddress address)
         {
+            await Initialize();
             XBeeNode node = await _xBee.GetRemoteAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalHigh);
         }
 
         public static async Task Disarm(NodeAddress address)
         {
+            await Initialize();
             XBeeNode node = await _xBee.GetRemoteAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalLow);
         }
 
         public static async Task SetNodeName(NodeAddress address, string name)
         {
+            await Initialize();
             XBeeNode node = await _xBee.GetRemoteAsync(address);
             await node.SetNodeIdentifier(name);
             await node.WriteChanges();
