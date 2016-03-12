@@ -107,11 +107,6 @@ namespace LaunchPad2.ViewModels
             Zoom = DefaultZoom;
 
             CompositionTarget.Rendering += CompositionTargetOnRendering;
-
-
-
-
-            Nodes.Add(new NodeViewModel("test", LongAddress.Broadcast));
         }
 
         public string Status
