@@ -95,7 +95,7 @@ namespace NodeControl
         {
             await Initialize();
 
-            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
 
             var gpioPorts = GpioPorts.None;
 
@@ -127,21 +127,21 @@ namespace NodeControl
         public static async Task Arm(NodeAddress address)
         {
             await Initialize();
-            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalHigh);
         }
 
         public static async Task Disarm(NodeAddress address)
         {
             await Initialize();
-            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalLow);
         }
 
         public static async Task SetNodeName(NodeAddress address, string name)
         {
             await Initialize();
-            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetNodeIdentifier(name);
             await node.WriteChanges();
         }
