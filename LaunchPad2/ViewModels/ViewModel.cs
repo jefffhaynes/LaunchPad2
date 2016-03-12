@@ -443,7 +443,9 @@ namespace LaunchPad2.ViewModels
                 MessageBox.Show("No network controller found.");
             }
 
-            if (!IsNetworkFullyArmed)
+            var overrideArm = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+
+            if (!overrideArm && !IsNetworkFullyArmed)
             {
                 MessageBox.Show("The network must be fully armed to proceed");
                 SetStatus("Failed to Arm Network");
