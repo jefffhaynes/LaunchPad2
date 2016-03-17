@@ -182,6 +182,9 @@
                             <DataTrigger Binding="{Binding Nodes.Count}" Value="0">
                                 <Setter Property="IsEnabled" Value="False"/>
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding AudioTrack.IsPaused}" Value="False">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
@@ -206,9 +209,6 @@
                     <Style TargetType="Button">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsNetworkArming}" Value="True">
-                                <Setter Property="IsEnabled" Value="False"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Nodes.Count}" Value="0">
                                 <Setter Property="IsEnabled" Value="False"/>
                             </DataTrigger>
                         </Style.Triggers>

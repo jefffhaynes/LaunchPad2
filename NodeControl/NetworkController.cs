@@ -30,13 +30,11 @@ namespace NodeControl
 
         public static async Task DiscoverNetworkAsync()
         {
-            if (InitializingController != null)
-                InitializingController(null, EventArgs.Empty);
+            InitializingController?.Invoke(null, EventArgs.Empty);
 
             await Initialize();
 
-            if (DiscoveringNetwork != null)
-                DiscoveringNetwork(null, EventArgs.Empty);
+            DiscoveringNetwork?.Invoke(null, EventArgs.Empty);
 
             await _xBee.DiscoverNetwork(TimeSpan.FromSeconds(10));
         }
@@ -81,14 +79,14 @@ namespace NodeControl
 #if TRACE
         private static void XBeeOnFrameMemberDeserializing(object sender, MemberSerializingEventArgs e)
         {
-            var message = string.Format("D-Start: {0}", e.MemberName);
+            var message = $"D-Start: {e.MemberName}";
             System.Diagnostics.Trace.WriteLine(message, "XBee");
         }
 
         private static void XBeeOnFrameMemberDeserialized(object sender, MemberSerializedEventArgs e)
         {
             var value = e.Value ?? "null";
-            var message = string.Format("D-End: {0} ({1})", e.MemberName, value);
+            var message = $"D-End: {e.MemberName} ({value})";
             System.Diagnostics.Trace.WriteLine(message, "XBee");
         }
 #endif
@@ -97,7 +95,7 @@ namespace NodeControl
         {
             await Initialize();
 
-            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
 
             var gpioPorts = GpioPorts.None;
 
@@ -129,21 +127,21 @@ namespace NodeControl
         public static async Task Arm(NodeAddress address)
         {
             await Initialize();
-            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalHigh);
         }
 
         public static async Task Disarm(NodeAddress address)
         {
             await Initialize();
-            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalLow);
         }
 
         public static async Task SetNodeName(NodeAddress address, string name)
         {
             await Initialize();
-            XBeeNode node = await _xBee.GetRemoteAsync(address);
+            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetNodeIdentifier(name);
             await node.WriteChanges();
         }
@@ -174,20 +172,13 @@ namespace NodeControl
         {
             XBeeNode node = e.Node;
 
-            if (NodeDiscovered != null)
-                NodeDiscovered(null, e);
+            NodeDiscovered?.Invoke(null, e);
 
             if (IsSeriesOne)
                 Initialize(node);
         }
 
-        private static bool IsSeriesOne
-        {
-            get
-            {
-                return _xBee.HardwareVersion == HardwareVersion.XBeeSeries1 ||
-                       _xBee.HardwareVersion == HardwareVersion.XBeeProSeries1;
-            }
-        }
+        private static bool IsSeriesOne => _xBee.HardwareVersion == HardwareVersion.XBeeSeries1 ||
+                                           _xBee.HardwareVersion == HardwareVersion.XBeeProSeries1;
     }
 }
