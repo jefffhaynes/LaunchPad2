@@ -107,11 +107,6 @@ namespace LaunchPad2.ViewModels
             Zoom = DefaultZoom;
 
             CompositionTarget.Rendering += CompositionTargetOnRendering;
-
-
-
-
-            Nodes.Add(new NodeViewModel("test", LongAddress.Broadcast));
         }
 
         public string Status
@@ -485,7 +480,12 @@ namespace LaunchPad2.ViewModels
 
             try
             {
-                await Task.WhenAll(EnabledNodes.Select(Arm));
+                var nodes = EnabledNodes.Where(node => node.DiscoveryState == NodeDiscoveryState.Discovered);
+                await Task.WhenAll(nodes.Select(Arm));
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message);
             }
             finally
             {
@@ -511,10 +511,15 @@ namespace LaunchPad2.ViewModels
         public async Task Disarm()
         {
             IsNetworkArming = true;
-
+            
             try
             {
-                await Task.WhenAll(EnabledNodes.Select(Disarm));
+                var nodes = EnabledNodes.Where(node => node.DiscoveryState == NodeDiscoveryState.Discovered);
+                await Task.WhenAll(nodes.Select(Disarm));
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
             }
             finally
             {
