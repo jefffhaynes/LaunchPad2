@@ -377,8 +377,6 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        //private bool IsNetworkFullyArmed => EnabledNodes.All(node => node.IsArmed);
-
         public bool IsNetworkDisarmed => EnabledNodes.All(node => !node.IsArmed);
 
         public void Dispose()
@@ -471,16 +469,7 @@ namespace LaunchPad2.ViewModels
             {
                 MessageBox.Show("No network controller found.");
             }
-
-            //var overrideArm = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
-
-            //if (!overrideArm && !IsNetworkFullyArmed)
-            //{
-            //    MessageBox.Show("The network must be fully armed to proceed");
-            //    SetStatus("Failed to Arm Network");
-            //    return;
-            //}
-
+            
             SetStatus("Starting Show");
 
             IsShowStarting = true;

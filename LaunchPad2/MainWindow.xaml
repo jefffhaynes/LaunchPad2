@@ -302,13 +302,17 @@
             <controls:MenuSeparator Grid.Column="11"/>
 
             <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='%s'}" Grid.Column="12"
-                       Foreground="{StaticResource MenuYellowBrushKey}" FontSize="16" FontWeight="Bold" Margin="6,3,12,3">
+                       Foreground="{StaticResource MenuYellowBrushKey}" FontWeight="Bold" Margin="6,3,12,3">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>
+                        <Setter Property="FontSize" Value="16"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsShowRunning}" Value="true">
+                            <DataTrigger Binding="{Binding IsShowStarting}" Value="true">
                                 <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Mode=OneTime, Source={x:Static launchpad:UiHelper.HasTouchInput}}" Value="True">
+                                <Setter Property="FontSize" Value="36"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
