@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using LaunchPad2.Controls;
 using LaunchPad2.Models;
@@ -26,6 +27,10 @@ namespace LaunchPad2
             InitializeComponent();
             DataContext = _viewModel;
             _viewModel.Stopped += (sender, args) => AudioScrollViewer.ScrollToHorizontalOffset(0);
+
+            ConfirmPopup.PlacementTarget = PlayButton;
+            ConfirmPopup.PopupAnimation = PopupAnimation.Scroll;
+
 
             Closing += (sender, args) =>
             {

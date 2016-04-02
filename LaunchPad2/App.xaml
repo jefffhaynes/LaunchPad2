@@ -7,23 +7,24 @@
     <Application.Resources>
 
         <SolidColorBrush x:Key="MenuTextBrushKey" Color="#FFEDEDED"/>
-        <SolidColorBrush x:Key="MenuSelectedTextBrushKey" Color="#008EF8"/>
+        <SolidColorBrush x:Key="MenuSelectedTextBrushKey" Color="#FF008EF8"/>
         <SolidColorBrush x:Key="MenuGrayBrushKey" Color="#FFC6C6C6"/>
         <SolidColorBrush x:Key="MenuBlueBrushKey" Color="#FF79C0FE"/>
-        <SolidColorBrush x:Key="MenuBrightBlueBrushKey" Color="#008EF8"/>
+        <SolidColorBrush x:Key="MenuBrightBlueBrushKey" Color="#FF008EF8"/>
         <SolidColorBrush x:Key="MenuGreenBrushKey" Color="#FF8CD189"/>
-        <SolidColorBrush x:Key="MenuBrightGreenBrushKey" Color="#329832"/>
+        <SolidColorBrush x:Key="MenuBrightGreenBrushKey" Color="#FF329832"/>
         <SolidColorBrush x:Key="MenuBrownBrushKey" Color="#FFD6AB6A"/>
-        <SolidColorBrush x:Key="MenuYellowBrushKey" Color="#FED700"/>
+        <SolidColorBrush x:Key="MenuYellowBrushKey" Color="#FFFED700"/>
         <SolidColorBrush x:Key="MenuRedBrushKey" Color="#FFFE0000"/>
         <SolidColorBrush x:Key="MenuDisabledBrushKey" Color="#FF535355"/>
-        <SolidColorBrush x:Key="MenuMouseOverBrushKey" Color="#3E3E40"/>
+        <SolidColorBrush x:Key="MenuMouseOverBrushKey" Color="#FF3E3E40"/>
+        <SolidColorBrush x:Key="MenuBackgroundBrushKey" Color="#FF1B1B1C"/>
         <SolidColorBrush x:Key="CueActiveBrushKey" Color="#FFDB46FF"/>
         <SolidColorBrush x:Key="AudioCueBrushKey" Color="#FFFE0000"/>
         <SolidColorBrush x:Key="StopButtonBrushKey" Color="#FFF28A75"/>
         <SolidColorBrush x:Key="TrackBackgroundBrushKey" Color="Black"/>
         <SolidColorBrush x:Key="GridSplitterBackgroundBrush" Color="#FF3F3F46"/>
-        <SolidColorBrush x:Key="StatusBarBrushKey" Color="#68217A"/>
+        <SolidColorBrush x:Key="StatusBarBrushKey" Color="#FF68217A"/>
 
         <SolidColorBrush x:Key="PanelBackgroundBrushKey" Color="#FF252526"/>
         <SolidColorBrush x:Key="PanelControlBorderBrushKey" Color="#FF434346"/>
@@ -132,6 +133,23 @@
                                 <Setter Property="Width" Value="48"/>
                                 <Setter Property="Height" Value="48"/>
                             </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <ContentPresenter x:Name="ContentPresenter" Margin="3"/>
+            </Border>
+        </ControlTemplate>
+
+        <ControlTemplate x:Key="HeavyButtonTemplate" TargetType="{x:Type Button}">
+            <Border BorderThickness="0">
+                <Border.Style>
+                    <Style TargetType="{x:Type Border}">
+                        <Setter Property="Background" Value="#FF333337"/>
+                        <Setter Property="Padding" Value="6"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#3E3E40"/>
+                            </Trigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>

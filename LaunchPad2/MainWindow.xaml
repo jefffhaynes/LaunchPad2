@@ -115,8 +115,15 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="200"/>
         </Grid.ColumnDefinitions>
+        
+        <Popup Name="ConfirmPopup"  IsOpen="{Binding IsConfirming}">
+            <Popup.Effect>
+                <DropShadowEffect />
+            </Popup.Effect>
+            <controls:ConfirmPopupControl Padding="6"/>
+        </Popup>
 
-        <Grid Grid.ColumnSpan="2">
+        <Grid Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -131,8 +138,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0" Click="LoadButtonOnClick" Margin="3" Background="Transparent" BorderThickness="0" 
@@ -227,7 +233,7 @@
 
             <controls:MenuSeparator Grid.Column="7"/>
 
-            <Button Grid.Row="0" Grid.Column="8" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding PlayCommand}"  
+            <Button Name="PlayButton" Grid.Row="0" Grid.Column="8" Margin="3" Background="Transparent" BorderThickness="0" Command="{Binding PlayCommand}"  
                     Template="{StaticResource TouchButtonTemplate}">
                 <Button.Style>
                     <Style TargetType="Button">
@@ -235,6 +241,9 @@
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding AudioTrack.IsPaused}" Value="False">
                                 <Setter Property="ToolTip" Value="Pause"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsShowStarting}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -292,40 +301,8 @@
 
             <controls:MenuSeparator Grid.Column="11"/>
 
-            <Button Grid.Row="0" Grid.Column="12" Margin="3" BorderThickness="0"
-                    Template="{StaticResource TouchButtonTemplate}">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Command" Value="{Binding StartShowCommand}"/>
-                        <Setter Property="ToolTip" Value="Start Show"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsShowRunning}" Value="True">
-                                <Setter Property="Command" Value="{Binding AbortShowCommand}"/>
-                                <Setter Property="ToolTip" Value="Abort"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-                <Path Stretch="Uniform">
-                    <Path.Style>
-                        <Style TargetType="Path">
-                            <Setter Property="Data" Value="{DynamicResource StartShowGeometryKey}"/>
-                            <Setter Property="Fill" Value="{DynamicResource MenuYellowBrushKey}"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsEnabled" Value="False">
-                                    <Setter Property="Fill" Value="{DynamicResource MenuDisabledBrushKey}"/>
-                                </Trigger>
-                                <DataTrigger Binding="{Binding IsShowRunning}" Value="True">
-                                    <Setter Property="Data" Value="{DynamicResource AbortGeometryKey}"/>
-                                    <Setter Property="Fill" Value="{DynamicResource MenuRedBrushKey}"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Path.Style>
-                </Path>
-            </Button>
-
-            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='%s'}" Grid.Column="13" Foreground="{StaticResource MenuTextBrushKey}" FontSize="12" Margin="3,3,12,3">
+            <TextBlock VerticalAlignment="Center" Text="{Binding CountdownTime, StringFormat='%s'}" Grid.Column="12"
+                       Foreground="{StaticResource MenuYellowBrushKey}" FontSize="16" FontWeight="Bold" Margin="6,3,12,3">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -338,7 +315,7 @@
                 </TextBlock.Style>
             </TextBlock>
 
-            <Rectangle Grid.Column="14" Fill="{StaticResource WarningBrushKey}">
+            <Rectangle Grid.Column="13" Fill="{StaticResource WarningBrushKey}">
                 <Rectangle.Style>
                     <Style TargetType="Rectangle">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -351,6 +328,8 @@
                 </Rectangle.Style>
             </Rectangle>
         </Grid>
+        
+
 
         <ScrollViewer Name="AudioScrollViewer" UseLayoutRounding="True" Grid.Row="1" Grid.Column="0" Margin="0,0,0,6" 
                       VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Hidden" HorizontalContentAlignment="Left"
@@ -987,4 +966,7 @@
             <TextBlock Text="{Binding Status}" Foreground="{StaticResource MenuTextBrushKey}" Margin="4"/>
         </Border>
     </Grid>
+    
+    
 </Window>
+

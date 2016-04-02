@@ -1,0 +1,72 @@
+﻿<UserControl x:Class="LaunchPad2.Controls.ConfirmPopupControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:LaunchPad2.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="400" Background="{StaticResource MenuBackgroundBrushKey}">
+    <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <TextBlock Margin="6,6,6,0" FontSize="18" FontWeight="Bold" Text="ONE OR MORE DEVICES ARE ARMED.  TYPE CONFIRM TO PROCEED." Foreground="{StaticResource MenuTextBrushKey}"/>
+        <local:ConfirmControl Margin="0,0,0,12" x:Name="ConfirmControl" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Text="CONFIRM" FontSize="48" FontWeight="Bold">
+            <local:ConfirmControl.Style>
+                <Style TargetType="local:ConfirmControl">
+                    <Setter Property="Foreground" Value="{StaticResource MenuGreenBrushKey}"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsConfirmed" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource CueActiveBrushKey}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </local:ConfirmControl.Style>
+        </local:ConfirmControl>
+
+        <Grid Grid.Row="2" HorizontalAlignment="Right">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Margin="6" FontSize="24" Command="{Binding StartShowCommand}" Template="{StaticResource HeavyButtonTemplate}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="IsEnabled" Value="False"/>
+                        <Setter Property="Foreground" Value="{StaticResource MenuTextBrushKey}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=ConfirmControl, Path=IsConfirmed}" Value="True">
+                                <Setter Property="IsEnabled" Value="True"/>
+                            </DataTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{StaticResource MenuDisabledBrushKey}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <StackPanel Orientation="Horizontal">
+                    <Path Margin="0,6,6,6" Width="24" Height="24" Stretch="UniformToFill"  Data="{StaticResource RocketGeometryKey}">
+                        <Path.Style>
+                            <Style TargetType="Path">
+                                <Setter Property="Fill" Value="{StaticResource CueActiveBrushKey}"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.33"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Path.Style>
+                    </Path>
+                    <TextBlock Text="Start"/>
+                </StackPanel>
+            </Button>
+
+            <Button Grid.Column="1" Content="Cancel" Margin="6" FontSize="24" Command="{Binding StopCommand}" 
+                    Foreground="{StaticResource MenuTextBrushKey}" Template="{StaticResource HeavyButtonTemplate}"/>
+        </Grid>
+    </Grid>
+</UserControl>

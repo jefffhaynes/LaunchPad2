@@ -84,6 +84,12 @@
     <Compile Include="ActionBatch.cs" />
     <Compile Include="ColorExtensions.cs" />
     <Compile Include="ComponentExtensions.cs" />
+    <Compile Include="Controls\ConfirmControl.xaml.cs">
+      <DependentUpon>ConfirmControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ConfirmPopupControl.xaml.cs">
+      <DependentUpon>ConfirmPopupControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\CueControlBase.cs" />
     <Compile Include="Controls\RegionCueControl.cs" />
     <Compile Include="Controls\LibraryPanel.xaml.cs">
@@ -137,6 +143,7 @@
     <Compile Include="UndoManager.cs" />
     <Compile Include="UndoMemento.cs" />
     <Compile Include="ViewModels\BrushViewModel.cs" />
+    <Compile Include="ViewModels\ConfirmControlCharacterViewModel.cs" />
     <Compile Include="ViewModels\CueMoveInfo.cs" />
     <Compile Include="ViewModels\DeviceViewModel.cs" />
     <Compile Include="ViewModels\EventCueViewModel.cs" />
@@ -151,6 +158,14 @@
     <Compile Include="ViewModels\TrackViewModel.cs" />
     <Compile Include="ViewModels\ViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Page Include="Controls\ConfirmControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ConfirmPopupControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\LibraryPanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

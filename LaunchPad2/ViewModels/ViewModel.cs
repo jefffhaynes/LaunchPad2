@@ -41,6 +41,8 @@ namespace LaunchPad2.ViewModels
         private TimeSpan _selectedRegionStart;
         private string _status;
         private double _zoom;
+        private bool _isConfirming;
+        private bool _isShowStarting;
 
         public ViewModel()
         {
@@ -51,12 +53,6 @@ namespace LaunchPad2.ViewModels
             StopCommand = new RelayCommand(async () => { await Stop(); });
 
             StartShowCommand = new RelayCommand(StartShow, IsAudioFileLoaded);
-
-            AbortShowCommand = new RelayCommand(async () =>
-            {
-                _countdownCancellationTokenSource.Cancel();
-                await Stop();
-            });
 
             PositionCommand = new RelayCommand(position =>
             {
@@ -381,7 +377,7 @@ namespace LaunchPad2.ViewModels
             }
         }
 
-        private bool IsNetworkFullyArmed => EnabledNodes.All(node => node.IsArmed);
+        //private bool IsNetworkFullyArmed => EnabledNodes.All(node => node.IsArmed);
 
         public bool IsNetworkDisarmed => EnabledNodes.All(node => !node.IsArmed);
 
@@ -401,20 +397,26 @@ namespace LaunchPad2.ViewModels
 
         private async void Play()
         {
-            if (!IsNetworkDisarmed)
-            {
-                MessageBox.Show("Please disarm the system before playing.");
-                return;
-            }
-
             if (AudioTrack.SamplePosition == 0)
                 await Stop();
 
-            AudioTrack.IsPaused = !AudioTrack.IsPaused;
+            if (!IsNetworkDisarmed)
+            {
+                IsConfirming = true;
+            }
+            else
+            {
+                AudioTrack.IsPaused = !AudioTrack.IsPaused;
+            }
         }
 
         private async Task Stop()
         {
+            IsConfirming = false;
+            IsShowStarting = false;
+
+            _countdownCancellationTokenSource?.Cancel();
+
             if (AudioTrack != null)
             {
                 AudioTrack.IsPaused = true;
@@ -427,13 +429,40 @@ namespace LaunchPad2.ViewModels
                 IsShowRunning = false;
                 SetStatus("Show Aborted");
             }
+            
+            Stopped?.Invoke(this, EventArgs.Empty);
+        }
 
-            var handler = Stopped;
-            handler?.Invoke(this, EventArgs.Empty);
+        public bool IsConfirming
+        {
+            get { return _isConfirming; }
+            set
+            {
+                if (_isConfirming == value)
+                    return;
+
+                _isConfirming = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsShowStarting
+        {
+            get { return _isShowStarting; }
+            set
+            {
+                if (_isShowStarting == value)
+                    return;
+
+                _isShowStarting = value;
+                OnPropertyChanged();
+            }
         }
 
         private async void StartShow()
         {
+            IsConfirming = false;
+
             try
             {
                 await NetworkController.Initialize();
@@ -443,17 +472,18 @@ namespace LaunchPad2.ViewModels
                 MessageBox.Show("No network controller found.");
             }
 
-            var overrideArm = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+            //var overrideArm = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
 
-            if (!overrideArm && !IsNetworkFullyArmed)
-            {
-                MessageBox.Show("The network must be fully armed to proceed");
-                SetStatus("Failed to Arm Network");
-                return;
-            }
+            //if (!overrideArm && !IsNetworkFullyArmed)
+            //{
+            //    MessageBox.Show("The network must be fully armed to proceed");
+            //    SetStatus("Failed to Arm Network");
+            //    return;
+            //}
 
             SetStatus("Starting Show");
 
+            IsShowStarting = true;
             IsShowRunning = true;
 
             _countdownCancellationTokenSource = new CancellationTokenSource();
@@ -472,6 +502,8 @@ namespace LaunchPad2.ViewModels
 
             if (!_countdownCancellationTokenSource.IsCancellationRequested)
                 AudioTrack.IsPaused = false;
+
+            IsShowStarting = false;
 
             SetStatus("Show Running");
         }
@@ -1323,8 +1355,6 @@ namespace LaunchPad2.ViewModels
         public RelayCommand StopCommand { get; private set; }
 
         public RelayCommand StartShowCommand { get; }
-
-        public RelayCommand AbortShowCommand { get; private set; }
 
         public RelayCommand PositionCommand { get; private set; }
 
