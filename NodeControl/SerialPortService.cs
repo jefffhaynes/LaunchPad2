@@ -57,9 +57,7 @@ namespace NodeControl
                 if (!_serialPorts.SequenceEqual(availableSerialPorts))
                 {
                     _serialPorts = availableSerialPorts;
-                    var handler = PortsChanged;
-                    if (handler != null)
-                        handler(null, new PortsChangedArgs(eventType, _serialPorts));
+                    PortsChanged?.Invoke(null, new PortsChangedArgs(eventType, _serialPorts));
                 }
             }
         }

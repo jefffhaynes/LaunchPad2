@@ -32,35 +32,36 @@ namespace NodeControl
         {
             InitializingController?.Invoke(null, EventArgs.Empty);
 
-            await Initialize();
+            if(!await Initialize())
+                throw new InvalidOperationException("No controller found.");
 
             DiscoveringNetwork?.Invoke(null, EventArgs.Empty);
 
             await _xBee.DiscoverNetwork(TimeSpan.FromSeconds(10));
         }
 
-        public static async Task Initialize()
+        public static async Task<bool> Initialize()
         {
             if (_isInitialized)
-                return;
+                return true;
+            
+            // Don't bother checking if nothing has changed
+            if (!_portChange)
+                return false;
 
             await InitializeSemaphore.WaitAsync();
 
             try
             {
                 if (_isInitialized)
-                    return;
-
-                // Don't bother checking if nothing has changed
-                if (!_portChange)
-                    throw new InvalidOperationException("No controller found.");
+                    return true;
 
                 _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
 
                 _portChange = false;
 
                 if (_xBee == null)
-                    throw new InvalidOperationException("No controller found.");
+                    return false;
 
 #if TRACE
                 _xBee.FrameMemberDeserializing += XBeeOnFrameMemberDeserializing;
@@ -74,6 +75,8 @@ namespace NodeControl
             {
                 InitializeSemaphore.Release();
             }
+
+            return true;
         }
 
 #if TRACE
@@ -93,7 +96,8 @@ namespace NodeControl
 
         public static async void SetActivePorts(NodeAddress address, Ports ports)
         {
-            await Initialize();
+            if (!await Initialize())
+                return;
 
             XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
 
@@ -126,21 +130,27 @@ namespace NodeControl
 
         public static async Task Arm(NodeAddress address)
         {
-            await Initialize();
+            if (!await Initialize())
+                throw new InvalidOperationException("No controller found.");
+
             XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalHigh);
         }
 
         public static async Task Disarm(NodeAddress address)
         {
-            await Initialize();
+            if (!await Initialize())
+                throw new InvalidOperationException("No controller found.");
+
             XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalLow);
         }
 
         public static async Task SetNodeName(NodeAddress address, string name)
         {
-            await Initialize();
+            if(!await Initialize())
+                throw new InvalidOperationException("No controller found.");
+
             XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetNodeIdentifier(name);
             await node.WriteChanges();
