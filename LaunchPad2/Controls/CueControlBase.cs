@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using LaunchPad2.Annotations;
+using LaunchPad2.Properties;
 
 namespace LaunchPad2.Controls
 {

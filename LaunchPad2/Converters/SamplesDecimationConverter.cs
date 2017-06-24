@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows.Data;
 using FMOD;
 using LaunchPad2.Annotations;
+using LaunchPad2.Properties;
 using Waveform;
 
 namespace LaunchPad2.Converters
