@@ -440,7 +440,7 @@ namespace LaunchPad2.ViewModels
                 await Stop();
             }
 
-            if (!IsNetworkDisarmed)
+            if (!IsNetworkDisarmed && !IsShowRunning)
             {
                 IsConfirming = true;
             }
