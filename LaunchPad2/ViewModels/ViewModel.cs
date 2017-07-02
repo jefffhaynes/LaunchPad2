@@ -440,7 +440,10 @@ namespace LaunchPad2.ViewModels
                 await Stop();
             }
 
-            if (!IsNetworkDisarmed && !IsShowRunning)
+            var startShow = !IsNetworkDisarmed && !IsShowRunning
+                            || Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
+            if (startShow)
             {
                 IsConfirming = true;
             }
