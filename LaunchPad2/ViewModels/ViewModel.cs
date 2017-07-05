@@ -524,8 +524,13 @@ namespace LaunchPad2.ViewModels
 
             try
             {
-                var nodes = EnabledNodes.Where(node => node.DiscoveryState == NodeDiscoveryState.Discovered);
-                await Task.WhenAll(nodes.Select(Arm));
+                var broadcast = new NodeAddress(LongAddress.Broadcast);
+                await NetworkController.Arm(broadcast);
+
+                foreach (var nodeViewModel in Nodes)
+                {
+                    nodeViewModel.IsArmed = true;
+                }
             }
             catch (Exception e)
             {
@@ -536,30 +541,20 @@ namespace LaunchPad2.ViewModels
                 IsNetworkArming = false;
             }
         }
-
-        private static async Task Arm(NodeViewModel node)
-        {
-            try
-            {
-                await NetworkController.Arm(new NodeAddress(node.Address));
-                node.IsArmed = true;
-            }
-            catch (InvalidOperationException)
-            {
-            }
-            catch (TimeoutException)
-            {
-            }
-        }
-
+        
         public async Task Disarm()
         {
             IsNetworkArming = true;
 
             try
             {
-                var nodes = EnabledNodes.Where(node => node.DiscoveryState == NodeDiscoveryState.Discovered);
-                await Task.WhenAll(nodes.Select(Disarm));
+                var broadcast = new NodeAddress(LongAddress.Broadcast);
+                await NetworkController.Disarm(broadcast);
+
+                foreach (var nodeViewModel in Nodes)
+                {
+                    nodeViewModel.IsArmed = false;
+                }
             }
             catch (Exception e)
             {
@@ -568,21 +563,6 @@ namespace LaunchPad2.ViewModels
             finally
             {
                 IsNetworkArming = false;
-            }
-        }
-
-        private static async Task Disarm(NodeViewModel node)
-        {
-            try
-            {
-                await NetworkController.Disarm(new NodeAddress(node.Address));
-                node.IsArmed = false;
-            }
-            catch (InvalidOperationException)
-            {
-            }
-            catch (TimeoutException)
-            {
             }
         }
 
@@ -1291,6 +1271,8 @@ namespace LaunchPad2.ViewModels
 
             try
             {
+                await Disarm();
+                
                 await NetworkController.DiscoverNetworkAsync();
                 NetworkDiscoveryState = NetworkDiscoveryState.Discovered;
             }
