@@ -32,35 +32,36 @@ namespace NodeControl
         {
             InitializingController?.Invoke(null, EventArgs.Empty);
 
-            await Initialize();
+            if(!await Initialize())
+                throw new InvalidOperationException("No controller found.");
 
             DiscoveringNetwork?.Invoke(null, EventArgs.Empty);
 
-            await _xBee.DiscoverNetwork(TimeSpan.FromSeconds(10));
+            await _xBee.DiscoverNetworkAsync(TimeSpan.FromSeconds(10));
         }
 
-        public static async Task Initialize()
+        public static async Task<bool> Initialize()
         {
             if (_isInitialized)
-                return;
+                return true;
+            
+            // Don't bother checking if nothing has changed
+            if (!_portChange)
+                return false;
 
             await InitializeSemaphore.WaitAsync();
 
             try
             {
                 if (_isInitialized)
-                    return;
+                    return true;
 
-                // Don't bother checking if nothing has changed
-                if (!_portChange)
-                    throw new InvalidOperationException("No controller found.");
-
-                _xBee = await XBeeController.FindAndOpen(SerialPort.GetPortNames(), 9600);
+                _xBee = await XBeeController.FindAndOpenAsync(SerialPort.GetPortNames(), 9600);
 
                 _portChange = false;
 
                 if (_xBee == null)
-                    throw new InvalidOperationException("No controller found.");
+                    return false;
 
 #if TRACE
                 _xBee.FrameMemberDeserializing += XBeeOnFrameMemberDeserializing;
@@ -74,6 +75,8 @@ namespace NodeControl
             {
                 InitializeSemaphore.Release();
             }
+
+            return true;
         }
 
 #if TRACE
@@ -93,9 +96,10 @@ namespace NodeControl
 
         public static async void SetActivePorts(NodeAddress address, Ports ports)
         {
-            await Initialize();
+            if (!await Initialize())
+                return;
 
-            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
+            XBeeNode node = await _xBee.GetNodeAsync(address);
 
             var gpioPorts = GpioPorts.None;
 
@@ -126,24 +130,30 @@ namespace NodeControl
 
         public static async Task Arm(NodeAddress address)
         {
-            await Initialize();
-            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
-            await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalHigh);
+            if (!await Initialize())
+                throw new InvalidOperationException("No controller found.");
+
+            XBeeNode node = await _xBee.GetNodeAsync(address);
+            await node.SetInputOutputConfigurationAsync(ArmingPort, InputOutputConfiguration.DigitalHigh);
         }
 
         public static async Task Disarm(NodeAddress address)
         {
-            await Initialize();
-            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
-            await node.SetInputOutputConfiguration(ArmingPort, InputOutputConfiguration.DigitalLow);
+            if (!await Initialize())
+                throw new InvalidOperationException("No controller found.");
+
+            XBeeNode node = await _xBee.GetNodeAsync(address);
+            await node.SetInputOutputConfigurationAsync(ArmingPort, InputOutputConfiguration.DigitalLow);
         }
 
         public static async Task SetNodeName(NodeAddress address, string name)
         {
-            await Initialize();
-            XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
-            await node.SetNodeIdentifier(name);
-            await node.WriteChanges();
+            if(!await Initialize())
+                throw new InvalidOperationException("No controller found.");
+
+            XBeeNode node = await _xBee.GetNodeAsync(address);
+            await node.SetNodeIdentifierAsync(name);
+            await node.WriteChangesAsync();
         }
 
         private static async void Initialize(XBeeNode node)
@@ -167,18 +177,14 @@ namespace NodeControl
         }
 
         public static event EventHandler<NodeDiscoveredEventArgs> NodeDiscovered;
-
+        
         private static void XBeeOnNodeDiscovered(object sender, NodeDiscoveredEventArgs e)
         {
             XBeeNode node = e.Node;
 
             NodeDiscovered?.Invoke(null, e);
-
-            if (IsSeriesOne)
-                Initialize(node);
+            
+            Initialize(node);
         }
-
-        private static bool IsSeriesOne => _xBee.HardwareVersion == HardwareVersion.XBeeSeries1 ||
-                                           _xBee.HardwareVersion == HardwareVersion.XBeeProSeries1;
     }
 }

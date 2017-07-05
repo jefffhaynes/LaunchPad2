@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using FMOD;
 using LaunchPad2.Annotations;
+using LaunchPad2.Properties;
 
 namespace LaunchPad2.Controls
 {

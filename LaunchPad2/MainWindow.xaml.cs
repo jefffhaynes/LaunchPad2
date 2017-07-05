@@ -16,11 +16,13 @@ namespace LaunchPad2
 {
     public partial class MainWindow : Window
     {
+        private readonly SemaphoreSlim _saveLock = new SemaphoreSlim(1);
+        private bool _audioFileChanged;
+
 // ReSharper disable once NotAccessedField.Local
         private TemporaryFile _temporaryAudioFile;
+
         private ViewModel _viewModel = new ViewModel();
-        private bool _audioFileChanged;
-        private readonly SemaphoreSlim _saveLock = new SemaphoreSlim(1);
 
         public MainWindow()
         {
@@ -54,7 +56,7 @@ namespace LaunchPad2
                     Multiselect = false
                 };
 
-                bool? result = dialog.ShowDialog();
+                var result = dialog.ShowDialog();
                 if (result != null && result.Value)
                 {
                     _viewModel.AudioFile = dialog.FileName;
@@ -77,7 +79,9 @@ namespace LaunchPad2
                 await _saveLock.WaitAsync();
 
                 if (_viewModel.File == null || !File.Exists(_viewModel.File))
+                {
                     SaveAsButtonOnClick(sender, e);
+                }
                 else
                 {
                     _viewModel.SetStatus("Saving...");
@@ -86,8 +90,13 @@ namespace LaunchPad2
                     await Task.Run(() =>
                     {
                         if (_audioFileChanged)
+                        {
                             Packager.Pack(_viewModel.File, model, _viewModel.AudioFile);
-                        else Packager.Update(_viewModel.File, model);
+                        }
+                        else
+                        {
+                            Packager.Update(_viewModel.File, model);
+                        }
                     });
 
                     _viewModel.SetStatus("Saved");
@@ -113,7 +122,7 @@ namespace LaunchPad2
                     Filter = "LaunchPad Files|*.lpx"
                 };
 
-                bool? result = dialog.ShowDialog();
+                var result = dialog.ShowDialog();
                 if (result != null && result.Value)
                 {
                     _viewModel.SetStatus("Saving...");
@@ -142,12 +151,12 @@ namespace LaunchPad2
                     Multiselect = false
                 };
 
-                bool? result = dialog.ShowDialog();
+                var result = dialog.ShowDialog();
                 if (result != null && result.Value)
                 {
                     _viewModel.SetStatus("Loading...");
 
-                    string filename = dialog.FileName;
+                    var filename = dialog.FileName;
 
                     Model model = null;
                     TemporaryFile temporaryAudioFile = null;
@@ -158,7 +167,9 @@ namespace LaunchPad2
                     DataContext = _viewModel;
 
                     if (temporaryAudioFile != null)
+                    {
                         _viewModel.AudioFile = temporaryAudioFile.Path;
+                    }
 
                     _temporaryAudioFile = temporaryAudioFile;
                     _viewModel.File = dialog.FileName;
@@ -176,7 +187,7 @@ namespace LaunchPad2
 
         private void OnScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            ScrollViewer scrollViewer = Equals(sender, AudioScrollViewer) ? TrackScrollViewer : AudioScrollViewer;
+            var scrollViewer = Equals(sender, AudioScrollViewer) ? TrackScrollViewer : AudioScrollViewer;
 
             scrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
             TimelineScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
@@ -184,12 +195,12 @@ namespace LaunchPad2
             /* Try to keep scroll position on zoom */
             if (Math.Abs(e.ExtentWidthChange) > double.Epsilon)
             {
-                double originalExtent = e.ExtentWidth - e.ExtentWidthChange;
+                var originalExtent = e.ExtentWidth - e.ExtentWidthChange;
 
                 if (Math.Abs(originalExtent) > double.Epsilon)
                 {
-                    double changeRatio = e.ExtentWidth/originalExtent;
-                    scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset*changeRatio);
+                    var changeRatio = e.ExtentWidth / originalExtent;
+                    scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * changeRatio);
                     TimelineScrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * changeRatio);
                 }
             }
@@ -198,15 +209,25 @@ namespace LaunchPad2
         private void CommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             if (e.Command == ApplicationCommands.Undo)
+            {
                 UndoManager.Undo();
+            }
             else if (e.Command == ApplicationCommands.Redo)
+            {
                 UndoManager.Redo();
+            }
             else if (e.Command == ApplicationCommands.Cut)
+            {
                 _viewModel.Cut();
+            }
             else if (e.Command == ApplicationCommands.Copy)
+            {
                 _viewModel.Copy();
+            }
             else if (e.Command == ApplicationCommands.Paste)
+            {
                 _viewModel.Paste();
+            }
         }
 
         private void SelectionCanvas_OnCueMoving(object sender, CueMovingEventArgs e)

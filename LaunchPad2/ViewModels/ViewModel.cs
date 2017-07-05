@@ -31,8 +31,10 @@ namespace LaunchPad2.ViewModels
         private TimeSpan _countdownTime;
         private List<CueMoveInfo> _cueUndoStates;
         private string _file;
+        private bool _isConfirming;
         private bool _isNetworkArming;
         private bool _isShowRunning;
+        private bool _isShowStarting;
         private bool _isWorking;
         private NetworkDiscoveryState _networkDiscoveryState;
         private bool _repeat;
@@ -41,8 +43,6 @@ namespace LaunchPad2.ViewModels
         private TimeSpan _selectedRegionStart;
         private string _status;
         private double _zoom;
-        private bool _isConfirming;
-        private bool _isShowStarting;
 
         public ViewModel()
         {
@@ -57,7 +57,9 @@ namespace LaunchPad2.ViewModels
             PositionCommand = new RelayCommand(position =>
             {
                 if (AudioTrack != null)
+                {
                     AudioTrack.SamplePosition = (uint) position;
+                }
             });
 
             AddTrackCommand = new RelayCommand(() => AddTrack(), IsAudioFileLoaded);
@@ -107,7 +109,7 @@ namespace LaunchPad2.ViewModels
 
         public string Status
         {
-            get { return _status; }
+            get => _status;
 
             set
             {
@@ -121,7 +123,7 @@ namespace LaunchPad2.ViewModels
 
         public bool IsWorking
         {
-            get { return _isWorking; }
+            get => _isWorking;
             set
             {
                 if (_isWorking != value)
@@ -134,7 +136,7 @@ namespace LaunchPad2.ViewModels
 
         public string File
         {
-            get { return _file; }
+            get => _file;
             set
             {
                 if (_file != value)
@@ -147,7 +149,7 @@ namespace LaunchPad2.ViewModels
 
         public TimeSpan CountdownTime
         {
-            get { return _countdownTime; }
+            get => _countdownTime;
             set
             {
                 if (_countdownTime != value)
@@ -160,7 +162,7 @@ namespace LaunchPad2.ViewModels
 
         public bool IsShowRunning
         {
-            get { return _isShowRunning; }
+            get => _isShowRunning;
             set
             {
                 if (_isShowRunning != value)
@@ -175,7 +177,7 @@ namespace LaunchPad2.ViewModels
 
         public string AudioFile
         {
-            get { return _audioFile; }
+            get => _audioFile;
             set
             {
                 if (_audioFile != value)
@@ -189,7 +191,7 @@ namespace LaunchPad2.ViewModels
 
         public bool Repeat
         {
-            get { return _repeat; }
+            get => _repeat;
             set
             {
                 if (_repeat != value)
@@ -197,7 +199,9 @@ namespace LaunchPad2.ViewModels
                     _repeat = value;
 
                     if (AudioTrack != null)
+                    {
                         AudioTrack.Repeat = value;
+                    }
 
                     OnPropertyChanged();
                 }
@@ -206,7 +210,7 @@ namespace LaunchPad2.ViewModels
 
         public AudioTrack AudioTrack
         {
-            get { return _audioTrack; }
+            get => _audioTrack;
 
             set
             {
@@ -246,7 +250,9 @@ namespace LaunchPad2.ViewModels
             get
             {
                 if (AudioTrack == null)
+                {
                     return 0;
+                }
 
                 return AudioTrack.SampleRate;
             }
@@ -267,7 +273,7 @@ namespace LaunchPad2.ViewModels
 
         public double Zoom
         {
-            get { return _zoom; }
+            get => _zoom;
             set
             {
                 if (Math.Abs(_zoom - value) > double.Epsilon)
@@ -280,7 +286,7 @@ namespace LaunchPad2.ViewModels
 
         public object SelectedItem
         {
-            get { return _selectedItem; }
+            get => _selectedItem;
             set
             {
                 if (_selectedItem != value)
@@ -295,7 +301,7 @@ namespace LaunchPad2.ViewModels
 
         public TimeSpan SelectedRegionStart
         {
-            get { return _selectedRegionStart; }
+            get => _selectedRegionStart;
             set
             {
                 if (_selectedRegionStart != value)
@@ -311,7 +317,7 @@ namespace LaunchPad2.ViewModels
 
         public TimeSpan SelectedRegionLength
         {
-            get { return _selectedRegionLength; }
+            get => _selectedRegionLength;
             set
             {
                 if (_selectedRegionLength != value)
@@ -329,11 +335,13 @@ namespace LaunchPad2.ViewModels
 
         public uint SelectedRegionStartSample
         {
-            get { return AudioTrack == null ? 0 : (uint) AudioTrack.ToSamples(SelectedRegionStart); }
+            get => AudioTrack == null ? 0 : (uint) AudioTrack.ToSamples(SelectedRegionStart);
             set
             {
                 if (AudioTrack == null)
+                {
                     return;
+                }
 
                 SelectedRegionStart = AudioTrack.ToTime(value);
             }
@@ -341,11 +349,13 @@ namespace LaunchPad2.ViewModels
 
         public int SelectedRegionSampleLength
         {
-            get { return AudioTrack == null ? 0 : (int) AudioTrack.ToSamples(SelectedRegionLength); }
+            get => AudioTrack == null ? 0 : (int) AudioTrack.ToSamples(SelectedRegionLength);
             set
             {
                 if (AudioTrack == null)
+                {
                     return;
+                }
 
                 SelectedRegionLength = AudioTrack.ToTime(value);
             }
@@ -353,7 +363,7 @@ namespace LaunchPad2.ViewModels
 
         public NetworkDiscoveryState NetworkDiscoveryState
         {
-            get { return _networkDiscoveryState; }
+            get => _networkDiscoveryState;
             set
             {
                 if (_networkDiscoveryState != value)
@@ -366,7 +376,7 @@ namespace LaunchPad2.ViewModels
 
         public bool IsNetworkArming
         {
-            get { return _isNetworkArming; }
+            get => _isNetworkArming;
             set
             {
                 if (_isNetworkArming != value)
@@ -378,6 +388,36 @@ namespace LaunchPad2.ViewModels
         }
 
         public bool IsNetworkDisarmed => EnabledNodes.All(node => !node.IsArmed);
+
+        public bool IsConfirming
+        {
+            get => _isConfirming;
+            set
+            {
+                if (_isConfirming == value)
+                {
+                    return;
+                }
+
+                _isConfirming = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsShowStarting
+        {
+            get => _isShowStarting;
+            set
+            {
+                if (_isShowStarting == value)
+                {
+                    return;
+                }
+
+                _isShowStarting = value;
+                OnPropertyChanged();
+            }
+        }
 
         public void Dispose()
         {
@@ -396,9 +436,14 @@ namespace LaunchPad2.ViewModels
         private async void Play()
         {
             if (AudioTrack.SamplePosition == 0)
+            {
                 await Stop();
+            }
 
-            if (!IsNetworkDisarmed)
+            var startShow = !IsNetworkDisarmed && !IsShowRunning
+                            || Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
+            if (startShow)
             {
                 IsConfirming = true;
             }
@@ -427,34 +472,8 @@ namespace LaunchPad2.ViewModels
                 IsShowRunning = false;
                 SetStatus("Show Aborted");
             }
-            
+
             Stopped?.Invoke(this, EventArgs.Empty);
-        }
-
-        public bool IsConfirming
-        {
-            get { return _isConfirming; }
-            set
-            {
-                if (_isConfirming == value)
-                    return;
-
-                _isConfirming = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool IsShowStarting
-        {
-            get { return _isShowStarting; }
-            set
-            {
-                if (_isShowStarting == value)
-                    return;
-
-                _isShowStarting = value;
-                OnPropertyChanged();
-            }
         }
 
         private async void StartShow()
@@ -465,11 +484,11 @@ namespace LaunchPad2.ViewModels
             {
                 await NetworkController.Initialize();
             }
-            catch(InvalidOperationException)
+            catch (InvalidOperationException)
             {
                 MessageBox.Show("No network controller found.");
             }
-            
+
             SetStatus("Starting Show");
 
             IsShowStarting = true;
@@ -481,7 +500,7 @@ namespace LaunchPad2.ViewModels
 
 
             CountdownTime = CountdownLength;
-            
+
             var start = DateTime.Now;
             while (CountdownTime > TimeSpan.Zero && !_countdownCancellationTokenSource.IsCancellationRequested)
             {
@@ -490,7 +509,9 @@ namespace LaunchPad2.ViewModels
             }
 
             if (!_countdownCancellationTokenSource.IsCancellationRequested)
+            {
                 AudioTrack.IsPaused = false;
+            }
 
             IsShowStarting = false;
 
@@ -506,7 +527,7 @@ namespace LaunchPad2.ViewModels
                 var nodes = EnabledNodes.Where(node => node.DiscoveryState == NodeDiscoveryState.Discovered);
                 await Task.WhenAll(nodes.Select(Arm));
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 MessageBox.Show(e.Message);
             }
@@ -523,7 +544,7 @@ namespace LaunchPad2.ViewModels
                 await NetworkController.Arm(new NodeAddress(node.Address));
                 node.IsArmed = true;
             }
-            catch(InvalidOperationException)
+            catch (InvalidOperationException)
             {
             }
             catch (TimeoutException)
@@ -534,7 +555,7 @@ namespace LaunchPad2.ViewModels
         public async Task Disarm()
         {
             IsNetworkArming = true;
-            
+
             try
             {
                 var nodes = EnabledNodes.Where(node => node.DiscoveryState == NodeDiscoveryState.Discovered);
@@ -602,15 +623,23 @@ namespace LaunchPad2.ViewModels
                         cue.IsActive = true;
                         trackActive = true;
                     }
-                    else cue.IsActive = false;
+                    else
+                    {
+                        cue.IsActive = false;
+                    }
                 }
 
                 if (track.Port != null)
                 {
                     bool portState;
                     if (_portStates.TryGetValue(track.Port, out portState))
+                    {
                         _portStates[track.Port] = portState | trackActive;
-                    else _portStates.Add(track.Port, trackActive);
+                    }
+                    else
+                    {
+                        _portStates.Add(track.Port, trackActive);
+                    }
                 }
             }
 
@@ -643,13 +672,17 @@ namespace LaunchPad2.ViewModels
         private void AddCue()
         {
             if (AudioTrack == null)
+            {
                 return;
+            }
 
             var position = AudioTrack.Position;
 
             /* Put it someplace useful */
             if (position == TimeSpan.Zero && AudioTrack.Length > DefaultCuePosition)
+            {
                 position = DefaultCuePosition;
+            }
 
             var sampleRate = SampleRate;
             var trackCues = GetSelectedTracks().ToDictionary(track => track,
@@ -658,13 +691,17 @@ namespace LaunchPad2.ViewModels
             var doAction = new Action(() =>
             {
                 foreach (var pair in trackCues)
+                {
                     pair.Key.AddCue(pair.Value);
+                }
             });
 
             var undoAction = new Action(() =>
             {
                 foreach (var pair in trackCues)
+                {
                     pair.Key.RemoveCue(pair.Value);
+                }
             });
 
             UndoManager.DoAndAdd(doAction, undoAction);
@@ -734,17 +771,23 @@ namespace LaunchPad2.ViewModels
                 }
 
                 if (cuesToRemove.Count == 0)
+                {
                     break;
+                }
             }
         }
 
         private void UpdateSampleRate()
         {
             if (AudioTrack == null)
+            {
                 return;
+            }
 
             foreach (var cue in AllCues)
+            {
                 cue.SampleRate = SampleRate;
+            }
         }
 
         public void StartMove()
@@ -759,9 +802,14 @@ namespace LaunchPad2.ViewModels
                     cue => Tracks.Single(track => track.Cues.Contains(cue)));
 
                 foreach (var clonedCueAndTrack in _clonedCuesAndTracks)
+                {
                     clonedCueAndTrack.Value.Cues.Add(clonedCueAndTrack.Key);
+                }
             }
-            else _clonedCuesAndTracks = null;
+            else
+            {
+                _clonedCuesAndTracks = null;
+            }
         }
 
         public void EndMove()
@@ -776,13 +824,17 @@ namespace LaunchPad2.ViewModels
                 var doAction = new Action(() =>
                 {
                     foreach (var clonedCueAndTrack in clonedCuesAndTracks)
+                    {
                         clonedCueAndTrack.Value.Cues.Add(clonedCueAndTrack.Key);
+                    }
                 });
 
                 var undoAction = new Action(() =>
                 {
                     foreach (var clonedCueAndTrack in clonedCuesAndTracks)
+                    {
                         clonedCueAndTrack.Value.Cues.Remove(clonedCueAndTrack.Key);
+                    }
                 });
 
                 var batchUndoMemento = new UndoBatchMemento();
@@ -808,7 +860,9 @@ namespace LaunchPad2.ViewModels
         private void CommitCueMoveUndo(UndoBatchMemento undoBatchMemento = null)
         {
             if (_cueUndoStates == null)
+            {
                 return;
+            }
 
             var cueStates = AllCues.Where(cue => cue.IsSelected)
                 .Select(cue => new CueMoveInfo(cue, cue.Clone())).ToList();
@@ -818,7 +872,9 @@ namespace LaunchPad2.ViewModels
             /* Check for no movement */
             var firstUndoState = undoCueStates.First();
             if (!firstUndoState.HasChanged)
+            {
                 return;
+            }
 
             /* Needed only for redo */
             var doAction = new Action(() =>
@@ -842,7 +898,9 @@ namespace LaunchPad2.ViewModels
             });
 
             if (undoBatchMemento == null)
+            {
                 UndoManager.Add(doAction, undoAction);
+            }
             else
             {
                 undoBatchMemento.Add(doAction, undoAction);
@@ -865,29 +923,39 @@ namespace LaunchPad2.ViewModels
         private void CueAlignLeft()
         {
             if (!GetSelectedCues().Any())
+            {
                 return;
+            }
 
             double start = GetSelectedCues().Min(cue => cue.StartSample);
 
             foreach (var cue in GetSelectedCues())
+            {
                 cue.StartSample = (uint) start;
+            }
         }
 
         private void CueAlignRight()
         {
             if (!GetSelectedCues().Any())
+            {
                 return;
+            }
 
             double end = GetSelectedCues().Max(cue => cue.EndSample);
 
             foreach (var cue in GetSelectedCues())
+            {
                 cue.EndSample = (uint) end;
+            }
         }
 
         private void CueAlignAll()
         {
             if (!GetSelectedCues().Any())
+            {
                 return;
+            }
 
             CueAlignLeft();
             CueMakeSameWidth();
@@ -896,12 +964,16 @@ namespace LaunchPad2.ViewModels
         private void CueMakeSameWidth()
         {
             if (!GetSelectedCues().Any())
+            {
                 return;
+            }
 
             double length = GetSelectedCues().Max(cue => cue.SampleLength);
 
             foreach (var cue in GetSelectedCues())
+            {
                 cue.SampleLength = (int) length;
+            }
         }
 
         private void CueDistributeLeft()
@@ -919,17 +991,19 @@ namespace LaunchPad2.ViewModels
             var selectedCues = GetSelectedCues().ToList();
 
             if (selectedCues.Count < 2)
+            {
                 return;
+            }
 
             double min = selectedCues.Min(cue => cue.StartSample);
             double max = selectedCues.Max(cue => cue.StartSample);
             var range = max - min;
-            var spacing = range/(selectedCues.Count - 1);
+            var spacing = range / (selectedCues.Count - 1);
 
             var i = 0;
             foreach (var cue in cues)
             {
-                cue.StartSample = (uint) (min + spacing*i);
+                cue.StartSample = (uint) (min + spacing * i);
                 i++;
             }
         }
@@ -950,10 +1024,10 @@ namespace LaunchPad2.ViewModels
             double average;
             var stdDev = subbandAverages.StdDev(out average);
 
-            var millisecondsPerValue = AudioTrack.Length.TotalMilliseconds/subbandAverages.Count;
+            var millisecondsPerValue = AudioTrack.Length.TotalMilliseconds / subbandAverages.Count;
             var energyAndTime =
                 subbandAverages.Select((value, i) =>
-                    new SampleInfo<double>(TimeSpan.FromMilliseconds(i*millisecondsPerValue), value));
+                    new SampleInfo<double>(TimeSpan.FromMilliseconds(i * millisecondsPerValue), value));
 
             var energyAndTimeOrderedByEnergy =
                 energyAndTime.Where(sample => sample.Value > average + stdDev)
@@ -1003,7 +1077,7 @@ namespace LaunchPad2.ViewModels
 
                     var cues =
                         regionalEnergyAndTimeOrderedByEnergy.Select(
-                            value => new EventCueViewModel(SampleRate, value.Time, sampleDuration))
+                                value => new EventCueViewModel(SampleRate, value.Time, sampleDuration))
                             .ToList();
 
                     var trackCues = track.Cues;
@@ -1012,7 +1086,9 @@ namespace LaunchPad2.ViewModels
                         foreach (var cue in cues)
                         {
                             if (!trackCues.Any(c => c.Intersects(cue)))
+                            {
                                 trackCues.Add(cue);
+                            }
                         }
                     });
 
@@ -1039,7 +1115,9 @@ namespace LaunchPad2.ViewModels
             var device = SelectedItem as DeviceViewModel;
 
             if (device == null)
+            {
                 return;
+            }
 
             var undoBatchMemento = new UndoBatchMemento();
 
@@ -1068,7 +1146,7 @@ namespace LaunchPad2.ViewModels
                 return;
             }
 
-            Zoom = width/_audioTrack.TotalSamples*100;
+            Zoom = width / _audioTrack.TotalSamples * 100;
         }
 
         public void Cut()
@@ -1104,7 +1182,9 @@ namespace LaunchPad2.ViewModels
                         var insertTrack = GetSelectedTracks().LastOrDefault();
 
                         if (insertTrack == null)
+                        {
                             Tracks.Add(track);
+                        }
                         else
                         {
                             var insertIndex = Tracks.IndexOf(insertTrack);
@@ -1118,7 +1198,9 @@ namespace LaunchPad2.ViewModels
                 var undoAction = new Action(() =>
                 {
                     foreach (var track in trackViewModels)
+                    {
                         Tracks.Remove(track);
+                    }
                 });
 
                 UndoManager.DoAndAdd(doAction, undoAction);
@@ -1133,7 +1215,9 @@ namespace LaunchPad2.ViewModels
                 name = $"{baseName} - Copy";
 
                 if (i != 0)
+                {
                     name += $" {i}";
+                }
             }
 
             return name;
@@ -1150,14 +1234,18 @@ namespace LaunchPad2.ViewModels
             UndoManager.DoAndAdd(() =>
             {
                 foreach (var rootGroupable in rootGroupables)
+                {
                     rootGroupable.Group = group;
+                }
                 Groups.Add(group);
                 group.Select();
             }, () =>
             {
                 group.Unselect();
                 foreach (var rootGroupable in rootGroupables)
+                {
                     rootGroupable.Group = null;
+                }
                 Groups.Remove(group);
             });
         }
@@ -1175,7 +1263,9 @@ namespace LaunchPad2.ViewModels
                 {
                     group.Unselect();
                     foreach (var child in group.Children)
+                    {
                         child.Group = null;
+                    }
                     Groups.Remove(group);
                 }
             }, () =>
@@ -1183,7 +1273,9 @@ namespace LaunchPad2.ViewModels
                 foreach (var group in groups)
                 {
                     foreach (var child in group.Children)
+                    {
                         child.Group = group;
+                    }
                     Groups.Add(group);
                     group.Select();
                 }
@@ -1193,7 +1285,9 @@ namespace LaunchPad2.ViewModels
         public async Task DiscoverNetwork()
         {
             foreach (var node in Nodes)
+            {
                 node.Discovering = true;
+            }
 
             try
             {
@@ -1217,7 +1311,9 @@ namespace LaunchPad2.ViewModels
             finally
             {
                 foreach (var node in Nodes)
+                {
                     node.Discovering = false;
+                }
             }
         }
 
@@ -1228,7 +1324,9 @@ namespace LaunchPad2.ViewModels
             {
                 await Disarm();
                 foreach (var node in Nodes)
+                {
                     node.DiscoveryState = NodeDiscoveryState.None;
+                }
             }
         }
 
@@ -1237,7 +1335,9 @@ namespace LaunchPad2.ViewModels
             var node = SelectedItem as NodeViewModel;
 
             if (node == null)
+            {
                 return;
+            }
 
             var undoBatchMemento = new UndoBatchMemento();
 
@@ -1275,7 +1375,7 @@ namespace LaunchPad2.ViewModels
             var existingNode = Nodes.FirstOrDefault(n => n.Address.Equals(node.Address.LongAddress));
 
             var name = e.Name;
-            var signalStrength = e.SignalStrength.HasValue ? e.SignalStrength : SignalStrength.High;
+            var signalStrength = e.SignalStrength ?? SignalStrength.High;
 
             if (existingNode == null)
             {
@@ -1297,13 +1397,17 @@ namespace LaunchPad2.ViewModels
             if (e.NewItems != null)
             {
                 foreach (var item in e.NewItems.Cast<NodeViewModel>())
+                {
                     item.PropertyChanged += OnNodeViewModelOnPropertyChanged;
+                }
             }
 
             if (e.OldItems != null)
             {
                 foreach (var item in e.OldItems.Cast<NodeViewModel>())
+                {
                     item.PropertyChanged -= OnNodeViewModelOnPropertyChanged;
+                }
             }
         }
 
@@ -1330,68 +1434,70 @@ namespace LaunchPad2.ViewModels
         private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
         {
             if (AudioTrack != null && !AudioTrack.IsPaused)
+            {
                 AudioTrack.Update();
+            }
         }
 
         #region Commands
 
-        public RelayCommand UndoCommand { get; private set; }
+        public RelayCommand UndoCommand { get; }
 
-        public RelayCommand RedoCommand { get; private set; }
+        public RelayCommand RedoCommand { get; }
 
         public RelayCommand PlayCommand { get; }
 
-        public RelayCommand StopCommand { get; private set; }
+        public RelayCommand StopCommand { get; }
 
         public RelayCommand StartShowCommand { get; }
 
-        public RelayCommand PositionCommand { get; private set; }
+        public RelayCommand PositionCommand { get; }
 
         public RelayCommand AddTrackCommand { get; }
 
-        public ICommand AddCueCommand { get; private set; }
+        public ICommand AddCueCommand { get; }
 
-        public ICommand DeleteCueCommand { get; private set; }
+        public ICommand DeleteCueCommand { get; }
 
-        public ICommand DeleteCommand { get; private set; }
+        public ICommand DeleteCommand { get; }
 
         public RelayCommand CalculateBeatsCommand { get; }
 
-        public ICommand CueAlignLeftCommand { get; private set; }
+        public ICommand CueAlignLeftCommand { get; }
 
-        public ICommand CueAlignRightCommand { get; private set; }
+        public ICommand CueAlignRightCommand { get; }
 
-        public ICommand CueAlignAllCommand { get; private set; }
+        public ICommand CueAlignAllCommand { get; }
 
-        public ICommand CueMakeSameWidthCommand { get; private set; }
+        public ICommand CueMakeSameWidthCommand { get; }
 
-        public ICommand CueDistributeLeftCommand { get; private set; }
+        public ICommand CueDistributeLeftCommand { get; }
 
-        public ICommand CueDistributeLeftReverseCommand { get; private set; }
+        public ICommand CueDistributeLeftReverseCommand { get; }
 
-        public ICommand CueDistributeOnBeatsCommand { get; private set; }
+        public ICommand CueDistributeOnBeatsCommand { get; }
 
-        public ICommand AddDeviceCommand { get; private set; }
+        public ICommand AddDeviceCommand { get; }
 
-        public ICommand DeleteDeviceCommand { get; private set; }
+        public ICommand DeleteDeviceCommand { get; }
 
-        public ICommand AddTrackFromDeviceCommand { get; private set; }
+        public ICommand AddTrackFromDeviceCommand { get; }
 
-        public ICommand DiscoverNetworkCommand { get; private set; }
+        public ICommand DiscoverNetworkCommand { get; }
 
-        public ICommand NetworkDiscoveryResetCommand { get; private set; }
+        public ICommand NetworkDiscoveryResetCommand { get; }
 
-        public ICommand DeleteNodeCommand { get; private set; }
+        public ICommand DeleteNodeCommand { get; }
 
-        public ICommand ArmNetworkCommand { get; private set; }
+        public ICommand ArmNetworkCommand { get; }
 
-        public ICommand DisarmNetworkCommand { get; private set; }
+        public ICommand DisarmNetworkCommand { get; }
 
-        public ICommand GroupCommand { get; private set; }
+        public ICommand GroupCommand { get; }
 
-        public ICommand UngroupCommand { get; private set; }
+        public ICommand UngroupCommand { get; }
 
-        public ICommand ZoomExtentsCommand { get; private set; }
+        public ICommand ZoomExtentsCommand { get; }
 
         #endregion
     }
