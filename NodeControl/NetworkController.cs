@@ -143,7 +143,6 @@ namespace NodeControl
             await Initialize();
             XBeeNode node = await _xBee.GetRemoteNodeAsync(address);
             await node.SetNodeIdentifier(name);
-            await node.WriteChanges();
         }
 
         private static async void Initialize(XBeeNode node)

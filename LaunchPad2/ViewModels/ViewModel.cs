@@ -1286,7 +1286,7 @@ namespace LaunchPad2.ViewModels
             }
             else
             {
-                existingNode.Name = name;
+                existingNode.SetNameInteral(name);
                 existingNode.SignalStrength = signalStrength;
                 existingNode.DiscoveryState = NodeDiscoveryState.Discovered;
             }
@@ -1297,28 +1297,26 @@ namespace LaunchPad2.ViewModels
             if (e.NewItems != null)
             {
                 foreach (var item in e.NewItems.Cast<NodeViewModel>())
-                    item.PropertyChanged += OnNodeViewModelOnPropertyChanged;
+                    item.NameChanged += OnNodeViewModelNameChanged;
             }
 
             if (e.OldItems != null)
             {
                 foreach (var item in e.OldItems.Cast<NodeViewModel>())
-                    item.PropertyChanged -= OnNodeViewModelOnPropertyChanged;
+                    item.NameChanged -= OnNodeViewModelNameChanged;
             }
         }
 
-        private async void OnNodeViewModelOnPropertyChanged(object o, PropertyChangedEventArgs args)
+        private async void OnNodeViewModelNameChanged(object o, EventArgs args)
         {
-            var n = (NodeViewModel) o;
-            if (args.PropertyName == "Name")
+            var n = (NodeViewModel)o;
+
+            try
             {
-                try
-                {
-                    await NetworkController.SetNodeName(new NodeAddress(n.Address), n.Name);
-                }
-                catch (TimeoutException)
-                {
-                }
+                await NetworkController.SetNodeName(new NodeAddress(n.Address), n.Name);
+            }
+            catch (TimeoutException)
+            {
             }
         }
 
