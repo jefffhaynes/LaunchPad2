@@ -52,14 +52,8 @@ namespace LaunchPad2.ViewModels
                 {
                     _name = value;
                     OnPropertyChanged();
-                    NameChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
-        }
-
-        public void SetNameInteral(string name)
-        {
-            _name = name;
         }
 
         public bool IsEnabled
@@ -186,7 +180,5 @@ namespace LaunchPad2.ViewModels
             {
             }
         }
-
-        public event EventHandler NameChanged;
     }
 }
